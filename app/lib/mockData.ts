@@ -88,22 +88,10 @@ export const mockProjects: Record<string, ProjectData> = {
         config: { type: 'bride' }
       },
       {
-        id: 'comp-7',
-        type: 'InvitationMessage',
-        order: 7,
-        config: {}
-      },
-      {
         id: 'comp-8',
         type: 'EventDetails',
         order: 8,
         config: {}
-      },
-      {
-        id: 'comp-9',
-        type: 'CountdownTimer',
-        order: 9,
-        config: { design: 'elegant-card' }
       },
       {
         id: 'comp-10',
@@ -263,22 +251,10 @@ export const mockProjects: Record<string, ProjectData> = {
         config: { type: 'bride' }
       },
       {
-        id: 'bn-comp-7',
-        type: 'InvitationMessage',
-        order: 7,
-        config: {}
-      },
-      {
         id: 'bn-comp-8',
         type: 'EventDetails',
         order: 8,
         config: {}
-      },
-      {
-        id: 'bn-comp-9',
-        type: 'CountdownTimer',
-        order: 9,
-        config: { design: 'elegant-card' }
       },
       {
         id: 'bn-comp-10',

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
+import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
-interface CountdownTimerProps {
+interface CountdownTimerProps extends CurveDividerProps, DecorativeFlowersProps {
   targetDate?: string;
   design?: "simple" | "elegant-card" | "minimal";
   showDays?: boolean;
@@ -10,6 +12,10 @@ interface CountdownTimerProps {
   showMinutes?: boolean;
   showSeconds?: boolean;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
+  titleColor?: string;
+  valueColor?: string;
+  labelColor?: string;
   className?: string;
 }
 
@@ -21,6 +27,15 @@ export default function CountdownTimer({
   showMinutes = true,
   showSeconds = true,
   backgroundColor,
+  backgroundImageUrl,
+  showTopCurve,
+  showBottomCurve,
+  topCurveColor,
+  bottomCurveColor,
+  topCurveStyle,
+  bottomCurveStyle,
+  decorativeFlowers = false,
+  flowerStyle = 'beage',
   titleColor,
   valueColor,
   labelColor,
@@ -60,13 +75,42 @@ export default function CountdownTimer({
     return () => clearInterval(interval);
   }, [targetDate]);
 
+  // Build background style
+  const backgroundStyle: React.CSSProperties = {};
+  
+  if (backgroundImageUrl) {
+    backgroundStyle.backgroundImage = `url(${backgroundImageUrl})`;
+    backgroundStyle.backgroundSize = 'cover';
+    backgroundStyle.backgroundPosition = 'center';
+    backgroundStyle.backgroundRepeat = 'no-repeat';
+  } else if (backgroundColor) {
+    backgroundStyle.backgroundColor = backgroundColor;
+  }
+
   if (!targetDate) {
     return (
       <div 
-        className={`text-center py-8 ${className}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
+        className={`text-center py-8 relative ${className}`}
+        style={Object.keys(backgroundStyle).length > 0 ? backgroundStyle : undefined}
       >
-        <p className="text-muted">No event date set</p>
+        {backgroundImageUrl && backgroundColor && (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor, opacity: 0.5 }}
+          />
+        )}
+        {/* Top Curve Divider */}
+        {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+        {/* Decorative Flowers */}
+        {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+        <p 
+          className="text-muted relative z-10"
+          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        >
+          No event date set
+        </p>
+        {/* Bottom Curve Divider */}
+        {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
       </div>
     );
   }
@@ -81,10 +125,23 @@ export default function CountdownTimer({
   if (design === "elegant-card") {
     return (
       <div 
-        className={`py-12 px-4 w-full ${className}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
+        className={`py-12 px-4 w-full relative ${className}`}
+        style={Object.keys(backgroundStyle).length > 0 ? backgroundStyle : undefined}
       >
-        <div className="max-w-4xl mx-auto">
+        {backgroundImageUrl && backgroundColor && (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor, opacity: 0.5 }}
+          />
+        )}
+        {/* Top Curve Divider */}
+        {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+        {/* Decorative Flowers */}
+        {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+        <div 
+          className="max-w-4xl mx-auto relative z-10"
+          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        >
           <h3 className="text-center text-xl font-semibold mb-8" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
             Menuju Hari Bahagia
           </h3>
@@ -104,6 +161,8 @@ export default function CountdownTimer({
             ))}
           </div>
         </div>
+        {/* Bottom Curve Divider */}
+        {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
       </div>
     );
   }
@@ -111,10 +170,23 @@ export default function CountdownTimer({
   if (design === "minimal") {
     return (
       <div 
-        className={`text-center py-8 px-4 ${className}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
+        className={`text-center py-8 px-4 relative ${className}`}
+        style={Object.keys(backgroundStyle).length > 0 ? backgroundStyle : undefined}
       >
-        <div className="inline-flex items-center gap-4">
+        {backgroundImageUrl && backgroundColor && (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor, opacity: 0.5 }}
+          />
+        )}
+        {/* Top Curve Divider */}
+        {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+        {/* Decorative Flowers */}
+        {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+        <div 
+          className="inline-flex items-center gap-4 relative z-10"
+          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        >
           {timeUnits.map((unit, index) => (
             <div key={index} className="flex flex-col items-center">
               <span className="text-2xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: valueColor || "#1f2937" }}>
@@ -124,6 +196,8 @@ export default function CountdownTimer({
             </div>
           ))}
         </div>
+        {/* Bottom Curve Divider */}
+        {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
       </div>
     );
   }
@@ -131,10 +205,23 @@ export default function CountdownTimer({
   // Simple design (default)
   return (
     <div 
-      className={`text-center py-8 px-4 ${className}`}
-      style={backgroundColor ? { backgroundColor } : undefined}
+      className={`text-center py-8 px-4 relative ${className}`}
+      style={Object.keys(backgroundStyle).length > 0 ? backgroundStyle : undefined}
     >
-      <div className="flex items-center justify-center gap-6">
+      {backgroundImageUrl && backgroundColor && (
+        <div 
+          className="absolute inset-0"
+          style={{ backgroundColor, opacity: 0.5 }}
+        />
+      )}
+      {/* Top Curve Divider */}
+      {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+      {/* Decorative Flowers */}
+      {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+      <div 
+        className="flex items-center justify-center gap-6 relative z-10"
+        style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+      >
         {timeUnits.map((unit, index) => (
           <div key={index} className="flex flex-col">
             <span className="text-4xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: valueColor || "#1f2937" }}>
@@ -144,6 +231,8 @@ export default function CountdownTimer({
           </div>
         ))}
       </div>
+      {/* Bottom Curve Divider */}
+      {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
     </div>
   );
 }

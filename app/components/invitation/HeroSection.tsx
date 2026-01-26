@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
-interface HeroSectionProps {
+interface HeroSectionProps extends DecorativeFlowersProps {
   subtitle?: string;
   coupleNames?: string;
   quote?: string;
@@ -12,6 +13,13 @@ interface HeroSectionProps {
   coupleNamesColor?: string;
   quoteColor?: string;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
+  curveColor?: string;
+  topCurveColor?: string;
+  showTopCurve?: boolean;
+  showBottomCurve?: boolean;
+  topCurveStyle?: 'gentle' | 'wave' | 'smooth';
+  bottomCurveStyle?: 'gentle' | 'wave' | 'smooth';
   className?: string;
 }
 
@@ -24,9 +32,25 @@ export default function HeroSection({
   coupleNamesColor,
   quoteColor,
   backgroundColor,
+  backgroundImageUrl,
+  curveColor,
+  topCurveColor,
+  showTopCurve = true,
+  showBottomCurve = true,
+  topCurveStyle = 'gentle',
+  bottomCurveStyle = 'gentle',
+  decorativeFlowers = false,
+  flowerStyle = 'beage',
   className = ""
 }: HeroSectionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Curve SVG paths for different styles
+  const curvePaths = {
+    gentle: "M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z", // Original gentle curve
+    wave: "M0,0c100,0,200,60,300,60c100,0,200-60,300-60c100,0,200,60,300,60c100,0,100-60,100-60v100H0V0z", // Wavy pattern
+    smooth: "M0,0c200,0,300,40,500,40c200,0,300-40,500-40v100H0V0z" // Smooth rounded curve
+  };
 
   // Auto-rotate background images
   useEffect(() => {
@@ -39,11 +63,32 @@ export default function HeroSection({
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
+  // Build background style for section (only if no backgroundImages array)
+  const sectionStyle: React.CSSProperties = {};
+  
+  if (!backgroundImages?.length) {
+    if (backgroundImageUrl) {
+      sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+      sectionStyle.backgroundSize = 'cover';
+      sectionStyle.backgroundPosition = 'center';
+      sectionStyle.backgroundRepeat = 'no-repeat';
+    } else if (backgroundColor) {
+      sectionStyle.backgroundColor = backgroundColor;
+    }
+  }
+
   return (
     <section 
       className={`relative min-h-screen w-full flex items-end justify-center overflow-hidden ${className}`}
-      style={backgroundColor && !backgroundImages?.length ? { backgroundColor } : undefined}
+      style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
     >
+      {/* Color overlay if both image and color are set (and no backgroundImages array) */}
+      {!backgroundImages?.length && backgroundImageUrl && backgroundColor && (
+        <div 
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor, opacity: 0.5 }}
+        />
+      )}
       {/* Background Slideshow with Ken Burns Effect */}
       {backgroundImages.length > 0 && (
         <div className="absolute inset-0 z-0">
@@ -69,8 +114,23 @@ export default function HeroSection({
         </div>
       )}
 
+      {/* SVG Curve Divider at Top */}
+      {showTopCurve && (
+        <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16" style={{ fill: topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
+            <path d={curvePaths[topCurveStyle]} />
+          </svg>
+        </div>
+      )}
+
+      {/* Decorative Flowers */}
+      {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+
       {/* Content */}
-      <div className="relative z-10 w-full px-6 py-16 text-center text-white">
+      <div 
+        className="relative z-10 w-full px-6 py-16 text-center text-white"
+        style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+      >
         <p className="text-lg mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: subtitleColor || "rgba(255, 255, 255, 0.9)" }}>
           {subtitle}
         </p>
@@ -83,11 +143,13 @@ export default function HeroSection({
       </div>
 
       {/* SVG Curve Divider at Bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16 fill-white">
-          <path d="M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z" />
-        </svg>
-      </div>
+      {showBottomCurve && (
+        <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16" style={{ fill: curveColor || '#ffffff' }}>
+            <path d={curvePaths[bottomCurveStyle]} />
+          </svg>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes ken-burns {

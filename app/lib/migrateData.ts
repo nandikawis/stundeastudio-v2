@@ -34,10 +34,6 @@ export function migrateProjectData(project: ProjectData): MigratedProjectData {
         width = componentData.width || 340; // 375 - 35px padding
         height = componentData.height || 400;
         break;
-      case 'CountdownTimer':
-        width = 340;
-        height = 150;
-        break;
       case 'ImageCarousel':
         width = 340;
         height = 400;
@@ -61,10 +57,6 @@ export function migrateProjectData(project: ProjectData): MigratedProjectData {
       case 'CoupleProfile':
         width = 340;
         height = 350;
-        break;
-      case 'InvitationMessage':
-        width = 340;
-        height = 250;
         break;
       case 'EventDetails':
         width = 340;
@@ -124,7 +116,6 @@ function mapComponentTypeToElementType(type: string): EditorElement['type'] {
   const typeMap: Record<string, EditorElement['type']> = {
     'BlankSection': 'blank',
     'Hero': 'section',
-    'CountdownTimer': 'countdown',
     'ImageCarousel': 'carousel',
     'PhotoGalleryGrid': 'photo-gallery',
     'CoverSection': 'cover',
@@ -132,7 +123,6 @@ function mapComponentTypeToElementType(type: string): EditorElement['type'] {
     'QuoteSection': 'quote',
     'ReligiousGreeting': 'religious-greeting',
     'CoupleProfile': 'couple-profile',
-    'InvitationMessage': 'invitation-message',
     'EventDetails': 'event-details',
     'ClosingSection': 'closing',
   };
@@ -164,10 +154,6 @@ function extractStyles(type: string, componentData: any): EditorElement['styles'
  */
 function extractContent(type: string, componentData: any): any {
   switch (type) {
-    case 'CountdownTimer':
-      return {
-        targetDate: componentData.targetDate || new Date().toISOString(),
-      };
     case 'ImageCarousel':
     case 'PhotoGalleryGrid':
       return {
@@ -184,10 +170,6 @@ function extractContent(type: string, componentData: any): any {
         greeting: componentData.greeting || '',
         message: componentData.message || '',
         imageUrl: componentData.imageUrl || '',
-      };
-    case 'InvitationMessage':
-      return {
-        message: componentData.message || '',
       };
     case 'EventDetails':
       return {
@@ -236,7 +218,6 @@ function getDefaultTextForType(type: string): string {
   const defaults: Record<string, string> = {
     'QuoteSection': 'Love is composed of a single soul inhabiting two bodies.',
     'ReligiousGreeting': 'Bismillahirrahmanirrahim',
-    'InvitationMessage': 'You are cordially invited to our wedding celebration.',
     'EventDetails': 'Event Details',
     'ClosingSection': 'Thank you for your presence',
   };

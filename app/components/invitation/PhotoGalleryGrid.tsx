@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
+import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
 interface GalleryImage {
   id?: string;
@@ -9,31 +11,74 @@ interface GalleryImage {
   alt?: string;
 }
 
-interface PhotoGalleryGridProps {
+interface PhotoGalleryGridProps extends CurveDividerProps, DecorativeFlowersProps {
   images?: GalleryImage[];
   columns?: number;
+  title?: string;
+  titleColor?: string;
   className?: string;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
 }
 
 export default function PhotoGalleryGrid({
   images = [],
   columns = 2,
+  title = "Photo Gallery",
+  titleColor,
   className = "",
-  backgroundColor
+  backgroundColor,
+  backgroundImageUrl,
+  showTopCurve = true,
+  showBottomCurve,
+  topCurveColor,
+  bottomCurveColor,
+  topCurveStyle,
+  bottomCurveStyle,
+  decorativeFlowers = false,
+  flowerStyle = 'beage'
 }: PhotoGalleryGridProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Build background style for section
+  const sectionStyle: React.CSSProperties = {};
+  
+  if (backgroundImageUrl) {
+    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+    sectionStyle.backgroundSize = 'cover';
+    sectionStyle.backgroundPosition = 'center';
+    sectionStyle.backgroundRepeat = 'no-repeat';
+  } else if (backgroundColor) {
+    sectionStyle.backgroundColor = backgroundColor;
+  } else {
+    sectionStyle.background = 'linear-gradient(to bottom, #ffffff, #f9fafb, #ffffff)';
+  }
 
   if (images.length === 0) {
     return (
       <section 
-        className={`py-16 px-6 w-full ${!backgroundColor ? 'bg-white' : ''} ${className}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
+        className={`py-16 px-6 w-full relative ${className}`}
+        style={sectionStyle}
       >
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-8" style={{ fontFamily: "var(--font-playfair)" }}>
-            Photo Gallery
-          </h2>
+        {backgroundImageUrl && backgroundColor && (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor, opacity: 0.5 }}
+          />
+        )}
+        {/* Top Curve Divider */}
+        {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+        {/* Decorative Flowers */}
+        {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+        <div 
+          className="max-w-4xl mx-auto relative z-10"
+          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        >
+          {title && (
+            <h2 className="text-3xl font-bold text-center mb-8" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
+              {title}
+            </h2>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
@@ -47,6 +92,8 @@ export default function PhotoGalleryGrid({
             ))}
           </div>
         </div>
+        {/* Bottom Curve Divider */}
+        {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
       </section>
     );
   }
@@ -54,20 +101,29 @@ export default function PhotoGalleryGrid({
   return (
     <>
       <section 
-        className={`py-16 px-6 w-full ${!backgroundColor ? 'bg-gradient-to-b from-white via-gray-50 to-white' : ''} relative ${className}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
+        className={`py-16 px-6 w-full relative ${className}`}
+        style={sectionStyle}
       >
-        {/* SVG Curve Divider at Top */}
-        <div className="absolute top-0 left-0 right-0 z-0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16 fill-white">
-            <path d="M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z" />
-          </svg>
-        </div>
+        {backgroundImageUrl && backgroundColor && (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor, opacity: 0.5 }}
+          />
+        )}
+        {/* Top Curve Divider */}
+        {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+        {/* Decorative Flowers */}
+        {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
 
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-8" style={{ fontFamily: "var(--font-playfair)" }}>
-            Photo Gallery
-          </h2>
+        <div 
+          className="relative z-10 max-w-4xl mx-auto"
+          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        >
+          {title && (
+            <h2 className="text-3xl font-bold text-center mb-8" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
+              {title}
+            </h2>
+          )}
 
           <div 
             className="grid gap-2"
@@ -91,6 +147,8 @@ export default function PhotoGalleryGrid({
             ))}
           </div>
         </div>
+        {/* Bottom Curve Divider */}
+        {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
       </section>
 
       {/* Lightbox Modal */}

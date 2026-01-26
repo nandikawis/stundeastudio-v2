@@ -153,3 +153,19 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+/* Global text wrapping for all sections - prevent horizontal overflow */
+section p,
+section h1,
+section h2,
+section h3,
+section h4,
+section h5,
+section h6,
+section span,
+section div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}

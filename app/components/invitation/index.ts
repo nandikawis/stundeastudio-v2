@@ -10,7 +10,6 @@ export { default as HeroSection } from "./HeroSection";
 export { default as QuoteSection } from "./QuoteSection";
 export { default as ReligiousGreeting } from "./ReligiousGreeting";
 export { default as CoupleProfile } from "./CoupleProfile";
-export { default as InvitationMessage } from "./InvitationMessage";
 export { default as EventDetails } from "./EventDetails";
 export { default as PhotoGalleryGrid } from "./PhotoGalleryGrid";
 export { default as ClosingSection } from "./ClosingSection";
@@ -30,7 +29,6 @@ import HeroSection from "./HeroSection";
 import QuoteSection from "./QuoteSection";
 import ReligiousGreeting from "./ReligiousGreeting";
 import CoupleProfile from "./CoupleProfile";
-import InvitationMessage from "./InvitationMessage";
 import EventDetails from "./EventDetails";
 import PhotoGalleryGrid from "./PhotoGalleryGrid";
 import ClosingSection from "./ClosingSection";
@@ -42,7 +40,6 @@ import CoupleNames from "./CoupleNames";
 export const componentRegistry: Record<string, React.ComponentType<any>> = {
   BlankSection,
   Hero,
-  CountdownTimer,
   ImageCarousel,
   // New Bayu & Nia style components
   CoverSection,
@@ -50,7 +47,6 @@ export const componentRegistry: Record<string, React.ComponentType<any>> = {
   QuoteSection,
   ReligiousGreeting,
   CoupleProfile,
-  InvitationMessage,
   EventDetails,
   PhotoGalleryGrid,
   ClosingSection,

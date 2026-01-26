@@ -66,12 +66,15 @@ export default function SectionEditor({
       if (design.defaultData) {
         updatedProject.component_data[selectedSectionId] = {
           ...updatedProject.component_data[selectedSectionId],
-          ...design.defaultData
+          ...design.defaultData,
+          designId: design.id // Also save designId for tracking
         };
       }
 
       onUpdateProject(updatedProject);
       setShowDesignPicker(false);
+      setInternalSelectedSectionId(null);
+      if (onSelectSection) onSelectSection(null);
     }
   };
 
@@ -100,15 +103,17 @@ export default function SectionEditor({
         return (
           <div
             key={componentConfig.id}
-            className={`relative w-full ${
+            className={`relative w-full group ${
               isSelected ? 'ring-2 ring-accent ring-offset-2' : ''
             }`}
           >
             {/* Section Overlay - Click to Edit */}
             {!isSelected && (
-              <div className="absolute inset-0 z-10 cursor-pointer group">
-                <div className="absolute inset-0 bg-transparent group-hover:bg-accent/5 transition-all" />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+              <>
+                {/* Hover background - non-blocking */}
+                <div className="absolute inset-0 bg-transparent group-hover:bg-accent/5 transition-all pointer-events-none z-40" />
+                {/* Edit buttons - only these are interactive */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-50 pointer-events-auto">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -128,7 +133,7 @@ export default function SectionEditor({
                     Change Design
                   </button>
                 </div>
-              </div>
+              </>
             )}
 
             {/* Render Component */}
@@ -147,7 +152,8 @@ export default function SectionEditor({
               onSelectDesign={handleDesignSelect}
               onClose={() => {
                 setShowDesignPicker(false);
-                setSelectedSectionId(null);
+                setInternalSelectedSectionId(null);
+                if (onSelectSection) onSelectSection(null);
               }}
             />
           </div>

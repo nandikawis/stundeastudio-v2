@@ -115,44 +115,29 @@ const createStandardTemplateStructure = (): TemplateSection[] => [
     }
   },
   {
-    id: 'invitation-message',
-    type: 'message',
-    componentType: 'InvitationMessage',
-    order: 7,
-    defaultData: {
-      message: 'Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu.'
-    }
-  },
-  {
     id: 'event-details',
     type: 'event',
     componentType: 'EventDetails',
-    order: 8,
-    defaultData: {}
-  },
-  {
-    id: 'countdown-timer',
-    type: 'countdown',
-    componentType: 'CountdownTimer',
-    order: 9,
+    order: 7,
     defaultData: {
-      design: 'elegant-card'
+      invitationMessage: 'Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu.'
     }
   },
   {
     id: 'image-carousel',
     type: 'carousel',
     componentType: 'ImageCarousel',
-    order: 10,
+    order: 8,
     defaultData: {
-      images: []
+      images: [],
+      countdownDesign: 'elegant-card'
     }
   },
   {
     id: 'photo-gallery',
     type: 'gallery',
     componentType: 'PhotoGalleryGrid',
-    order: 11,
+    order: 9,
     defaultData: {
       columns: 2,
       images: []
@@ -162,7 +147,7 @@ const createStandardTemplateStructure = (): TemplateSection[] => [
     id: 'closing-section',
     type: 'closing',
     componentType: 'ClosingSection',
-    order: 12,
+    order: 10,
     defaultData: {
       coupleNames: 'John & Jane',
       message: 'Terima kasih atas ucapan, doa, dan kesediaannya untuk datang di acara pernikahan putra-putri kami.'
@@ -288,18 +273,14 @@ export const mockTemplates: Template[] = [
             address: 'Br. Celuk, Kapal, Mengwi, Badung',
             type: 'bride'
           }),
-          ...(section.id === 'invitation-message' && {
-            message: 'Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu.'
-          }),
           ...(section.id === 'event-details' && {
+            invitationMessage: 'Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu.',
             eventDate: '2026-01-09',
             eventTime: '13:00 WITA - SELESAI',
             venueName: 'Desa Umabian, Kecamatan Marga, Tabanan'
           }),
-          ...(section.id === 'countdown-timer' && {
-            design: 'elegant-card'
-          }),
           ...(section.id === 'image-carousel' && {
+            countdownDesign: 'elegant-card',
             images: [
               { url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800', alt: 'Prewedding 1', order: 1 },
               { url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800', alt: 'Prewedding 2', order: 2 },

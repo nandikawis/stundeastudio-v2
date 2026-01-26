@@ -3,7 +3,7 @@
 
 export interface EditorElement {
   id: string;
-  type: 'text' | 'image' | 'shape' | 'countdown' | 'carousel' | 'section' | 'blank' | 'cover' | 'hero-section' | 'quote' | 'religious-greeting' | 'couple-profile' | 'invitation-message' | 'event-details' | 'photo-gallery' | 'closing';
+  type: 'text' | 'image' | 'shape' | 'carousel' | 'section' | 'blank' | 'cover' | 'hero-section' | 'quote' | 'religious-greeting' | 'couple-profile' | 'event-details' | 'photo-gallery' | 'closing';
   x: number;        // Absolute position in canvas coordinates
   y: number;        // Absolute position in canvas coordinates
   width: number;    // Element width

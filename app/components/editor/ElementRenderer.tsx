@@ -2,15 +2,13 @@
 
 import { EditorElement } from "../../lib/editorState";
 import Image from "next/image";
-import CountdownTimer from "../../components/invitation/CountdownTimer";
 import ImageCarousel from "../../components/invitation/ImageCarousel";
 import CoverSection from "../../components/invitation/CoverSection";
 import HeroSection from "../../components/invitation/HeroSection";
 import QuoteSection from "../../components/invitation/QuoteSection";
 import ReligiousGreeting from "../../components/invitation/ReligiousGreeting";
-import CoupleProfile from "../../components/invitation/CoupleProfile";
-import InvitationMessage from "../../components/invitation/InvitationMessage";
-import EventDetails from "../../components/invitation/EventDetails";
+import CoupleProfile, { CoupleProfileDesign } from "../../components/invitation/CoupleProfile";
+import EventDetails, { EventDetailsDesign } from "../../components/invitation/EventDetails";
 import PhotoGalleryGrid from "../../components/invitation/PhotoGalleryGrid";
 import ClosingSection from "../../components/invitation/ClosingSection";
 
@@ -106,27 +104,6 @@ export default function ElementRenderer({
           />
         );
 
-      case "countdown":
-        return (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px",
-              overflow: "auto",
-            }}
-          >
-            <CountdownTimer
-              targetDate={element.content?.targetDate || eventData?.eventDate}
-              design={element.content?.design || "elegant-card"}
-              className="w-full h-full"
-            />
-          </div>
-        );
-
       case "carousel":
         return (
           <div
@@ -142,6 +119,22 @@ export default function ElementRenderer({
               autoplayInterval={element.content?.autoplayInterval || 5000}
               className="w-full h-full"
               isEditable={false}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
+              countdownTargetDate={element.content?.countdownTargetDate || eventData?.eventDate}
+              countdownDesign={element.content?.countdownDesign || "elegant-card"}
+              countdownShowDays={element.content?.countdownShowDays !== false}
+              countdownShowHours={element.content?.countdownShowHours !== false}
+              countdownShowMinutes={element.content?.countdownShowMinutes !== false}
+              countdownShowSeconds={element.content?.countdownShowSeconds !== false}
+              countdownTitleColor={element.content?.countdownTitleColor}
+              countdownValueColor={element.content?.countdownValueColor}
+              countdownLabelColor={element.content?.countdownLabelColor}
+              countdownCardColor={element.content?.countdownCardColor}
+              dateMessageDate={element.content?.dateMessageDate}
+              dateMessageText={element.content?.dateMessageText}
+              dateMessageDateColor={element.content?.dateMessageDateColor}
+              dateMessageTextColor={element.content?.dateMessageTextColor}
             />
           </div>
         );
@@ -154,6 +147,8 @@ export default function ElementRenderer({
               coupleNames={element.content?.coupleNames}
               quote={element.content?.quote}
               guestName={element.content?.guestName}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );
@@ -166,6 +161,8 @@ export default function ElementRenderer({
               coupleNames={element.content?.coupleNames}
               quote={element.content?.quote}
               backgroundImages={element.content?.backgroundImages || []}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );
@@ -177,6 +174,8 @@ export default function ElementRenderer({
               quote={element.content?.quote}
               author={element.content?.author}
               imageUrl={element.content?.imageUrl}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );
@@ -188,6 +187,8 @@ export default function ElementRenderer({
               greeting={element.content?.greeting}
               message={element.content?.message}
               imageUrl={element.content?.imageUrl}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );
@@ -202,17 +203,12 @@ export default function ElementRenderer({
               parents={element.content?.parents}
               address={element.content?.address}
               imageUrl={element.content?.imageUrl}
-              imagePosition={element.content?.imagePosition}
+              design={element.content?.design as CoupleProfileDesign | undefined}
+              imageStyle={element.content?.imageStyle}
+              glowColor={element.content?.glowColor}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
               type={element.content?.type}
-            />
-          </div>
-        );
-
-      case "invitation-message":
-        return (
-          <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
-            <InvitationMessage
-              message={element.content?.message}
             />
           </div>
         );
@@ -226,6 +222,19 @@ export default function ElementRenderer({
               venueName={element.content?.venueName || eventData?.venueName}
               venueAddress={element.content?.venueAddress || eventData?.venueAddress}
               venueCoordinates={element.content?.venueCoordinates}
+              googleMapsLink={element.content?.googleMapsLink}
+              mapButtonText={element.content?.mapButtonText}
+              mapButtonColor={element.content?.mapButtonColor}
+              mapButtonTextColor={element.content?.mapButtonTextColor}
+              invitationMessage={element.content?.invitationMessage}
+              invitationMessageColor={element.content?.invitationMessageColor}
+              design={element.content?.design as EventDetailsDesign | undefined}
+              cardBackgroundColor={element.content?.cardBackgroundColor}
+              cardOpacity={element.content?.cardOpacity}
+              cardHeaderColor={element.content?.cardHeaderColor}
+              cardBodyColor={element.content?.cardBodyColor}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );
@@ -236,6 +245,8 @@ export default function ElementRenderer({
             <PhotoGalleryGrid
               images={element.content?.images || []}
               columns={element.content?.columns || 2}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );
@@ -249,6 +260,8 @@ export default function ElementRenderer({
               designerCredit={element.content?.designerCredit}
               socialLinks={element.content?.socialLinks}
               audioUrl={element.content?.audioUrl}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
             />
           </div>
         );

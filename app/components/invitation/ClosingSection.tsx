@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
+import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
-interface ClosingSectionProps {
+interface ClosingSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   coupleNames?: string;
   message?: string;
   designerCredit?: string;
@@ -16,6 +18,7 @@ interface ClosingSectionProps {
   messageColor?: string;
   designerCreditColor?: string;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
   className?: string;
 }
 
@@ -29,6 +32,15 @@ export default function ClosingSection({
   messageColor,
   designerCreditColor,
   backgroundColor,
+  backgroundImageUrl,
+  showTopCurve = true,
+  showBottomCurve,
+  topCurveColor,
+  bottomCurveColor,
+  topCurveStyle,
+  bottomCurveStyle,
+  decorativeFlowers = false,
+  flowerStyle = 'beage',
   className = ""
 }: ClosingSectionProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -45,20 +57,42 @@ export default function ClosingSection({
     }
   };
 
+  // Build background style for section
+  const sectionStyle: React.CSSProperties = {};
+  
+  if (backgroundImageUrl) {
+    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+    sectionStyle.backgroundSize = 'cover';
+    sectionStyle.backgroundPosition = 'center';
+    sectionStyle.backgroundRepeat = 'no-repeat';
+  } else if (backgroundColor) {
+    sectionStyle.backgroundColor = backgroundColor;
+  } else {
+    sectionStyle.background = 'linear-gradient(to bottom, #ffffff, #f9fafb, #111827)';
+  }
+
   return (
     <>
       <section 
-        className={`py-16 px-6 w-full ${!backgroundColor ? 'bg-gradient-to-b from-white via-gray-50 to-gray-900' : ''} relative ${className}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
+        className={`py-16 px-6 w-full relative ${className}`}
+        style={sectionStyle}
       >
-        {/* SVG Curve Divider at Top */}
-        <div className="absolute top-0 left-0 right-0 z-0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16 fill-white">
-            <path d="M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z" />
-          </svg>
-        </div>
+        {/* Color overlay if both image and color are set */}
+        {backgroundImageUrl && backgroundColor && (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor, opacity: 0.5 }}
+          />
+        )}
+        {/* Top Curve Divider */}
+        {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+        {/* Decorative Flowers */}
+        {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
 
-        <div className="relative z-10 max-w-2xl mx-auto text-center text-white">
+        <div 
+          className="relative z-10 max-w-2xl mx-auto text-center text-white"
+          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        >
           {/* Spacer */}
           <div className="h-8" />
 
@@ -113,6 +147,8 @@ export default function ClosingSection({
             </div>
           )}
         </div>
+        {/* Bottom Curve Divider */}
+        {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
       </section>
 
       {/* Audio Player Button (Fixed Bottom Right) */}

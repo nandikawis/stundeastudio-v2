@@ -20,6 +20,257 @@ export default function SectionPropertiesPanel({
     onUpdate(section.id, field, value);
   };
 
+  // Helper function to render curve divider controls
+  const renderCurveDividers = () => (
+    <>
+      <div className="mt-4 pt-4 border-t border-border">
+        <div className="flex items-center justify-between mb-4">
+          <label className="block text-sm font-medium text-primary">Top Curve Divider</label>
+          {componentData.showTopCurve !== false ? (
+            <button
+              onClick={() => handleFieldUpdate('showTopCurve', false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              type="button"
+              title="Delete top curve divider"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete
+            </button>
+          ) : (
+            <button
+              onClick={() => handleFieldUpdate('showTopCurve', true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+              type="button"
+              title="Add top curve divider"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Divider
+            </button>
+          )}
+        </div>
+        {componentData.showTopCurve !== false && (
+          <>
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-primary mb-2">Style</label>
+              <select
+                value={componentData.topCurveStyle || 'gentle'}
+                onChange={(e) => handleFieldUpdate('topCurveStyle', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+              >
+                <option value="gentle">Gentle</option>
+                <option value="wave">Wave</option>
+                <option value="smooth">Smooth</option>
+              </select>
+            </div>
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-primary mb-2">Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={componentData.topCurveColor || '#ffffff'}
+                  onChange={(e) => handleFieldUpdate('topCurveColor', e.target.value)}
+                  className="w-10 h-10 border border-border rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={componentData.topCurveColor || '#ffffff'}
+                  onChange={(e) => handleFieldUpdate('topCurveColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-border">
+        <div className="flex items-center justify-between mb-4">
+          <label className="block text-sm font-medium text-primary">Bottom Curve Divider</label>
+          {componentData.showBottomCurve !== false ? (
+            <button
+              onClick={() => handleFieldUpdate('showBottomCurve', false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              type="button"
+              title="Delete bottom curve divider"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete
+            </button>
+          ) : (
+            <button
+              onClick={() => handleFieldUpdate('showBottomCurve', true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+              type="button"
+              title="Add bottom curve divider"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Divider
+            </button>
+          )}
+        </div>
+        {componentData.showBottomCurve !== false && (
+          <>
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-primary mb-2">Style</label>
+              <select
+                value={componentData.bottomCurveStyle || 'gentle'}
+                onChange={(e) => handleFieldUpdate('bottomCurveStyle', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+              >
+                <option value="gentle">Gentle</option>
+                <option value="wave">Wave</option>
+                <option value="smooth">Smooth</option>
+              </select>
+            </div>
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-primary mb-2">Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={componentData.bottomCurveColor || '#ffffff'}
+                  onChange={(e) => handleFieldUpdate('bottomCurveColor', e.target.value)}
+                  className="w-10 h-10 border border-border rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={componentData.bottomCurveColor || '#ffffff'}
+                  onChange={(e) => handleFieldUpdate('bottomCurveColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  // Helper function to render decorative flowers controls
+  const renderDecorativeFlowersSection = () => (
+    <div className="mt-4 pt-4 border-t border-border">
+      <div className="flex items-center justify-between mb-4">
+        <label className="block text-sm font-medium text-primary">Decorative Flowers</label>
+        {componentData.decorativeFlowers ? (
+          <button
+            onClick={() => handleFieldUpdate('decorativeFlowers', false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+            type="button"
+            title="Delete decorative flowers"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+          </button>
+        ) : (
+          <button
+            onClick={() => handleFieldUpdate('decorativeFlowers', true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+            type="button"
+            title="Add decorative flowers"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Flowers
+          </button>
+        )}
+      </div>
+      {componentData.decorativeFlowers && (
+        <div className="mt-2">
+          <label className="block text-sm font-medium text-primary mb-2">Flower Style</label>
+          <select
+            value={componentData.flowerStyle || 'beage'}
+            onChange={(e) => handleFieldUpdate('flowerStyle', e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+          >
+            <option value="red">Red</option>
+            <option value="beage">Beage</option>
+            <option value="pink">Pink</option>
+            <option value="white">White</option>
+          </select>
+          <p className="text-xs text-muted mt-1">Choose the color theme for decorative flowers</p>
+        </div>
+      )}
+    </div>
+  );
+
+  // Helper function to render background image and color controls
+  const renderBackgroundSection = () => (
+    <div className="mt-4 pt-4 border-t border-border">
+      <div>
+        <label className="block text-sm font-medium text-primary mb-2">Background Image URL</label>
+        <input
+          type="text"
+          value={componentData.backgroundImageUrl || ''}
+          onChange={(e) => handleFieldUpdate('backgroundImageUrl', e.target.value)}
+          className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+          placeholder="https://..."
+        />
+        <p className="text-xs text-muted mt-1">Background image for the entire section</p>
+      </div>
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-primary">Background Color</label>
+          <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-border">
+            <button
+              onClick={() => {
+                if (!componentData.backgroundColor) {
+                  handleFieldUpdate('backgroundColor', '#ffffff');
+                }
+              }}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                componentData.backgroundColor 
+                  ? 'bg-white text-primary shadow-sm border border-border' 
+                  : 'text-muted hover:text-primary'
+              }`}
+              type="button"
+            >
+              Color
+            </button>
+            <button
+              onClick={() => handleFieldUpdate('backgroundColor', '')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                !componentData.backgroundColor 
+                  ? 'bg-white text-primary shadow-sm border border-border' 
+                  : 'text-muted hover:text-primary'
+              }`}
+              type="button"
+            >
+              No Color
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={componentData.backgroundColor || '#ffffff'}
+            onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+            className="w-10 h-10 border border-border rounded cursor-pointer"
+          />
+          <input
+            type="text"
+            value={componentData.backgroundColor || ''}
+            onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+            placeholder="#ffffff"
+            className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+          />
+        </div>
+        <p className="text-xs text-muted mt-1">If both image and color are set, color will overlay the image</p>
+      </div>
+    </div>
+  );
+
   const renderFields = () => {
     switch (section.type) {
       case 'CoverSection':
@@ -79,14 +330,9 @@ export default function SectionPropertiesPanel({
                 />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
@@ -163,13 +409,132 @@ export default function SectionPropertiesPanel({
               />
             </div>
             <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-primary">Top Curve Divider</label>
+                {componentData.showTopCurve !== false ? (
+                  <button
+                    onClick={() => handleFieldUpdate('showTopCurve', false)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md text-sm font-medium transition-all"
+                    type="button"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleFieldUpdate('showTopCurve', true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 rounded-md text-sm font-medium transition-all"
+                    type="button"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Divider
+                  </button>
+                )}
+              </div>
+              {componentData.showTopCurve !== false && (
+                <>
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-primary mb-2">Style</label>
+                    <select
+                      value={componentData.topCurveStyle || 'gentle'}
+                      onChange={(e) => handleFieldUpdate('topCurveStyle', e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                    >
+                      <option value="gentle">Gentle</option>
+                      <option value="wave">Wave</option>
+                      <option value="smooth">Smooth</option>
+                    </select>
+                  </div>
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-primary mb-2">Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={componentData.topCurveColor || '#ffffff'}
+                        onChange={(e) => handleFieldUpdate('topCurveColor', e.target.value)}
+                        className="w-10 h-10 border border-border rounded cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={componentData.topCurveColor || '#ffffff'}
+                        onChange={(e) => handleFieldUpdate('topCurveColor', e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-primary">Bottom Curve Divider</label>
+                {componentData.showBottomCurve !== false ? (
+                  <button
+                    onClick={() => handleFieldUpdate('showBottomCurve', false)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md text-sm font-medium transition-all"
+                    type="button"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleFieldUpdate('showBottomCurve', true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 rounded-md text-sm font-medium transition-all"
+                    type="button"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Divider
+                  </button>
+                )}
+              </div>
+              {componentData.showBottomCurve !== false && (
+                <>
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-primary mb-2">Style</label>
+                    <select
+                      value={componentData.bottomCurveStyle || 'gentle'}
+                      onChange={(e) => handleFieldUpdate('bottomCurveStyle', e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                    >
+                      <option value="gentle">Gentle</option>
+                      <option value="wave">Wave</option>
+                      <option value="smooth">Smooth</option>
+                    </select>
+                  </div>
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-primary mb-2">Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={componentData.curveColor || '#ffffff'}
+                        onChange={(e) => handleFieldUpdate('curveColor', e.target.value)}
+                        className="w-10 h-10 border border-border rounded cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={componentData.curveColor || '#ffffff'}
+                        onChange={(e) => handleFieldUpdate('curveColor', e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
@@ -221,14 +586,71 @@ export default function SectionPropertiesPanel({
                 className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
                 placeholder="https://..."
               />
+              <p className="text-xs text-muted mt-1">Decorative image displayed above the quote</p>
             </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
             <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">Background Image URL</label>
+                <input
+                  type="text"
+                  value={componentData.backgroundImageUrl || ''}
+                  onChange={(e) => handleFieldUpdate('backgroundImageUrl', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  placeholder="https://..."
+                />
+                <p className="text-xs text-muted mt-1">Background image for the entire section</p>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-primary">Background Color</label>
+                  <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-border">
+                    <button
+                      onClick={() => {
+                        if (!componentData.backgroundColor) {
+                          handleFieldUpdate('backgroundColor', '#ffffff');
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        componentData.backgroundColor 
+                          ? 'bg-white text-primary shadow-sm border border-border' 
+                          : 'text-muted hover:text-primary'
+                      }`}
+                      type="button"
+                    >
+                      Color
+                    </button>
+                    <button
+                      onClick={() => handleFieldUpdate('backgroundColor', '')}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        !componentData.backgroundColor 
+                          ? 'bg-white text-primary shadow-sm border border-border' 
+                          : 'text-muted hover:text-primary'
+                      }`}
+                      type="button"
+                    >
+                      No Color
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={componentData.backgroundColor || '#ffffff'}
+                    onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+                    className="w-10 h-10 border border-border rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={componentData.backgroundColor || ''}
+                    onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+                    placeholder="#ffffff"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  />
+                </div>
+                <p className="text-xs text-muted mt-1">If both image and color are set, color will overlay the image</p>
+              </div>
             </div>
           </>
         );
@@ -282,20 +704,27 @@ export default function SectionPropertiesPanel({
                 placeholder="https://..."
               />
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
       case 'CoupleProfile':
         return (
           <>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-2">Design Style</label>
+              <select
+                value={componentData.design || 'with-container'}
+                onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+              >
+                <option value="simple">Simple (No Container)</option>
+                <option value="with-container">With Image Container</option>
+              </select>
+              <p className="text-xs text-muted mt-1">Choose whether to use image container styles</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-primary mb-2">Name</label>
               <input
@@ -414,52 +843,88 @@ export default function SectionPropertiesPanel({
                 placeholder="https://..."
               />
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
-          </>
-        );
-
-      case 'InvitationMessage':
-        return (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Message</label>
-              <textarea
-                value={componentData.message || ''}
-                onChange={(e) => handleFieldUpdate('message', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                rows={4}
-                placeholder="Merupakan suatu kebahagiaan..."
-              />
-              <div className="mt-2">
-                <ColorPicker
-                  label="Color"
-                  value={componentData.messageColor || '#374151'}
-                  onChange={(value) => handleFieldUpdate('messageColor', value)}
-                  defaultValue="#374151"
-                />
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
+            {componentData.design === 'with-container' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">Image Container Style</label>
+                  <select
+                    value={componentData.imageStyle || 'circular'}
+                    onChange={(e) => handleFieldUpdate('imageStyle', e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  >
+                    <optgroup label="Circular">
+                      <option value="circular">Circular - Classic</option>
+                      <option value="circular-gradient">Circular - Gradient Border</option>
+                      <option value="circular-glow">Circular - Glow Effect</option>
+                    </optgroup>
+                    <optgroup label="Rounded">
+                      <option value="rounded-elegant">Rounded - Elegant Frame</option>
+                      <option value="rounded-modern">Rounded - Modern Gradient</option>
+                      <option value="rounded-glow">Rounded - Glow Effect</option>
+                    </optgroup>
+                    <optgroup label="Oval">
+                      <option value="oval-vintage">Oval - Vintage Frame</option>
+                      <option value="oval-classic">Oval - Classic Frame</option>
+                      <option value="oval-glow">Oval - Glow Effect</option>
+                    </optgroup>
+                    <optgroup label="Hexagon">
+                      <option value="hexagon-glow">Hexagon - Glow Effect</option>
+                      <option value="hexagon-classic">Hexagon - Classic Frame</option>
+                      <option value="hexagon-modern">Hexagon - Modern Dark</option>
+                    </optgroup>
+                    <optgroup label="Square">
+                      <option value="square-frame">Square - Framed</option>
+                      <option value="square-elegant">Square - Elegant Dark</option>
+                      <option value="square-glow">Square - Glow Effect</option>
+                    </optgroup>
+                  </select>
+                  <p className="text-xs text-muted mt-1">Choose an eye-catching style for the profile image</p>
+                </div>
+                {(componentData.imageStyle === 'circular-glow' || 
+                  componentData.imageStyle === 'rounded-glow' || 
+                  componentData.imageStyle === 'oval-glow' || 
+                  componentData.imageStyle === 'hexagon-glow' || 
+                  componentData.imageStyle === 'square-glow') && (
+                  <div className="mt-4">
+                    <ColorPicker
+                      label="Glow Color"
+                      value={componentData.glowColor || '#b49549'}
+                      onChange={(value) => handleFieldUpdate('glowColor', value)}
+                      defaultValue="#b49549"
+                    />
+                    <p className="text-xs text-muted mt-1">Customize the glow effect color</p>
+                  </div>
+                )}
+              </>
+            )}
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
       case 'EventDetails':
         return (
           <>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-2">Invitation Message</label>
+              <p className="text-xs text-muted mb-2">This message will appear above the event card in this section</p>
+              <textarea
+                value={componentData.invitationMessage || ''}
+                onChange={(e) => handleFieldUpdate('invitationMessage', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                rows={4}
+                placeholder="Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu."
+              />
+              <div className="mt-2">
+                <ColorPicker
+                  label="Message Color"
+                  value={componentData.invitationMessageColor || '#374151'}
+                  onChange={(value) => handleFieldUpdate('invitationMessageColor', value)}
+                  defaultValue="#374151"
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-primary mb-2">Event Date</label>
               <input
@@ -554,6 +1019,82 @@ export default function SectionPropertiesPanel({
                 />
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-2">Google Maps Link</label>
+              <input
+                type="text"
+                value={componentData.googleMapsLink || ''}
+                onChange={(e) => handleFieldUpdate('googleMapsLink', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                placeholder="https://maps.google.com/?q=..."
+              />
+              <p className="text-xs text-muted mt-1">Google Maps link for the map button below the card</p>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">Map Button Text</label>
+              <input
+                type="text"
+                value={componentData.mapButtonText || 'Petunjuk Arah'}
+                onChange={(e) => handleFieldUpdate('mapButtonText', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                placeholder="Petunjuk Arah"
+              />
+              <p className="text-xs text-muted mt-1">Text displayed on the map button</p>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">Map Button Background Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={componentData.mapButtonColor || '#111827'}
+                  onChange={(e) => handleFieldUpdate('mapButtonColor', e.target.value)}
+                  className="w-10 h-10 border border-border rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={componentData.mapButtonColor || '#111827'}
+                  onChange={(e) => handleFieldUpdate('mapButtonColor', e.target.value)}
+                  placeholder="#111827"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                />
+              </div>
+              <p className="text-xs text-muted mt-1">Background color of the map button</p>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">Map Button Text Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={componentData.mapButtonTextColor || '#ffffff'}
+                  onChange={(e) => handleFieldUpdate('mapButtonTextColor', e.target.value)}
+                  className="w-10 h-10 border border-border rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={componentData.mapButtonTextColor || '#ffffff'}
+                  onChange={(e) => handleFieldUpdate('mapButtonTextColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                />
+              </div>
+              <p className="text-xs text-muted mt-1">Text color of the map button</p>
+            </div>
+            <div className="mt-4 pt-4 border-t border-border">
+              <label className="block text-sm font-medium text-primary mb-2">Design Style</label>
+              <select
+                value={componentData.design || 'card'}
+                onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+              >
+                <option value="card">Card Style</option>
+                <option value="elegant-split">Elegant Split</option>
+                <option value="modern-minimal">Modern Minimal</option>
+                <option value="timeline-vertical">Timeline Vertical</option>
+                <option value="badge-accent">Badge Accent</option>
+                <option value="framed-classic">Framed Classic</option>
+              </select>
+              <p className="text-xs text-muted mt-1">Choose a layout design for the event details</p>
+            </div>
             <div className="mt-4 pt-4 border-t border-border">
               <label className="block text-sm font-medium text-primary mb-2">Closing Message</label>
               <textarea
@@ -592,75 +1133,100 @@ export default function SectionPropertiesPanel({
                 />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
-          </>
-        );
-
-      case 'CountdownTimer':
-        return (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Target Date & Time</label>
-              <input
-                type="datetime-local"
-                value={componentData.targetDate 
-                  ? new Date(componentData.targetDate).toISOString().slice(0, 16)
-                  : ''}
-                onChange={(e) => handleFieldUpdate('targetDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Design</label>
-              <select
-                value={componentData.design || 'elegant-card'}
-                onChange={(e) => handleFieldUpdate('design', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-              >
-                <option value="simple">Simple</option>
-                <option value="elegant-card">Elegant Card</option>
-                <option value="minimal">Minimal</option>
-              </select>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Title Color"
-                value={componentData.titleColor || '#1f2937'}
-                onChange={(value) => handleFieldUpdate('titleColor', value)}
-                defaultValue="#1f2937"
-              />
-            </div>
-            <div className="mt-2">
-              <ColorPicker
-                label="Value Color"
-                value={componentData.valueColor || '#1f2937'}
-                onChange={(value) => handleFieldUpdate('valueColor', value)}
-                defaultValue="#1f2937"
-              />
-            </div>
-            <div className="mt-2">
-              <ColorPicker
-                label="Label Color"
-                value={componentData.labelColor || '#6b7280'}
-                onChange={(value) => handleFieldUpdate('labelColor', value)}
-                defaultValue="#6b7280"
-              />
-            </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
+            {(componentData.design === 'badge-accent' || componentData.design === 'card' || componentData.design === 'elegant-split') ? (
+              <div className="mt-4 pt-4 border-t border-border">
+                <label className="block text-sm font-medium text-primary mb-2">Card Header Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={componentData.cardHeaderColor || '#1f2937'}
+                    onChange={(e) => handleFieldUpdate('cardHeaderColor', e.target.value)}
+                    className="w-10 h-10 border border-border rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={componentData.cardHeaderColor || '#1f2937'}
+                    onChange={(e) => handleFieldUpdate('cardHeaderColor', e.target.value)}
+                    placeholder="#1f2937"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  />
+                </div>
+                <label className="block text-sm font-medium text-primary mb-2 mt-3">Card Body Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={componentData.cardBodyColor || '#ffffff'}
+                    onChange={(e) => handleFieldUpdate('cardBodyColor', e.target.value)}
+                    className="w-10 h-10 border border-border rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={componentData.cardBodyColor || '#ffffff'}
+                    onChange={(e) => handleFieldUpdate('cardBodyColor', e.target.value)}
+                    placeholder="#ffffff"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  />
+                </div>
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-primary mb-2">Card Body Opacity</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={componentData.cardOpacity !== undefined ? componentData.cardOpacity : 0.95}
+                    onChange={(e) => handleFieldUpdate('cardOpacity', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted mt-1">
+                    <span>Transparent</span>
+                    <span>{((componentData.cardOpacity !== undefined ? componentData.cardOpacity : 0.95) * 100).toFixed(0)}%</span>
+                    <span>Opaque</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted mt-1">Header color for top bar, body color for content area</p>
+              </div>
+            ) : (
+              <div className="mt-4 pt-4 border-t border-border">
+                <label className="block text-sm font-medium text-primary mb-2">Card Background Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={componentData.cardBackgroundColor || '#ffffff'}
+                    onChange={(e) => handleFieldUpdate('cardBackgroundColor', e.target.value)}
+                    className="w-10 h-10 border border-border rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={componentData.cardBackgroundColor || '#ffffff'}
+                    onChange={(e) => handleFieldUpdate('cardBackgroundColor', e.target.value)}
+                    placeholder="#ffffff"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  />
+                </div>
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-primary mb-2">Card Opacity</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={componentData.cardOpacity !== undefined ? componentData.cardOpacity : 0.95}
+                    onChange={(e) => handleFieldUpdate('cardOpacity', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted mt-1">
+                    <span>Transparent</span>
+                    <span>{((componentData.cardOpacity !== undefined ? componentData.cardOpacity : 0.95) * 100).toFixed(0)}%</span>
+                    <span>Opaque</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted mt-1">Control the card background color and transparency</p>
+              </div>
+            )}
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
@@ -702,20 +1268,134 @@ export default function SectionPropertiesPanel({
                 className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
               />
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
+            <div className="mt-6 pt-6 border-t border-border">
+              <h3 className="text-sm font-semibold text-primary mb-4">Countdown Timer</h3>
+              <p className="text-xs text-muted mb-4">The countdown timer will appear below the carousel</p>
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">Target Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={componentData.countdownTargetDate 
+                    ? new Date(componentData.countdownTargetDate).toISOString().slice(0, 16)
+                    : ''}
+                  onChange={(e) => handleFieldUpdate('countdownTargetDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                />
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-primary mb-2">Design</label>
+                <select
+                  value={componentData.countdownDesign || 'elegant-card'}
+                  onChange={(e) => handleFieldUpdate('countdownDesign', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                >
+                  <option value="simple">Simple</option>
+                  <option value="elegant-card">Elegant Card</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </div>
+              <div className="mt-4">
+                <ColorPicker
+                  label="Title Color"
+                  value={componentData.countdownTitleColor || '#1f2937'}
+                  onChange={(value) => handleFieldUpdate('countdownTitleColor', value)}
+                  defaultValue="#1f2937"
+                />
+              </div>
+              <div className="mt-2">
+                <ColorPicker
+                  label="Value Color"
+                  value={componentData.countdownValueColor || '#1f2937'}
+                  onChange={(value) => handleFieldUpdate('countdownValueColor', value)}
+                  defaultValue="#1f2937"
+                />
+              </div>
+              <div className="mt-2">
+                <ColorPicker
+                  label="Label Color"
+                  value={componentData.countdownLabelColor || '#6b7280'}
+                  onChange={(value) => handleFieldUpdate('countdownLabelColor', value)}
+                  defaultValue="#6b7280"
+                />
+              </div>
+              {componentData.countdownDesign === 'elegant-card' && (
+                <div className="mt-2">
+                  <ColorPicker
+                    label="Card Background Color"
+                    value={componentData.countdownCardColor || '#ffffff'}
+                    onChange={(value) => handleFieldUpdate('countdownCardColor', value)}
+                    defaultValue="#ffffff"
+                  />
+                </div>
+              )}
             </div>
+            <div className="mt-6 pt-6 border-t border-border">
+              <h3 className="text-sm font-semibold text-primary mb-4">Date & Message Section</h3>
+              <p className="text-xs text-muted mb-4">This section appears between the carousel and countdown timer</p>
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">Date</label>
+                <input
+                  type="text"
+                  value={componentData.dateMessageDate || ''}
+                  onChange={(e) => handleFieldUpdate('dateMessageDate', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  placeholder="19.01.2026"
+                />
+                <div className="mt-2">
+                  <ColorPicker
+                    label="Date Color"
+                    value={componentData.dateMessageDateColor || '#8b7355'}
+                    onChange={(value) => handleFieldUpdate('dateMessageDateColor', value)}
+                    defaultValue="#8b7355"
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-primary mb-2">Message</label>
+                <textarea
+                  value={componentData.dateMessageText || ''}
+                  onChange={(e) => handleFieldUpdate('dateMessageText', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  rows={4}
+                  placeholder="Siang dan malam berganti begitu cepat..."
+                />
+                <div className="mt-2">
+                  <ColorPicker
+                    label="Text Color"
+                    value={componentData.dateMessageTextColor || '#4a4a4a'}
+                    onChange={(value) => handleFieldUpdate('dateMessageTextColor', value)}
+                    defaultValue="#4a4a4a"
+                  />
+                </div>
+              </div>
+            </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
       case 'PhotoGalleryGrid':
         return (
           <>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-2">Title</label>
+              <input
+                type="text"
+                value={componentData.title || 'Photo Gallery'}
+                onChange={(e) => handleFieldUpdate('title', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                placeholder="Photo Gallery"
+              />
+              <div className="mt-2">
+                <ColorPicker
+                  label="Color"
+                  value={componentData.titleColor || '#1f2937'}
+                  onChange={(value) => handleFieldUpdate('titleColor', value)}
+                  defaultValue="#1f2937"
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-primary mb-2">Images (URLs, one per line)</label>
               <textarea
@@ -742,14 +1422,9 @@ export default function SectionPropertiesPanel({
                 <option value="3">3 Columns</option>
               </select>
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 
@@ -840,14 +1515,9 @@ export default function SectionPropertiesPanel({
                 placeholder="https://..."
               />
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <ColorPicker
-                label="Background Color"
-                value={componentData.backgroundColor || ''}
-                onChange={(value) => handleFieldUpdate('backgroundColor', value)}
-                defaultValue=""
-              />
-            </div>
+            {renderDecorativeFlowersSection()}
+            {renderCurveDividers()}
+            {renderBackgroundSection()}
           </>
         );
 

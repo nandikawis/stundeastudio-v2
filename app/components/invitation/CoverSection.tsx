@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
+import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
-interface CoverSectionProps {
+interface CoverSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   date?: string;
   coupleNames?: string;
   quote?: string;
@@ -12,6 +14,7 @@ interface CoverSectionProps {
   coupleNamesColor?: string;
   quoteColor?: string;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
   className?: string;
 }
 
@@ -24,22 +27,60 @@ export default function CoverSection({
   coupleNamesColor,
   quoteColor,
   backgroundColor,
+  backgroundImageUrl,
+  showTopCurve,
+  showBottomCurve,
+  topCurveColor,
+  bottomCurveColor,
+  topCurveStyle,
+  bottomCurveStyle,
+  decorativeFlowers = false,
+  flowerStyle = 'beage',
   className = ""
 }: CoverSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Build background style for section
+  const sectionStyle: React.CSSProperties = {};
+  
+  if (backgroundImageUrl) {
+    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+    sectionStyle.backgroundSize = 'cover';
+    sectionStyle.backgroundPosition = 'center';
+    sectionStyle.backgroundRepeat = 'no-repeat';
+  } else if (backgroundColor) {
+    sectionStyle.backgroundColor = backgroundColor;
+  } else {
+    // Default gradient
+    sectionStyle.background = 'linear-gradient(to bottom, #111827, #1f2937, #111827)';
+  }
+
   return (
     <section 
-      className={`min-h-screen w-full flex flex-col items-center justify-center ${!backgroundColor ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900' : ''} text-white relative overflow-hidden ${className}`}
-      style={backgroundColor ? { backgroundColor } : undefined}
+      className={`min-h-screen w-full flex flex-col items-center justify-center text-white relative overflow-hidden ${className}`}
+      style={sectionStyle}
     >
+      {/* Color overlay if both image and color are set */}
+      {backgroundImageUrl && backgroundColor && (
+        <div 
+          className="absolute inset-0"
+          style={{ backgroundColor, opacity: 0.5 }}
+        />
+      )}
+      {/* Top Curve Divider */}
+      {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+      {/* Decorative Flowers */}
+      {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
       {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0 opacity-10 z-0">
         <div className="absolute top-20 left-10 w-32 h-32 border border-white/20 rounded-full"></div>
         <div className="absolute bottom-20 right-10 w-24 h-24 border border-white/20 rounded-full"></div>
       </div>
 
-      <div className="relative z-10 text-center px-6 py-12 max-w-md mx-auto">
+      <div 
+        className="relative z-10 text-center px-6 py-12 max-w-md mx-auto"
+        style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+      >
         {/* Date */}
         <p className="text-lg md:text-xl mb-6 tracking-wider" style={{ fontFamily: "var(--font-playfair)", color: dateColor || "rgba(255, 255, 255, 0.9)" }}>
           {date}
@@ -95,6 +136,9 @@ export default function CoverSection({
           </div>
         </div>
       )}
+
+      {/* Bottom Curve Divider */}
+      {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
     </section>
   );
 }

@@ -1,14 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
+import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
-interface QuoteSectionProps {
+interface QuoteSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   quote?: string;
   author?: string;
   imageUrl?: string;
   quoteColor?: string;
   authorColor?: string;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
   className?: string;
 }
 
@@ -19,14 +22,53 @@ export default function QuoteSection({
   quoteColor,
   authorColor,
   backgroundColor,
+  backgroundImageUrl,
+  showTopCurve,
+  showBottomCurve,
+  topCurveColor,
+  bottomCurveColor,
+  topCurveStyle,
+  bottomCurveStyle,
+  decorativeFlowers = false,
+  flowerStyle = 'beage',
   className = ""
 }: QuoteSectionProps) {
+  // Build background style for section
+  const sectionStyle: React.CSSProperties = {};
+  
+  if (backgroundImageUrl) {
+    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+    sectionStyle.backgroundSize = 'cover';
+    sectionStyle.backgroundPosition = 'center';
+    sectionStyle.backgroundRepeat = 'no-repeat';
+  } else if (backgroundColor) {
+    // If only color is set, use it as solid background
+    sectionStyle.backgroundColor = backgroundColor;
+  } else {
+    // Default white background
+    sectionStyle.backgroundColor = '#ffffff';
+  }
+
   return (
     <section 
-      className={`py-16 px-6 w-full ${!backgroundColor ? 'bg-white' : ''} ${className}`}
-      style={backgroundColor ? { backgroundColor } : undefined}
+      className={`py-16 px-6 w-full relative ${className}`}
+      style={sectionStyle}
     >
-      <div className="max-w-2xl mx-auto text-center">
+      {/* Color overlay if both image and color are set */}
+      {backgroundImageUrl && backgroundColor && (
+        <div 
+          className="absolute inset-0"
+          style={{ backgroundColor, opacity: 0.5 }}
+        />
+      )}
+      {/* Top Curve Divider */}
+      {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
+      {/* Decorative Flowers */}
+      {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+      <div 
+        className="max-w-2xl mx-auto text-center relative z-10"
+        style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+      >
         {/* Decorative Image */}
         {imageUrl && (
           <div className="mb-8">
@@ -62,6 +104,8 @@ export default function QuoteSection({
           </p>
         )}
       </div>
+      {/* Bottom Curve Divider */}
+      {renderBottomCurve({ showBottomCurve, bottomCurveColor, bottomCurveStyle })}
     </section>
   );
 }

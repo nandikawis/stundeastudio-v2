@@ -65,7 +65,6 @@ function mapElementTypeToComponentType(type: EditorElement['type']): string {
     'text': 'QuoteSection', // Default to QuoteSection for text
     'image': 'HeroImage',
     'shape': 'BlankSection',
-    'countdown': 'CountdownTimer',
     'carousel': 'ImageCarousel',
     'section': 'HeroSection',
     'blank': 'BlankSection',
@@ -75,7 +74,6 @@ function mapElementTypeToComponentType(type: EditorElement['type']): string {
     'quote': 'QuoteSection',
     'religious-greeting': 'ReligiousGreeting',
     'couple-profile': 'CoupleProfile',
-    'invitation-message': 'InvitationMessage',
     'event-details': 'EventDetails',
     'photo-gallery': 'PhotoGalleryGrid',
     'closing': 'ClosingSection',

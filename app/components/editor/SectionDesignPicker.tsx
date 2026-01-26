@@ -65,29 +65,6 @@ const designVariants: Record<string, DesignOption[]> = {
       defaultData: {}
     }
   ],
-  'CountdownTimer': [
-    {
-      id: 'countdown-1',
-      name: 'Elegant Card',
-      preview: 'countdown-elegant',
-      componentType: 'CountdownTimer',
-      defaultData: { design: 'elegant-card' }
-    },
-    {
-      id: 'countdown-2',
-      name: 'Simple',
-      preview: 'countdown-simple',
-      componentType: 'CountdownTimer',
-      defaultData: { design: 'simple' }
-    },
-    {
-      id: 'countdown-3',
-      name: 'Minimal',
-      preview: 'countdown-minimal',
-      componentType: 'CountdownTimer',
-      defaultData: { design: 'minimal' }
-    }
-  ],
   'ImageCarousel': [
     {
       id: 'carousel-1',
@@ -111,6 +88,66 @@ const designVariants: Record<string, DesignOption[]> = {
       preview: 'gallery-3col',
       componentType: 'PhotoGalleryGrid',
       defaultData: { columns: 3 }
+    }
+  ],
+  'EventDetails': [
+    {
+      id: 'event-card',
+      name: 'Card Style',
+      preview: 'event-card',
+      componentType: 'EventDetails',
+      defaultData: { design: 'card' }
+    },
+    {
+      id: 'event-elegant',
+      name: 'Elegant Split',
+      preview: 'event-elegant',
+      componentType: 'EventDetails',
+      defaultData: { design: 'elegant-split' }
+    },
+    {
+      id: 'event-minimal',
+      name: 'Modern Minimal',
+      preview: 'event-minimal',
+      componentType: 'EventDetails',
+      defaultData: { design: 'modern-minimal' }
+    },
+    {
+      id: 'event-timeline',
+      name: 'Timeline Vertical',
+      preview: 'event-timeline',
+      componentType: 'EventDetails',
+      defaultData: { design: 'timeline-vertical' }
+    },
+    {
+      id: 'event-badge',
+      name: 'Badge Accent',
+      preview: 'event-badge',
+      componentType: 'EventDetails',
+      defaultData: { design: 'badge-accent' }
+    },
+    {
+      id: 'event-framed',
+      name: 'Framed Classic',
+      preview: 'event-framed',
+      componentType: 'EventDetails',
+      defaultData: { design: 'framed-classic' }
+    }
+  ],
+  'CoupleProfile': [
+    {
+      id: 'couple-simple',
+      name: 'Simple (No Container)',
+      preview: 'couple-simple',
+      componentType: 'CoupleProfile',
+      defaultData: { design: 'simple' }
+    },
+    {
+      id: 'couple-container',
+      name: 'With Image Container',
+      preview: 'couple-container',
+      componentType: 'CoupleProfile',
+      defaultData: { design: 'with-container' }
     }
   ]
 };
