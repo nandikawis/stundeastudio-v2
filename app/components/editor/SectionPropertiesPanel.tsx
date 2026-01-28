@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { ProjectData, ComponentConfig } from "../../lib/mockData";
 import ColorPicker from "./ColorPicker";
 
@@ -10,6 +11,139 @@ interface SectionPropertiesPanelProps {
   onClose: () => void;
 }
 
+// Image file item interface for the capsule UI
+interface ImageFileItem {
+  url: string;
+  name: string;
+  file?: File;
+}
+
+// Reusable ImageFilePicker component matching the design
+interface ImageFilePickerProps {
+  images: ImageFileItem[];
+  onImagesChange: (images: ImageFileItem[]) => void;
+  multiple?: boolean;
+  label?: string;
+}
+
+function ImageFilePicker({ images, onImagesChange, multiple = true, label = "Choose Image" }: ImageFilePickerProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const readFileAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const newItems: ImageFileItem[] = [];
+    for (const file of files) {
+      const dataUrl = await readFileAsDataUrl(file);
+      newItems.push({
+        url: dataUrl,
+        name: file.name,
+        file: file,
+      });
+    }
+
+    if (multiple) {
+      onImagesChange([...images, ...newItems]);
+    } else {
+      onImagesChange(newItems.slice(0, 1));
+    }
+
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    const updated = images.filter((_, i) => i !== index);
+    onImagesChange(updated);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className="px-4 py-2 rounded-lg text-white font-medium text-sm transition-all hover:opacity-90"
+        style={{ backgroundColor: "#42768E" }}
+      >
+        {label}
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple={multiple}
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      {images.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {images.map((item, index) => (
+            <div
+              key={index}
+              className="flex items-center rounded-full overflow-hidden h-12"
+              style={{ backgroundColor: "#42768E" }}
+            >
+              {/* Image thumbnail */}
+              <div className="flex-shrink-0 w-16 h-12 bg-white border-r border-[#42768E] flex items-center justify-center overflow-hidden" style={{ borderWidth: '1px' }}>
+                {item.url && item.url.trim() ? (
+                  <img
+                    src={item.url}
+                    alt={item.name || `Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    style={{ display: 'block' }}
+                    onError={(e) => {
+                      // Replace with placeholder if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      const parent = target.parentElement;
+                      if (parent) {
+                        const placeholder = document.createElement('span');
+                        placeholder.className = 'text-xs text-[#42768E] font-medium';
+                        placeholder.textContent = 'img';
+                        parent.innerHTML = '';
+                        parent.appendChild(placeholder);
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="text-xs text-[#42768E] font-medium">img</span>
+                )}
+              </div>
+              {/* Image name */}
+              <div className="flex-1 px-3 py-2 bg-white border-r border-[#42768E] min-w-0 h-full flex items-center" style={{ borderWidth: '1px' }}>
+                <span className="text-sm text-[#42768E] truncate block">{item.name || `Image ${index + 1}`}</span>
+              </div>
+              {/* Remove button */}
+              <button
+                type="button"
+                onClick={() => handleRemove(index)}
+                className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors mr-1"
+                aria-label="Remove image"
+                title="Remove image"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SectionPropertiesPanel({
   section,
   componentData,
@@ -18,6 +152,17 @@ export default function SectionPropertiesPanel({
 }: SectionPropertiesPanelProps) {
   const handleFieldUpdate = (field: string, value: any) => {
     onUpdate(section.id, field, value);
+  };
+
+  // Helper: read a File as base64 data URL so we can
+  // preview images immediately in the editor without a backend.
+  const readFileAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   // Helper function to render curve divider controls
@@ -206,70 +351,119 @@ export default function SectionPropertiesPanel({
   );
 
   // Helper function to render background image and color controls
-  const renderBackgroundSection = () => (
-    <div className="mt-4 pt-4 border-t border-border">
-      <div>
-        <label className="block text-sm font-medium text-primary mb-2">Background Image URL</label>
-        <input
-          type="text"
-          value={componentData.backgroundImageUrl || ''}
-          onChange={(e) => handleFieldUpdate('backgroundImageUrl', e.target.value)}
-          className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-          placeholder="https://..."
-        />
-        <p className="text-xs text-muted mt-1">Background image for the entire section</p>
-      </div>
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-primary">Background Color</label>
-          <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-border">
-            <button
-              onClick={() => {
-                if (!componentData.backgroundColor) {
-                  handleFieldUpdate('backgroundColor', '#ffffff');
-                }
-              }}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                componentData.backgroundColor 
-                  ? 'bg-white text-primary shadow-sm border border-border' 
-                  : 'text-muted hover:text-primary'
-              }`}
-              type="button"
-            >
-              Color
-            </button>
-            <button
-              onClick={() => handleFieldUpdate('backgroundColor', '')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                !componentData.backgroundColor 
-                  ? 'bg-white text-primary shadow-sm border border-border' 
-                  : 'text-muted hover:text-primary'
-              }`}
-              type="button"
-            >
-              No Color
-            </button>
+  const renderBackgroundSection = () => {
+    // Normalize background image data to an array (like ImageCarousel),
+    // but we only allow a single image in the UI.
+    const rawArray = Array.isArray(componentData.backgroundImages)
+      ? componentData.backgroundImages
+      : componentData.backgroundImageUrl && componentData.backgroundImageUrl.trim()
+        ? [{
+            url: componentData.backgroundImageUrl,
+            alt: componentData.backgroundImageName || 'Background Image',
+            order: 1,
+          }]
+        : [];
+
+    const firstBg = rawArray[0];
+    const firstUrl =
+      typeof firstBg === 'string'
+        ? firstBg
+        : (firstBg && typeof firstBg.url === 'string'
+            ? firstBg.url
+            : '');
+    const firstAlt =
+      typeof firstBg === 'string'
+        ? undefined
+        : firstBg && typeof firstBg.alt === 'string'
+          ? firstBg.alt
+          : undefined;
+
+    return (
+      <div className="mt-4 pt-4 border-t border-border">
+        <div>
+          <label className="block text-sm font-medium text-primary mb-2">Background Image</label>
+          <ImageFilePicker
+            images={firstUrl
+              ? [{
+                  url: firstUrl,
+                  name: firstAlt ||
+                    (firstUrl.startsWith('data:')
+                      ? 'Background Image'
+                      : firstUrl.split('/').pop() || 'Background Image'),
+                }]
+              : []}
+            onImagesChange={(items) => {
+              if (items.length > 0) {
+                const item = items[0];
+                const nextArray = [{
+                  url: item.url,
+                  alt: item.name,
+                  order: 1,
+                }];
+
+                // Store only backgroundImages (single source of truth)
+                handleFieldUpdate('backgroundImages', nextArray);
+              } else {
+                handleFieldUpdate('backgroundImages', []);
+              }
+            }}
+            multiple={false}
+            label="Choose Image"
+          />
+          <p className="text-xs text-muted mt-1">Background image for the entire section (only one image allowed)</p>
+        </div>
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-primary">Background Color</label>
+            <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-border">
+              <button
+                onClick={() => {
+                  if (!componentData.backgroundColor) {
+                    handleFieldUpdate('backgroundColor', '#ffffff');
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  componentData.backgroundColor 
+                    ? 'bg-white text-primary shadow-sm border border-border' 
+                    : 'text-muted hover:text-primary'
+                }`}
+                type="button"
+              >
+                Color
+              </button>
+              <button
+                onClick={() => handleFieldUpdate('backgroundColor', '')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  !componentData.backgroundColor 
+                    ? 'bg-white text-primary shadow-sm border border-border' 
+                    : 'text-muted hover:text-primary'
+                }`}
+                type="button"
+              >
+                No Color
+              </button>
+            </div>
           </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={componentData.backgroundColor || '#ffffff'}
+              onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+              className="w-10 h-10 border border-border rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              value={componentData.backgroundColor || ''}
+              onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+              placeholder="#ffffff"
+              className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+            />
+          </div>
+          <p className="text-xs text-muted mt-1">If both image and color are set, color will overlay the image</p>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={componentData.backgroundColor || '#ffffff'}
-            onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
-            className="w-10 h-10 border border-border rounded cursor-pointer"
-          />
-          <input
-            type="text"
-            value={componentData.backgroundColor || ''}
-            onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
-            placeholder="#ffffff"
-            className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-          />
-        </div>
-        <p className="text-xs text-muted mt-1">If both image and color are set, color will overlay the image</p>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFields = () => {
     switch (section.type) {
@@ -394,19 +588,23 @@ export default function SectionPropertiesPanel({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">Background Images (URLs, one per line)</label>
-              <textarea
-                value={Array.isArray(componentData.backgroundImages) 
-                  ? componentData.backgroundImages.join('\n')
-                  : ''}
-                onChange={(e) => {
-                  const urls = e.target.value.split('\n').filter(url => url.trim());
-                  handleFieldUpdate('backgroundImages', urls);
+              <label className="block text-sm font-medium text-primary mb-2">Background Images</label>
+              <ImageFilePicker
+                images={Array.isArray(componentData.backgroundImages)
+                  ? componentData.backgroundImages.map((url: string, index: number) => ({
+                      url: url,
+                      name: url.startsWith('data:') ? `Background ${index + 1}` : url.split('/').pop() || `Background ${index + 1}`,
+                    }))
+                  : []}
+                onImagesChange={(items) => {
+                  handleFieldUpdate('backgroundImages', items.map(item => item.url));
                 }}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                rows={4}
-                placeholder="https://image1.jpg&#10;https://image2.jpg"
+                multiple={true}
+                label="Choose Image"
               />
+              <p className="text-xs text-muted mt-2">
+                Selected images will be added to the slideshow and can be seen in the preview immediately.
+              </p>
             </div>
             <div className="mt-4 pt-4 border-t border-border">
               <div className="flex items-center justify-between mb-4">
@@ -534,7 +732,6 @@ export default function SectionPropertiesPanel({
             </div>
             {renderDecorativeFlowersSection()}
             {renderCurveDividers()}
-            {renderBackgroundSection()}
           </>
         );
 
@@ -578,80 +775,27 @@ export default function SectionPropertiesPanel({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">Image URL</label>
-              <input
-                type="text"
-                value={componentData.imageUrl || ''}
-                onChange={(e) => handleFieldUpdate('imageUrl', e.target.value)}
+              <label className="block text-sm font-medium text-primary mb-2">Decorative Image</label>
+              <select
+                value={componentData.quoteDecorativeStyle || 'baby-bread'}
+                onChange={(e) => handleFieldUpdate('quoteDecorativeStyle', e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                placeholder="https://..."
-              />
-              <p className="text-xs text-muted mt-1">Decorative image displayed above the quote</p>
+              >
+                <option value="baby-bread">Baby Bread</option>
+                <option value="grey-and-white">Grey and White</option>
+                <option value="pink-and-yellow">Pink and Yellow</option>
+                <option value="pink-bouquet">Pink Bouquet</option>
+                <option value="pink-love">Pink Love</option>
+                <option value="white-teraccota">White Teraccota</option>
+                <option value="white">White</option>
+              </select>
+              <p className="text-xs text-muted mt-1">
+                Choose one of the built-in decorative PNGs to display above the quote.
+              </p>
             </div>
             {renderDecorativeFlowersSection()}
             {renderCurveDividers()}
-            <div className="mt-4 pt-4 border-t border-border">
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">Background Image URL</label>
-                <input
-                  type="text"
-                  value={componentData.backgroundImageUrl || ''}
-                  onChange={(e) => handleFieldUpdate('backgroundImageUrl', e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                  placeholder="https://..."
-                />
-                <p className="text-xs text-muted mt-1">Background image for the entire section</p>
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-primary">Background Color</label>
-                  <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-border">
-                    <button
-                      onClick={() => {
-                        if (!componentData.backgroundColor) {
-                          handleFieldUpdate('backgroundColor', '#ffffff');
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                        componentData.backgroundColor 
-                          ? 'bg-white text-primary shadow-sm border border-border' 
-                          : 'text-muted hover:text-primary'
-                      }`}
-                      type="button"
-                    >
-                      Color
-                    </button>
-                    <button
-                      onClick={() => handleFieldUpdate('backgroundColor', '')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                        !componentData.backgroundColor 
-                          ? 'bg-white text-primary shadow-sm border border-border' 
-                          : 'text-muted hover:text-primary'
-                      }`}
-                      type="button"
-                    >
-                      No Color
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={componentData.backgroundColor || '#ffffff'}
-                    onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
-                    className="w-10 h-10 border border-border rounded cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={componentData.backgroundColor || ''}
-                    onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
-                    placeholder="#ffffff"
-                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                  />
-                </div>
-                <p className="text-xs text-muted mt-1">If both image and color are set, color will overlay the image</p>
-              </div>
-            </div>
+            {renderBackgroundSection()}
           </>
         );
 
@@ -693,16 +837,6 @@ export default function SectionPropertiesPanel({
                   defaultValue="#374151"
                 />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Image URL</label>
-              <input
-                type="text"
-                value={componentData.imageUrl || ''}
-                onChange={(e) => handleFieldUpdate('imageUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                placeholder="https://..."
-              />
             </div>
             {renderDecorativeFlowersSection()}
             {renderCurveDividers()}
@@ -834,13 +968,30 @@ export default function SectionPropertiesPanel({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">Image URL</label>
-              <input
-                type="text"
-                value={componentData.imageUrl || ''}
-                onChange={(e) => handleFieldUpdate('imageUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                placeholder="https://..."
+              <label className="block text-sm font-medium text-primary mb-2">Profile Image</label>
+              <ImageFilePicker
+                images={componentData.imageUrl && componentData.imageUrl.trim()
+                  ? [{
+                      url: componentData.imageUrl,
+                      name: componentData.imageUrl.startsWith('data:')
+                        ? (componentData.profileImageName || 'Profile Image')
+                        : componentData.imageUrl.split('/').pop() || 'Profile Image',
+                    }]
+                  : []}
+                onImagesChange={(items) => {
+                  if (items.length > 0) {
+                    handleFieldUpdate('imageUrl', items[0].url);
+                    // Store the filename for data URLs so we can show it later
+                    if (items[0].url.startsWith('data:') && items[0].name) {
+                      handleFieldUpdate('profileImageName', items[0].name);
+                    }
+                  } else {
+                    handleFieldUpdate('imageUrl', '');
+                    handleFieldUpdate('profileImageName', '');
+                  }
+                }}
+                multiple={false}
+                label="Choose Image"
               />
             </div>
             {componentData.design === 'with-container' && (
@@ -1234,19 +1385,44 @@ export default function SectionPropertiesPanel({
         return (
           <>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">Images (URLs, one per line)</label>
-              <textarea
-                value={Array.isArray(componentData.images) 
-                  ? componentData.images.map((img: any) => img.url || img).join('\n')
-                  : ''}
-                onChange={(e) => {
-                  const urls = e.target.value.split('\n').filter(url => url.trim());
-                  handleFieldUpdate('images', urls.map((url, index) => ({ url, alt: `Image ${index + 1}`, order: index + 1 })));
+              <label className="block text-sm font-medium text-primary mb-2">Images</label>
+              <ImageFilePicker
+                images={Array.isArray(componentData.images)
+                  ? componentData.images.map((img: any, index: number) => {
+                      const url = img.url || img;
+                      const name = img.alt || img.name || (typeof url === 'string' && url.startsWith('data:') ? `Image ${index + 1}` : `Image ${index + 1}`);
+                      return { url, name };
+                    })
+                  : []}
+                onImagesChange={(items) => {
+                  handleFieldUpdate('images', items.map((item, index) => ({
+                    url: item.url,
+                    alt: item.name,
+                    order: index + 1,
+                  })));
                 }}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                rows={6}
-                placeholder="https://image1.jpg&#10;https://image2.jpg"
+                multiple={true}
+                label="Choose Image"
               />
+              <p className="text-xs text-muted mt-2">
+                Selected images will immediately appear in the carousel preview.
+              </p>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">Carousel Design</label>
+              <select
+                value={componentData.carouselDesign || 'classic'}
+                onChange={(e) => handleFieldUpdate('carouselDesign', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+              >
+                <option value="classic">Classic (Full Width)</option>
+                <option value="framed">Framed Card</option>
+                <option value="filmstrip">Filmstrip Thumbnails</option>
+                <option value="landscape">Landscape</option>
+              </select>
+              <p className="text-xs text-muted mt-1">
+                Choose how the carousel images are styled and displayed.
+              </p>
             </div>
             <div className="mt-4">
               <label className="flex items-center gap-2 text-sm font-medium text-primary">
@@ -1397,19 +1573,27 @@ export default function SectionPropertiesPanel({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">Images (URLs, one per line)</label>
-              <textarea
-                value={Array.isArray(componentData.images) 
-                  ? componentData.images.map((img: any) => img.url || img).join('\n')
-                  : ''}
-                onChange={(e) => {
-                  const urls = e.target.value.split('\n').filter(url => url.trim());
-                  handleFieldUpdate('images', urls.map((url, index) => ({ id: `gallery-${index + 1}`, url, alt: `Gallery ${index + 1}` })));
+              <label className="block text-sm font-medium text-primary mb-2">Gallery Images</label>
+              <ImageFilePicker
+                images={Array.isArray(componentData.images)
+                  ? componentData.images.map((img: any, index: number) => ({
+                      url: img.url || img,
+                      name: img.alt || img.name || `Gallery ${index + 1}`,
+                    }))
+                  : []}
+                onImagesChange={(items) => {
+                  handleFieldUpdate('images', items.map((item, index) => ({
+                    id: `gallery-${index + 1}`,
+                    url: item.url,
+                    alt: item.name,
+                  })));
                 }}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                rows={6}
-                placeholder="https://image1.jpg&#10;https://image2.jpg"
+                multiple={true}
+                label="Choose Image"
               />
+              <p className="text-xs text-muted mt-2">
+                Selected images will immediately appear in the gallery preview.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-primary mb-2">Columns</label>

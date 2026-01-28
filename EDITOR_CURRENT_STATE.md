@@ -12,7 +12,7 @@ This document describes the current state of the Stundea Studio wedding invitati
 - Sections are rendered using `TemplateRenderer` directly in the editor
 
 ### Editor Layout
-- **Left Sidebar**: Event Data panel (for editing project-level event details)
+- **Left Sidebar**: Background Music panel (for project-level audio upload and controls)
 - **Right Sidebar**: Section Properties Panel (for editing content and styles of the currently selected section)
 - **Main Canvas**: Displays all sections with hover overlay showing "Edit Content" and "Change Design" buttons
 - **No Navbar**: The editor page does not have a navbar
@@ -276,7 +276,7 @@ All sections support:
 
 4. **Color System**: All colors use hex values, stored as strings in component_data
 
-5. **Image Handling**: Images are stored as URLs (not uploaded - that's backend responsibility)
+5. **Image Handling**: Images are stored as URLs. Background and content images are selected via the editor and saved in `component_data`; actual file upload is handled by the backend (Supabase Storage).
 
 6. **Event Data Hierarchy**: Component-level event data (in EventDetails section) overrides project-level event data
 
@@ -451,4 +451,24 @@ The editor is fully functional for customizing invitation content and styles. Al
   - `app/lib/curveHelpers.tsx`: Curve divider rendering
 - **Section Count**: Reduced from 11 to 9 sections after consolidation
 - **Template Structure**: Updated to reflect new section order (1-9 instead of 1-11)
+
+### Background Music & Media Persistence
+- **Project-Level Background Music**:
+  - Left sidebar in `app/editor/[templateId]/page.tsx` is now dedicated to background music.
+  - Users can upload an audio file (e.g., MP3) via a styled "Pilih Musik Latar" button.
+  - Audio files are uploaded to Supabase Storage (bucket `music-bg`) via `POST /api/upload/audio` on the backend, which returns a public URL.
+  - The URL is stored in `ProjectData.background_music_url` and persisted via `PATCH /api/projects/:id`.
+  - `TemplateRenderer` (`app/components/invitation/TemplateRenderer.tsx`) plays this background music on invitation pages with a fixed play/pause button in the bottom-right corner.
+  - A "Hapus musik" action clears `background_music_url` in state and **immediately** persists the change via `persistProject`, ensuring deletions survive navigation without requiring an extra "Simpan" click.
+
+- **Immediate Persistence for Destructive Media Actions**:
+  - In `handleSectionFieldUpdate` (editor page), when a section field is cleared (`""` or `[]`), the editor:
+    - Clears the corresponding entry in `previewImages`.
+    - Clears the field in `project.component_data[sectionId][field]`.
+  - For single-image fields (`backgroundImageUrl` and `imageUrl`), these destructive clears now **immediately call `persistProject(updatedProject)`** (fire-and-forget) in addition to updating local state.
+  - This ensures that removing a background image or profile image truly updates the Supabase `projects` row even if:
+    - Auto-save is skipped (e.g., due to pending image data URLs in preview state).
+    - The user navigates away without manually clicking "Simpan".
+
+These changes ensure media (background music and single images) loads correctly when re-opening a project and that delete actions are durable across sessions.
 

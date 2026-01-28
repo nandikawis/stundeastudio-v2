@@ -4,25 +4,64 @@ import Image from "next/image";
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
+// Available decorative image styles for the quote section.
+// These map to PNG files stored in /public/quotedecorative.
+const QUOTE_DECORATIVE_IMAGES: Record<string, { src: string; alt: string }> = {
+  "baby-bread": {
+    src: "/quotedecorative/baby bread.png",
+    alt: "Baby bread decorative illustration",
+  },
+  "grey-and-white": {
+    src: "/quotedecorative/grey and white.png",
+    alt: "Grey and white decorative illustration",
+  },
+  "pink-and-yellow": {
+    src: "/quotedecorative/pink and yellow.png",
+    alt: "Pink and yellow decorative illustration",
+  },
+  "pink-bouquet": {
+    src: "/quotedecorative/pink bouquet.png",
+    alt: "Pink bouquet decorative illustration",
+  },
+  "pink-love": {
+    src: "/quotedecorative/pink love.png",
+    alt: "Pink love decorative illustration",
+  },
+  "white-teraccota": {
+    src: "/quotedecorative/white teraccota.png",
+    alt: "White terracotta decorative illustration",
+  },
+  white: {
+    src: "/quotedecorative/white.png",
+    alt: "White floral decorative illustration",
+  },
+};
+
+type QuoteDecorativeStyle = keyof typeof QUOTE_DECORATIVE_IMAGES;
+
 interface QuoteSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   quote?: string;
   author?: string;
-  imageUrl?: string;
+  // Use a named decorative style backed by /public/quotedecorative PNGs.
+  // We intentionally do NOT support arbitrary image URLs here anymore.
+  quoteDecorativeStyle?: QuoteDecorativeStyle;
   quoteColor?: string;
   authorColor?: string;
   backgroundColor?: string;
   backgroundImageUrl?: string;
+  backgroundImages?: Array<{ url: string; alt?: string; order?: number }> | string[];
   className?: string;
 }
 
 export default function QuoteSection({
   quote = "Ihaiva stam mā vi yaustam, Visvām āyur vyasnutam. Krindantau putrair naptrbhih, Modamānau sve grhe.\n\nWahai pasangan suami-isteri, semoga kalian tetap bersatu dan tidak pernah terpisahkan. Semoga kalian mencapai hidup penuh kebahagiaan, tinggal di rumah yang penuh kegembiraan bersama seluruh keturunanmu.",
   author = "Rg Veda X.85.42.",
-  imageUrl,
+  quoteDecorativeStyle,
   quoteColor,
   authorColor,
   backgroundColor,
   backgroundImageUrl,
+  backgroundImages,
   showTopCurve,
   showBottomCurve,
   topCurveColor,
@@ -33,11 +72,22 @@ export default function QuoteSection({
   flowerStyle = 'beage',
   className = ""
 }: QuoteSectionProps) {
+  // Extract background URL from array (like ImageCarousel) or fallback to legacy string
+  const firstBg = Array.isArray(backgroundImages) && backgroundImages.length > 0
+    ? backgroundImages[0]
+    : undefined;
+  const bgUrl =
+    typeof firstBg === "string"
+      ? firstBg
+      : firstBg && typeof firstBg === "object" && typeof firstBg.url === "string"
+        ? firstBg.url
+        : backgroundImageUrl || undefined;
+
   // Build background style for section
   const sectionStyle: React.CSSProperties = {};
   
-  if (backgroundImageUrl) {
-    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+  if (bgUrl) {
+    sectionStyle.backgroundImage = `url(${bgUrl})`;
     sectionStyle.backgroundSize = 'cover';
     sectionStyle.backgroundPosition = 'center';
     sectionStyle.backgroundRepeat = 'no-repeat';
@@ -55,7 +105,7 @@ export default function QuoteSection({
       style={sectionStyle}
     >
       {/* Color overlay if both image and color are set */}
-      {backgroundImageUrl && backgroundColor && (
+      {bgUrl && backgroundColor && (
         <div 
           className="absolute inset-0"
           style={{ backgroundColor, opacity: 0.5 }}
@@ -69,18 +119,16 @@ export default function QuoteSection({
         className="max-w-2xl mx-auto text-center relative z-10"
         style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
       >
-        {/* Decorative Image */}
-        {imageUrl && (
-          <div className="mb-8">
-            <div className="relative w-full max-w-xs mx-auto aspect-[505/1024]">
-              <Image
-                src={imageUrl}
-                alt="Decorative theme"
-                fill
-                className="object-contain"
-                sizes="(max-width: 505px) 100vw, 505px"
-              />
-            </div>
+        {/* Decorative Image from /public/quotedecorative (optional) */}
+        {quoteDecorativeStyle && QUOTE_DECORATIVE_IMAGES[quoteDecorativeStyle] && (
+          <div className="mb-4 flex justify-center">
+            <Image
+              src={QUOTE_DECORATIVE_IMAGES[quoteDecorativeStyle].src}
+              alt={QUOTE_DECORATIVE_IMAGES[quoteDecorativeStyle].alt}
+              width={120}
+              height={160}
+              className="object-contain"
+            />
           </div>
         )}
 

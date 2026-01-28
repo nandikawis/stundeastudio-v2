@@ -15,6 +15,7 @@ interface CoverSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   quoteColor?: string;
   backgroundColor?: string;
   backgroundImageUrl?: string;
+  backgroundImages?: Array<{ url: string; alt?: string; order?: number }> | string[];
   className?: string;
 }
 
@@ -28,6 +29,7 @@ export default function CoverSection({
   quoteColor,
   backgroundColor,
   backgroundImageUrl,
+  backgroundImages,
   showTopCurve,
   showBottomCurve,
   topCurveColor,
@@ -40,11 +42,22 @@ export default function CoverSection({
 }: CoverSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Extract background URL from array (like ImageCarousel) or fallback to legacy string
+  const firstBg = Array.isArray(backgroundImages) && backgroundImages.length > 0
+    ? backgroundImages[0]
+    : undefined;
+  const bgUrl =
+    typeof firstBg === "string"
+      ? firstBg
+      : firstBg && typeof firstBg === "object" && typeof firstBg.url === "string"
+        ? firstBg.url
+        : backgroundImageUrl || undefined;
+
   // Build background style for section
   const sectionStyle: React.CSSProperties = {};
   
-  if (backgroundImageUrl) {
-    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+  if (bgUrl) {
+    sectionStyle.backgroundImage = `url(${bgUrl})`;
     sectionStyle.backgroundSize = 'cover';
     sectionStyle.backgroundPosition = 'center';
     sectionStyle.backgroundRepeat = 'no-repeat';
@@ -61,7 +74,7 @@ export default function CoverSection({
       style={sectionStyle}
     >
       {/* Color overlay if both image and color are set */}
-      {backgroundImageUrl && backgroundColor && (
+      {bgUrl && backgroundColor && (
         <div 
           className="absolute inset-0"
           style={{ backgroundColor, opacity: 0.5 }}

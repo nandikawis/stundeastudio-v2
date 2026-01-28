@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
 interface HeroSectionProps extends DecorativeFlowersProps {
   subtitle?: string;
   coupleNames?: string;
   quote?: string;
+  /** Slideshow images only; no single-image background. */
   backgroundImages?: string[];
   subtitleColor?: string;
   coupleNamesColor?: string;
   quoteColor?: string;
   backgroundColor?: string;
-  backgroundImageUrl?: string;
   curveColor?: string;
   topCurveColor?: string;
   showTopCurve?: boolean;
@@ -32,7 +31,6 @@ export default function HeroSection({
   coupleNamesColor,
   quoteColor,
   backgroundColor,
-  backgroundImageUrl,
   curveColor,
   topCurveColor,
   showTopCurve = true,
@@ -63,17 +61,13 @@ export default function HeroSection({
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
-  // Build background style for section (only if no backgroundImages array)
+  // When no slideshow images, use backgroundColor or default gradient (no single-image background)
   const sectionStyle: React.CSSProperties = {};
-  
   if (!backgroundImages?.length) {
-    if (backgroundImageUrl) {
-      sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
-      sectionStyle.backgroundSize = 'cover';
-      sectionStyle.backgroundPosition = 'center';
-      sectionStyle.backgroundRepeat = 'no-repeat';
-    } else if (backgroundColor) {
+    if (backgroundColor) {
       sectionStyle.backgroundColor = backgroundColor;
+    } else {
+      sectionStyle.background = 'linear-gradient(to bottom, #111827, #1f2937, #111827)';
     }
   }
 
@@ -82,13 +76,6 @@ export default function HeroSection({
       className={`relative min-h-screen w-full flex items-end justify-center overflow-hidden ${className}`}
       style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
     >
-      {/* Color overlay if both image and color are set (and no backgroundImages array) */}
-      {!backgroundImages?.length && backgroundImageUrl && backgroundColor && (
-        <div 
-          className="absolute inset-0 z-0"
-          style={{ backgroundColor, opacity: 0.5 }}
-        />
-      )}
       {/* Background Slideshow with Ken Burns Effect */}
       {backgroundImages.length > 0 && (
         <div className="absolute inset-0 z-0">

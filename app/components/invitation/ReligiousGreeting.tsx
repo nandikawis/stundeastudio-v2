@@ -1,28 +1,27 @@
 "use client";
 
-import Image from "next/image";
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 
 interface ReligiousGreetingProps extends CurveDividerProps, DecorativeFlowersProps {
   greeting?: string;
   message?: string;
-  imageUrl?: string;
   greetingColor?: string;
   messageColor?: string;
   backgroundColor?: string;
   backgroundImageUrl?: string;
+  backgroundImages?: Array<{ url: string; alt?: string; order?: number }> | string[];
   className?: string;
 }
 
 export default function ReligiousGreeting({
   greeting = "Om Swastyastu",
   message = "Atas Asung Kertha Wara Nugraha Ida Sang Hyang Widhi Wasa/Tuhan Yang Maha Esa kami bermaksud mengundang Bapak/Ibu/Saudara/i pada Upacara Manusa Yadnya Pawiwahan (Pernikahan) putra-putri kami.",
-  imageUrl,
   greetingColor,
   messageColor,
   backgroundColor,
   backgroundImageUrl,
+  backgroundImages,
   showTopCurve = true,
   showBottomCurve,
   topCurveColor,
@@ -33,11 +32,22 @@ export default function ReligiousGreeting({
   flowerStyle = 'beage',
   className = ""
 }: ReligiousGreetingProps) {
+  // Extract background URL from array (like ImageCarousel) or fallback to legacy string
+  const firstBg = Array.isArray(backgroundImages) && backgroundImages.length > 0
+    ? backgroundImages[0]
+    : undefined;
+  const bgUrl =
+    typeof firstBg === "string"
+      ? firstBg
+      : firstBg && typeof firstBg === "object" && typeof firstBg.url === "string"
+        ? firstBg.url
+        : backgroundImageUrl || undefined;
+
   // Build background style for section
   const sectionStyle: React.CSSProperties = {};
   
-  if (backgroundImageUrl) {
-    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+  if (bgUrl) {
+    sectionStyle.backgroundImage = `url(${bgUrl})`;
     sectionStyle.backgroundSize = 'cover';
     sectionStyle.backgroundPosition = 'center';
     sectionStyle.backgroundRepeat = 'no-repeat';
@@ -49,11 +59,11 @@ export default function ReligiousGreeting({
 
   return (
     <section 
-      className={`py-16 px-6 w-full relative ${className}`}
+      className={`py-12 px-6 w-full relative ${className}`}
       style={sectionStyle}
     >
       {/* Color overlay if both image and color are set */}
-      {backgroundImageUrl && backgroundColor && (
+      {bgUrl && backgroundColor && (
         <div 
           className="absolute inset-0"
           style={{ backgroundColor, opacity: 0.5 }}
@@ -65,31 +75,16 @@ export default function ReligiousGreeting({
       {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
 
       <div 
-        className="relative z-10 max-w-2xl mx-auto text-center"
+        className="relative z-10 max-w-2xl mx-auto text-center px-2"
         style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
       >
-        {/* Om Swastyastu Image */}
-        {imageUrl && (
-          <div className="mb-8">
-            <div className="relative w-full max-w-md mx-auto aspect-[1140/581]">
-              <Image
-                src={imageUrl}
-                alt={greeting}
-                fill
-                className="object-contain"
-                sizes="(max-width: 1140px) 100vw, 1140px"
-              />
-            </div>
-          </div>
-        )}
-
         {/* Greeting Heading */}
-        <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ fontFamily: "var(--font-playfair)", color: greetingColor || "#1f2937" }}>
+        <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ fontFamily: "var(--font-playfair)", color: greetingColor || "#1f2937" }}>
           {greeting}
         </h2>
 
         {/* Message */}
-        <p className="text-base md:text-lg leading-relaxed px-4" style={{ fontFamily: "var(--font-dm-sans)", color: messageColor || "#374151" }}>
+        <p className="text-sm md:text-base leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: messageColor || "#374151" }}>
           {message}
         </p>
       </div>

@@ -21,6 +21,8 @@ interface ImageCarouselProps extends CurveDividerProps, DecorativeFlowersProps {
   isEditable?: boolean;
   backgroundColor?: string;
   backgroundImageUrl?: string;
+  // Carousel design style
+  carouselDesign?: "classic" | "framed" | "filmstrip" | "landscape";
   // Countdown timer props
   countdownTargetDate?: string;
   countdownDesign?: "simple" | "elegant-card" | "minimal";
@@ -57,6 +59,7 @@ export default function ImageCarousel({
   bottomCurveStyle,
   decorativeFlowers = false,
   flowerStyle = 'beage',
+  carouselDesign = "classic",
   countdownTargetDate,
   countdownDesign = "elegant-card",
   countdownShowDays = true,
@@ -72,6 +75,9 @@ export default function ImageCarousel({
   dateMessageDateColor,
   dateMessageTextColor
 }: ImageCarouselProps) {
+  // Normalize legacy "minimal" (from saved project data) to "landscape"
+  const carouselDesignResolved =
+    ((carouselDesign as string) === "minimal" ? "landscape" : carouselDesign) ?? "classic";
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -132,7 +138,16 @@ export default function ImageCarousel({
   };
 
   // Show placeholder slots when editable or when empty
-  const displayImages = images.length > 0 ? images : [];
+  // Filter out images with obviously invalid/empty URLs to avoid runtime URL errors.
+  const displayImages = images.length > 0 
+    ? images.filter((image) => {
+        if (!image || typeof image.url !== "string") return false;
+        const trimmed = image.url.trim();
+        if (!trimmed) return false;
+        // Allow absolute URLs, root-relative paths, and data: URLs (editor preview from "select file")
+        return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/") || trimmed.startsWith("data:");
+      })
+    : [];
   const placeholderSlots = isEditable && images.length === 0 ? 3 : 0;
 
   // Build background style for section
@@ -169,7 +184,17 @@ export default function ImageCarousel({
         className="max-w-6xl mx-auto relative z-10"
         style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
       >
-        <div className="relative w-full h-[400px] overflow-hidden rounded-lg">
+        <div
+          className={`relative w-full overflow-hidden flex-none ${
+            carouselDesignResolved === "framed"
+              ? "h-[360px] rounded-2xl bg-white/90 shadow-xl p-2"
+              : carouselDesignResolved === "filmstrip"
+              ? "h-[340px] rounded-lg"
+              : carouselDesignResolved === "landscape"
+              ? "h-[220px] rounded-lg"
+              : "h-[400px] rounded-lg"
+          }`}
+        >
           {displayImages.length > 0 ? (
             <>
               {/* Images */}
@@ -217,7 +242,7 @@ export default function ImageCarousel({
               )}
 
               {/* Dots Indicator */}
-              {showDots && displayImages.length > 1 && (
+              {showDots && carouselDesignResolved !== "filmstrip" && carouselDesignResolved !== "landscape" && displayImages.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                   {displayImages.map((_, index) => (
                     <button
@@ -230,6 +255,29 @@ export default function ImageCarousel({
                       }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />
+                  ))}
+                </div>
+              )}
+              {/* Filmstrip / Landscape thumbnails style */}
+              {(carouselDesignResolved === "filmstrip" || carouselDesignResolved === "landscape") && displayImages.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 bg-black/30 px-3 py-2 rounded-full backdrop-blur-sm">
+                  {displayImages.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSlide(index)}
+                      className={`relative w-10 h-10 rounded-md overflow-hidden border transition-all ${
+                        index === currentIndex ? "border-white shadow-md scale-100" : "border-white/40 opacity-70 scale-95"
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    >
+                      <Image
+                        src={image.url}
+                        alt={image.alt || `Thumbnail ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    </button>
                   ))}
                 </div>
               )}

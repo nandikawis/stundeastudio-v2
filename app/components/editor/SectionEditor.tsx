@@ -16,6 +16,9 @@ interface SectionEditorProps {
     venueName?: string;
     venueAddress?: string;
   };
+  // Preview-only image data, keyed by section ID. Allows showing local
+  // data URLs without persisting them in ProjectData/localStorage.
+  previewImages?: Record<string, { backgroundImageUrl?: string; backgroundImages?: Array<{ url: string; alt?: string; order?: number }>; imageUrl?: string; images?: any[] }>;
 }
 
 export default function SectionEditor({
@@ -23,7 +26,8 @@ export default function SectionEditor({
   onUpdateProject,
   onSelectSection,
   selectedSectionId: externalSelectedSectionId,
-  eventData
+  eventData,
+  previewImages,
 }: SectionEditorProps) {
   const [internalSelectedSectionId, setInternalSelectedSectionId] = useState<string | null>(null);
   const [showDesignPicker, setShowDesignPicker] = useState(false);
@@ -90,14 +94,22 @@ export default function SectionEditor({
         }
 
         const componentData = project.component_data[componentConfig.id] || {};
+        const preview = previewImages?.[componentConfig.id] || {};
+
+        // Merge preview data (e.g. data URL images) over persisted component_data
+        const mergedData = {
+          ...componentData,
+          ...preview,
+        };
+
         const props = {
           ...componentConfig.config,
-          ...componentData,
-          // For EventDetails, prioritize component_data over project-level data
-          eventDate: componentData.eventDate || eventData?.eventDate || project.event_date,
-          eventTime: componentData.eventTime || eventData?.eventTime || project.event_time,
-          venueName: componentData.venueName || eventData?.venueName || project.venue_name,
-          venueAddress: componentData.venueAddress || eventData?.venueAddress || project.venue_address,
+          ...mergedData,
+          // For EventDetails, prioritize mergedData over project-level data
+          eventDate: (mergedData as any).eventDate || eventData?.eventDate || project.event_date,
+          eventTime: (mergedData as any).eventTime || eventData?.eventTime || project.event_time,
+          venueName: (mergedData as any).venueName || eventData?.venueName || project.venue_name,
+          venueAddress: (mergedData as any).venueAddress || eventData?.venueAddress || project.venue_address,
         };
 
         return (

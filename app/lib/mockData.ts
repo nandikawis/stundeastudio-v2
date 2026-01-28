@@ -11,7 +11,8 @@ export interface ComponentConfig {
 export interface ProjectData {
   id: string;
   user_id: string;
-  template_type: string;
+  template_type?: string;
+  template_slug?: string;
   name: string;
   slug: string;
   status: 'draft' | 'published' | 'archived';
@@ -22,6 +23,7 @@ export interface ProjectData {
   venue_name?: string;
   venue_address?: string;
   venue_coordinates?: { lat: number; lng: number };
+  background_music_url?: string;
   is_active: boolean;
   published_at?: string;
   expires_at?: string;

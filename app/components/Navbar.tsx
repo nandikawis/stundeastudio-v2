@@ -3,11 +3,20 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { setAccessToken, getAccessToken } from "../lib/api";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const ticking = useRef(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState<any | null>(null);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -23,6 +32,64 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const logout = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/signout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (response.ok) {
+        setAccessToken(null);
+        localStorage.removeItem("user_uuid");
+        localStorage.removeItem("user_data");
+        setIsLoggedIn(false);
+        setUserData(null);
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+      setAccessToken(null);
+      localStorage.removeItem("user_uuid");
+      localStorage.removeItem("user_data");
+      setIsLoggedIn(false);
+      setUserData(null);
+    }
+  };
+
+  const checkLoginStatus = async () => {
+    try {
+      const token = getAccessToken();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      const response = await fetch(`${API_URL}/api/auth/check-session`, {
+        credentials: "include",
+        headers,
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setIsLoggedIn(true);
+        setUserData(data.data.user);
+        localStorage.setItem("user_uuid", data.data.user.id);
+        localStorage.setItem("user_data", JSON.stringify(data.data.user));
+        if (data.data.session?.access_token) {
+          setAccessToken(data.data.session.access_token);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUserData(null);
+        setAccessToken(null);
+        localStorage.removeItem("user_uuid");
+        localStorage.removeItem("user_data");
+      }
+    } catch (error) {
+      console.error("Error checking session:", error);
+      setIsLoggedIn(false);
+      setUserData(null);
+      setAccessToken(null);
+      localStorage.removeItem("user_uuid");
+      localStorage.removeItem("user_data");
+    }
+  };
   // Rounded corners: pill before scroll, square after
   const borderRadius = scrolled ? "0px" : "999px";
   const borderRadiusMd = scrolled ? "0px" : "999px";
@@ -122,7 +189,7 @@ export default function Navbar() {
 
                   {/* CTA Button */}
                   <Link
-                    href="/pricing"
+                    href="/login"
                     className="px-5 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/20"
                   >
                     Mulai Sekarang
@@ -210,7 +277,7 @@ export default function Navbar() {
                       Kontak
                     </Link>
                     <Link
-                      href="/pricing"
+                      href="/login"
                       onClick={() => setMenuOpen(false)}
                       className="block py-2 px-3 mt-2 text-center bg-primary text-white rounded-full font-medium hover:bg-primary-light transition-colors"
                     >

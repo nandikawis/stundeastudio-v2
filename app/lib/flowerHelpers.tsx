@@ -22,7 +22,7 @@ export const renderDecorativeFlowers = (props: DecorativeFlowersProps): React.Re
     <>
       {/* Top-left decorative flowers */}
       <div 
-        className="absolute left-0 w-48 h-48 opacity-60 pointer-events-none z-[5]"
+        className="absolute left-0 w-36 h-36 opacity-60 pointer-events-none z-[5]"
         style={{ top: 0, marginTop: topMargin }}
       >
         <img 
@@ -34,7 +34,7 @@ export const renderDecorativeFlowers = (props: DecorativeFlowersProps): React.Re
       
       {/* Bottom-right decorative flowers */}
       <div 
-        className="absolute right-0 w-48 h-48 opacity-50 pointer-events-none z-[5]"
+        className="absolute right-0 w-36 h-36 opacity-50 pointer-events-none z-[5]"
         style={{ bottom: 0, marginBottom: bottomMargin }}
       >
         <img 
