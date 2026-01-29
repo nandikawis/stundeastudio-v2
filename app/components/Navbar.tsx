@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { setAccessToken, getAccessToken } from "../lib/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);

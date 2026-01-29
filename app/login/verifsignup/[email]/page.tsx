@@ -14,6 +14,7 @@ export default function VerifSignupPage(): React.JSX.Element {
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
   const [mounted, setMounted] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     setMounted(true);
@@ -38,7 +39,7 @@ export default function VerifSignupPage(): React.JSX.Element {
   const resendVerificationEmail = async () => {
     try {
       console.log("DEBUG theemail:", theemail);
-      await fetch(`http://localhost:4000/api/auth/send-verification-email`, {
+      await fetch(`${API_URL}/api/auth/send-verification-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,7 +55,7 @@ export default function VerifSignupPage(): React.JSX.Element {
 
   const handleSubmit = async (verificationCode: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/auth/verify-otp`, {
+      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

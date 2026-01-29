@@ -85,6 +85,7 @@ const styles = `
 const darkGold = "var(--accent-dark)";
 const darkGoldHover = "var(--accent)";
 const textDarkGold = "var(--accent-dark)";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Login() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -140,7 +141,7 @@ export default function Login() {
 
   const handleLogin = async (values: typeof loginFormData) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/auth/signin`, {
+      const response = await fetch(`${API_URL}/api/auth/signin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -180,7 +181,7 @@ export default function Login() {
     values: typeof formData,
   ) => {
     try { 
-      const signupResponse = await fetch(`http://localhost:4000/api/auth/signup`, {
+      const signupResponse = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
