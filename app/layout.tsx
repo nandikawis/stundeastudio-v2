@@ -16,8 +16,42 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Stundea Studio | Undangan Pernikahan Digital",
-  description: "Buat undangan pernikahan digital yang elegan dan terjangkau. Platform pembuatan undangan pernikahan online terbaik di Indonesia.",
-  keywords: ["undangan pernikahan", "undangan digital", "wedding invitation", "undangan online", "stundea studio"],
+  description:
+    "Buat undangan pernikahan digital yang elegan dan terjangkau. Platform pembuatan undangan pernikahan online terbaik di Indonesia.",
+  keywords: [
+    "undangan pernikahan",
+    "undangan digital",
+    "wedding invitation",
+    "undangan online",
+    "stundea studio",
+  ],
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Stundea Studio | Undangan Pernikahan Digital",
+    description:
+      "Buat undangan pernikahan digital yang elegan dan terjangkau. Platform pembuatan undangan pernikahan online terbaik di Indonesia.",
+    siteName: "Stundea Studio",
+    type: "website",
+    images: [
+      {
+        url: "/stundea-studio-og.png",
+        width: 1000,
+        height: 1000,
+        alt: "Stundea Studio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Stundea Studio | Undangan Pernikahan Digital",
+    description:
+      "Buat undangan pernikahan digital yang elegan dan terjangkau. Platform pembuatan undangan pernikahan online terbaik di Indonesia.",
+    images: ["/stundea-studio-og.png"],
+  },
 };
 
 export default function RootLayout({
