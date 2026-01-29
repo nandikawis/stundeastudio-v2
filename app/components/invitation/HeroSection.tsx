@@ -114,8 +114,10 @@ export default function HeroSection({
                 className="absolute inset-0 bg-cover bg-center animate-ken-burns"
                 style={{
                   backgroundImage: `url(${image})`,
-                  backgroundSize: "120%",
-                  backgroundPosition: "center"
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat"
+                  
                 }}
               />
               {/* Overlay for text readability */}

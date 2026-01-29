@@ -133,7 +133,7 @@ export default function SectionEditor({
                 {/* Hover background - non-blocking */}
                 <div className="absolute inset-0 bg-transparent group-hover:bg-accent/5 transition-all pointer-events-none z-40" />
                 {/* Edit buttons - only these are interactive */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-50 pointer-events-auto">
+                <div className="absolute top-2 right-2 opacity-100 group-hover:opacity-100 transition-opacity flex gap-2 z-50 pointer-events-auto">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
