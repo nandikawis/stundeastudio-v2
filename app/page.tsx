@@ -375,117 +375,77 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-            {/* Contact Info */}
-            <div>
-              <span className="text-accent-dark text-sm font-medium uppercase tracking-wider">Hubungi Kami</span>
-              <h2 
-                className="text-3xl md:text-4xl font-bold text-primary mt-3 mb-6"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                Ada Pertanyaan?
-              </h2>
-              <p className="text-muted mb-8 leading-relaxed">
-                Tim kami siap membantu Anda. Jangan ragu untuk menghubungi kami jika ada pertanyaan seputar layanan atau fitur Stundea Studio.
-              </p>
+      <section id="contact" className="relative py-24 bg-background overflow-hidden">
+        {/* Animated background (optional: add Plasma here later if desired) */}
 
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-primary">Email</div>
-                    <div className="text-muted">hello@stundeastudio.com</div>
-                  </div>
-                </div>
+        {/* Content */}
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span className="text-accent-dark text-sm font-medium uppercase tracking-wider">
+              Hubungi Kami
+            </span>
+            <h2
+              className="text-3xl md:text-4xl font-bold text-primary mt-3 mb-4"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              Ada Pertanyaan?
+            </h2>
+            <p className="text-muted max-w-2xl mx-auto leading-relaxed">
+              Tim kami siap membantu Anda. Pilih cara komunikasi yang paling nyaman bagi Anda untuk
+              terhubung dengan Stundea Studio.
+            </p>
+          </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-primary">WhatsApp</div>
-                    <div className="text-muted">+62 812 3456 7890</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-primary">Jam Operasional</div>
-                    <div className="text-muted">Senin - Sabtu, 09:00 - 18:00 WIB</div>
-                  </div>
-                </div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-primary">Email</div>
+                <div className="text-muted text-sm">connect@stundeastudio.com</div>
               </div>
             </div>
 
-            {/* Contact Form */}
-            <div className="bg-white p-8 rounded-2xl border border-border">
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-primary mb-2">
-                      Nama Lengkap
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      className="w-full px-4 py-3 rounded-xl border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                      placeholder="Nama Anda"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      className="w-full px-4 py-3 rounded-xl border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                      placeholder="email@anda.com"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-primary mb-2">
-                    Subjek
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    className="w-full px-4 py-3 rounded-xl border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                    placeholder="Subjek pesan"
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                   />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-primary mb-2">
-                    Pesan
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={5}
-                    className="w-full px-4 py-3 rounded-xl border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all resize-none"
-                    placeholder="Tulis pesan Anda..."
+                </svg>
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-primary">WhatsApp</div>
+                <div className="text-muted text-sm">+62 812 3456 7890</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full px-8 py-4 bg-primary text-white rounded-xl font-medium hover:bg-primary-light transition-all hover:shadow-lg"
-                >
-                  Kirim Pesan
-                </button>
-              </form>
+                </svg>
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-primary">Jam Operasional</div>
+                <div className="text-muted text-sm">Senin - Sabtu, 09:00 - 18:00 WIB</div>
+              </div>
             </div>
           </div>
         </div>

@@ -83,12 +83,18 @@ export default function ImageCarousel({
   const carouselDesignResolved =
     ((carouselDesign as string) === "minimal" ? "landscape" : carouselDesign) ?? "classic";
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0
   });
+
+  // Avoid hydration mismatch: countdown uses Date so we only render it after client mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto-play functionality
   useEffect(() => {
@@ -354,8 +360,8 @@ export default function ImageCarousel({
           </div>
         )}
 
-        {/* Countdown Timer - Below carousel */}
-        {countdownTargetDate && (() => {
+        {/* Countdown Timer - Below carousel (client-only to avoid hydration mismatch with Date) */}
+        {mounted && countdownTargetDate && (() => {
           const timeUnits = [
             { label: "Hari", value: timeLeft.days, show: countdownShowDays },
             { label: "Jam", value: timeLeft.hours, show: countdownShowHours },

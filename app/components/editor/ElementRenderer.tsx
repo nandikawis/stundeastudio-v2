@@ -119,6 +119,7 @@ export default function ElementRenderer({
               autoplayInterval={element.content?.autoplayInterval || 5000}
               className="w-full h-full"
               isEditable={false}
+              carouselDesign={element.content?.carouselDesign || "classic"}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
               countdownTargetDate={element.content?.countdownTargetDate || eventData?.eventDate}

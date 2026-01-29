@@ -86,9 +86,22 @@ export default function TemplateRenderer({
 
   const buildProps = (componentConfig: (typeof sortedComponents)[0]) => {
     const componentData = project.component_data[componentConfig.id] || {};
+    // Ensure image-carousel always has Date & Message and Countdown when missing (e.g. old projects or Elegant/Refined/Minimal)
+    const defaultDateMessage = "Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu di hari yang berbahagia.";
+    const imageCarouselDefaults =
+      componentConfig.id === "image-carousel"
+        ? {
+            dateMessageDate: (componentData as Record<string, unknown>).dateMessageDate ?? "31.12.2026",
+            dateMessageText: (componentData as Record<string, unknown>).dateMessageText ?? defaultDateMessage,
+            countdownTargetDate: (componentData as Record<string, unknown>).countdownTargetDate ?? "2026-12-31T08:00:00.000Z",
+            dateMessageDateAlign: (componentData as Record<string, unknown>).dateMessageDateAlign ?? "center",
+            dateMessageTextAlign: (componentData as Record<string, unknown>).dateMessageTextAlign ?? "center",
+          }
+        : {};
     const base = {
       ...componentConfig.config,
       ...componentData,
+      ...imageCarouselDefaults,
       eventDate: componentData.eventDate || project.event_date,
       eventTime: componentData.eventTime || project.event_time,
       venueName: componentData.venueName || project.venue_name,
