@@ -15,6 +15,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://stundeastudio.com"),
   title: "Stundea Studio | Undangan Pernikahan Digital",
   description:
     "Buat undangan pernikahan digital yang elegan dan terjangkau. Platform pembuatan undangan pernikahan online terbaik di Indonesia.",

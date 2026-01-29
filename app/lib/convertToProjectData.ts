@@ -66,6 +66,7 @@ function mapElementTypeToComponentType(type: EditorElement['type']): string {
     'image': 'HeroImage',
     'shape': 'BlankSection',
     'carousel': 'ImageCarousel',
+    'countdown': 'CountdownTimer',
     'section': 'HeroSection',
     'blank': 'BlankSection',
     // New Bayu & Nia style components

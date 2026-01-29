@@ -1,18 +1,33 @@
 import TemplateRenderer from "@/app/components/invitation/TemplateRenderer";
-import { ProjectData } from "@/app/lib/mockData";
+import {
+  getProjectBySlug,
+  getProjectById,
+  type ProjectData,
+} from "@/app/lib/mockData";
 
-interface ModernElegantTemplateProps {
-  project: ProjectData;
-  guestName?: string;
-}
+// Static preview page for the Modern Elegant template using mock project data
+export default function ModernElegantTemplatePage() {
+  // Prefer a modern-elegant style project if available, otherwise fall back to project-1
+  const candidateProject: ProjectData | undefined =
+    getProjectBySlug("bayu-nia-wedding") ??
+    getProjectBySlug("bayu-nia-mobile-001") ??
+    getProjectById("project-1");
 
-// This is a template component - it uses the TemplateRenderer
-// In the future, you can customize this template's layout/styling
-export default function ModernElegantTemplate({ project, guestName }: ModernElegantTemplateProps) {
+  if (!candidateProject) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted">
+          Preview data for the Modern Elegant template is not available.
+        </p>
+      </main>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <TemplateRenderer project={project} guestName={guestName} />
-    </div>
+    <main className="min-h-screen bg-background">
+      <TemplateRenderer project={candidateProject} />
+    </main>
   );
 }
+
 
