@@ -45,6 +45,7 @@ interface CoupleProfileProps extends CurveDividerProps, DecorativeFlowersProps {
   addressColor?: string;
   backgroundColor?: string;
   backgroundImageUrl?: string;
+  backgroundImages?: Array<{ url: string; alt?: string; order?: number }> | string[];
   decorativeFlowers?: boolean;
   flowerStyle?: 'red' | 'beage' | 'pink' | 'white';
   className?: string;
@@ -78,6 +79,7 @@ export default function CoupleProfile({
   addressColor,
   backgroundColor,
   backgroundImageUrl,
+  backgroundImages,
   decorativeFlowers = false,
   flowerStyle = 'beage',
   showTopCurve,
@@ -103,19 +105,28 @@ export default function CoupleProfile({
         return "text-center";
     }
   };
+  const firstBg = Array.isArray(backgroundImages) && backgroundImages.length > 0
+  ? backgroundImages[0]
+  : undefined;
+const bgUrl =
+  typeof firstBg === "string"
+    ? firstBg
+    : firstBg && typeof firstBg === "object" && typeof firstBg.url === "string"
+      ? firstBg.url
+      : backgroundImageUrl || undefined;
 
   // Build background style for section
   const sectionStyle: React.CSSProperties = {};
   
-  if (backgroundImageUrl) {
-    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
+  if (bgUrl) {
+    sectionStyle.backgroundImage = `url(${bgUrl})`;
     sectionStyle.backgroundSize = 'cover';
     sectionStyle.backgroundPosition = 'center';
     sectionStyle.backgroundRepeat = 'no-repeat';
   } else if (backgroundColor) {
     sectionStyle.backgroundColor = backgroundColor;
   } else {
-    sectionStyle.backgroundColor = '#ffffff';
+    sectionStyle.background = 'linear-gradient(to bottom, #ffffff, #f9fafb, #ffffff)';
   }
 
   return (
