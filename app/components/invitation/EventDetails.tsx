@@ -20,6 +20,9 @@ interface EventDetailsProps extends CurveDividerProps, DecorativeFlowersProps {
   invitationMessageColor?: string;
   closingMessage?: string;
   closingText?: string; // "Om Shanti Shanti Shanti Om"
+  invitationMessageAlign?: "left" | "center" | "right" | "justify";
+  closingMessageAlign?: "left" | "center" | "right" | "justify";
+  closingTextAlign?: "left" | "center" | "right" | "justify";
   dateMonthYearColor?: string;
   dateDayColor?: string;
   titleColor?: string;
@@ -53,6 +56,9 @@ export default function EventDetails({
   invitationMessageColor,
   closingMessage = "Atas kehadiran dan doa restunya kami ucapkan terimakasih.",
   closingText = "Om Shanti Shanti Shanti Om",
+  invitationMessageAlign = "center",
+  closingMessageAlign = "center",
+  closingTextAlign = "center",
   dateMonthYearColor,
   dateDayColor,
   titleColor,
@@ -135,6 +141,20 @@ export default function EventDetails({
     sectionStyle.background = 'linear-gradient(to bottom, #ffffff, #f9fafb, #ffffff)';
   }
 
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      case "center":
+      default:
+        return "text-center";
+    }
+  };
+
   // Helper function to convert hex to rgba with opacity
   const hexToRgba = (hex: string | undefined, opacity: number): string => {
     if (!hex) return `rgba(255, 255, 255, ${opacity})`;
@@ -192,8 +212,11 @@ export default function EventDetails({
           <div className="max-w-sm mx-auto relative z-10 px-4">
             {/* Invitation Message - Above card */}
             {invitationMessage && (
-              <div className="mb-6 text-center">
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+              <div className={`mb-6 ${mapAlignToClass(invitationMessageAlign)}`}>
+                <p
+                  className="text-base leading-relaxed break-words"
+                  style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}
+                >
                   {invitationMessage}
                 </p>
               </div>
@@ -255,7 +278,7 @@ export default function EventDetails({
             {renderMapButton()}
 
             {/* Closing Message - Below card on background (two lines) */}
-            <div className="text-center px-2">
+            <div className={`px-2 ${mapAlignToClass(closingMessageAlign)}`}>
               {closingMessage.includes('terimakasih') ? (
                 <>
                   <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
@@ -270,7 +293,10 @@ export default function EventDetails({
                   {closingMessage}
                 </p>
               )}
-              <h5 className="text-base font-semibold text-white drop-shadow-md" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || "#ffffff" }}>
+              <h5
+                className={`text-base font-semibold text-white drop-shadow-md ${mapAlignToClass(closingTextAlign)}`}
+                style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || "#ffffff" }}
+              >
                 {closingText}
               </h5>
             </div>
@@ -282,7 +308,7 @@ export default function EventDetails({
           <div className="max-w-sm mx-auto relative z-10 px-4">
             {/* Invitation Message - Above card */}
             {invitationMessage && (
-              <div className="mb-6 text-center">
+              <div className={`mb-6 ${mapAlignToClass(invitationMessageAlign)}`}>
                 <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
                   {invitationMessage}
                 </p>
@@ -351,11 +377,14 @@ export default function EventDetails({
             {renderMapButton()}
 
             {/* Closing Message */}
-            <div className="text-center px-2">
+            <div className={`px-2 ${mapAlignToClass(closingMessageAlign)}`}>
               <p className="text-sm mb-2 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || undefined }}>
                 {closingMessage}
               </p>
-              <h5 className="text-base font-semibold text-white drop-shadow-md" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}>
+              <h5
+                className={`text-base font-semibold text-white drop-shadow-md ${mapAlignToClass(closingTextAlign)}`}
+                style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}
+              >
                 {closingText}
               </h5>
             </div>
@@ -367,7 +396,7 @@ export default function EventDetails({
           <div className="max-w-sm mx-auto relative z-10 px-4">
             {/* Invitation Message - Above card */}
             {invitationMessage && (
-              <div className="mb-6 text-center">
+              <div className={`mb-6 ${mapAlignToClass(invitationMessageAlign)}`}>
                 <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
                   {invitationMessage}
                 </p>
@@ -428,11 +457,14 @@ export default function EventDetails({
             {renderMapButton()}
 
             {/* Closing Message */}
-            <div className="text-center px-2">
+            <div className={`px-2 ${mapAlignToClass(closingMessageAlign)}`}>
               <p className="text-sm mb-2 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || undefined }}>
                 {closingMessage}
               </p>
-              <h5 className="text-base font-semibold text-white drop-shadow-md" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}>
+              <h5
+                className={`text-base font-semibold text-white drop-shadow-md ${mapAlignToClass(closingTextAlign)}`}
+                style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}
+              >
                 {closingText}
               </h5>
             </div>

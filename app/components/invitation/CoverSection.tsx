@@ -24,6 +24,11 @@ interface CoverSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   dateColor?: string;
   coupleNamesColor?: string;
   quoteColor?: string;
+  /** Text alignment controls */
+  dateAlign?: "left" | "center" | "right" | "justify";
+  coupleNamesAlign?: "left" | "center" | "right" | "justify";
+  quoteAlign?: "left" | "center" | "right" | "justify";
+  guestBlockAlign?: "left" | "center" | "right" | "justify";
   backgroundColor?: string;
   backgroundImageUrl?: string;
   backgroundImages?: Array<{ url: string; alt?: string; order?: number }> | string[];
@@ -39,6 +44,8 @@ interface CoverSectionProps extends CurveDividerProps, DecorativeFlowersProps {
   isEditor?: boolean;
   /** True when rendered on standalone public invitation pages (full viewport height) */
   isStandaloneInvitation?: boolean;
+  /** Called when cover has finished opening (so parent can unmount cover layer and avoid white flash) */
+  onOpened?: () => void;
   onEditContent?: () => void;
   onChangeDesign?: () => void;
 }
@@ -54,6 +61,10 @@ export default function CoverSection({
   dateColor,
   coupleNamesColor,
   quoteColor,
+  dateAlign = "center",
+  coupleNamesAlign = "center",
+  quoteAlign = "center",
+  guestBlockAlign = "center",
   backgroundColor,
   backgroundImageUrl,
   backgroundImages,
@@ -72,6 +83,7 @@ export default function CoverSection({
   className = "",
   isEditor = false,
   isStandaloneInvitation = false,
+  onOpened,
   onEditContent,
   onChangeDesign
 }: CoverSectionProps) {
@@ -104,14 +116,33 @@ export default function CoverSection({
     sectionStyle.background = 'linear-gradient(to bottom, #111827, #1f2937, #111827)';
   }
 
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      default:
+        return "text-center";
+    }
+  };
+
+  const dateAlignClass = mapAlignToClass(dateAlign);
+  const coupleNamesAlignClass = mapAlignToClass(coupleNamesAlign);
+  const quoteAlignClass = mapAlignToClass(quoteAlign);
+  const guestBlockAlignClass = mapAlignToClass(guestBlockAlign);
+
   const handleOpenInvitation = () => {
     // In editor mode, don't animate or hide
     if (isEditor) return;
     
     setIsAnimating(true);
-    // After animation completes, hide the section
+    // After animation completes, hide the section and notify parent (so cover layer can unmount and content is already painted)
     setTimeout(() => {
       setIsOpen(true);
+      onOpened?.();
     }, 800); // Match animation duration
   };
 
@@ -386,22 +417,31 @@ export default function CoverSection({
           )}
 
           {/* Date */}
-          <p className="text-lg md:text-xl mb-6 tracking-wider" style={{ fontFamily: "var(--font-playfair)", color: dateColor || "rgba(255, 255, 255, 0.9)" }}>
+          <p
+            className={`text-lg md:text-xl mb-6 tracking-wider ${dateAlignClass}`}
+            style={{ fontFamily: "var(--font-playfair)", color: dateColor || "rgba(255, 255, 255, 0.9)" }}
+          >
             {date}
           </p>
 
           {/* Couple Names */}
-          <h1 className="text-4xl md:text-5xl font-bold mb-8" style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}>
+          <h1
+            className={`text-4xl md:text-5xl font-bold mb-8 ${coupleNamesAlignClass}`}
+            style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}
+          >
             {coupleNames}
           </h1>
 
           {/* Greeting / Salam */}
-          <p className="text-sm md:text-base  mb-2 leading-relaxed px-4" style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.8)" }}>
+          <p
+            className={`text-sm md:text-base mb-2 leading-relaxed px-4 ${quoteAlignClass}`}
+            style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.8)" }}
+          >
             {quote}
           </p>
 
           {/* Guest block (guest name + location) */}
-          <div className="mb-8">
+          <div className={`mb-8 ${guestBlockAlignClass}`}>
             <h2 className="text-2xl font-semibold">
               {guestName || guestNamePlaceholder}
             </h2>

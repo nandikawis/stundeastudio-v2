@@ -16,6 +16,7 @@ interface PhotoGalleryGridProps extends CurveDividerProps, DecorativeFlowersProp
   columns?: number;
   title?: string;
   titleColor?: string;
+  titleAlign?: "left" | "center" | "right" | "justify";
   className?: string;
   backgroundColor?: string;
   backgroundImageUrl?: string;
@@ -27,6 +28,7 @@ export default function PhotoGalleryGrid({
   columns = 2,
   title = "Photo Gallery",
   titleColor,
+  titleAlign = "center",
   className = "",
   backgroundColor,
   backgroundImageUrl,
@@ -41,6 +43,20 @@ export default function PhotoGalleryGrid({
   flowerStyle = 'beage'
 }: PhotoGalleryGridProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      case "center":
+      default:
+        return "text-center";
+    }
+  };
 
   // Extract background URL from array (like ImageCarousel) or fallback to legacy string
   const firstBg = Array.isArray(backgroundImages) && backgroundImages.length > 0
@@ -88,7 +104,10 @@ export default function PhotoGalleryGrid({
           style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
         >
           {title && (
-            <h2 className="text-3xl font-bold text-center mb-8" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
+            <h2
+              className={`text-3xl font-bold mb-8 ${mapAlignToClass(titleAlign)}`}
+              style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}
+            >
               {title}
             </h2>
           )}
@@ -133,7 +152,10 @@ export default function PhotoGalleryGrid({
           style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
         >
           {title && (
-            <h2 className="text-3xl font-bold text-center mb-8" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
+            <h2
+              className={`text-3xl font-bold mb-8 ${mapAlignToClass(titleAlign)}`}
+              style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}
+            >
               {title}
             </h2>
           )}

@@ -20,6 +20,10 @@ export default function ProjectsPage() {
   const [publishTarget, setPublishTarget] = useState<ProjectData | null>(null);
   const [publishLoading, setPublishLoading] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<ProjectData | null>(null);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [reactivateId, setReactivateId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUserId =
@@ -244,6 +248,78 @@ export default function ProjectsPage() {
     );
   };
 
+  const ArchiveModal = () => {
+    if (!archiveTarget) return null;
+
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+          <h3 className="text-lg font-semibold text-primary mb-2">
+            Arsipkan Proyek?
+          </h3>
+          <p className="text-sm text-muted mb-4">
+            Proyek{" "}
+            <span className="font-semibold">
+              &quot;{archiveTarget.name || "Tanpa Nama"}&quot;
+            </span>{" "}
+            akan diarsipkan. Link undangan tidak lagi dapat diakses sampai kamu
+            mengaktifkan kembali dan memublikasikan lagi.
+          </p>
+
+          {archiveError && (
+            <p className="text-xs text-red-600 mb-3">{archiveError}</p>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-full border border-border text-xs text-muted hover:bg-gray-50 transition-colors"
+              disabled={archiveLoading}
+              onClick={() => {
+                setArchiveTarget(null);
+                setArchiveError(null);
+              }}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-light transition-colors disabled:opacity-60"
+              disabled={archiveLoading}
+              onClick={async () => {
+                if (!archiveTarget) return;
+                setArchiveLoading(true);
+                setArchiveError(null);
+
+                const res = await api.patch<ProjectData>(
+                  `/api/projects/${archiveTarget.id}`,
+                  { status: "archived" }
+                );
+
+                if (res.success) {
+                  setProjects((prev) =>
+                    prev.map((p) =>
+                      p.id === archiveTarget.id ? { ...p, status: "archived" } : p
+                    )
+                  );
+                  setArchiveTarget(null);
+                } else {
+                  setArchiveError(
+                    res.error || "Gagal mengarsipkan proyek. Coba lagi."
+                  );
+                }
+
+                setArchiveLoading(false);
+              }}
+            >
+              {archiveLoading ? "Mengarsipkan..." : "Arsipkan"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
@@ -252,6 +328,8 @@ export default function ProjectsPage() {
       <DeleteModal />
       {/* Publish modal */}
       <PublishModal />
+      {/* Archive confirmation modal */}
+      <ArchiveModal />
 
       <section className="pt-28 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -415,13 +493,49 @@ export default function ProjectsPage() {
                       </div>
 
                       <div className="mt-auto flex flex-col gap-2">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Link
                             href={`/editor/${project.id}`}
-                            className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-light transition-colors"
+                            className="flex-1 min-w-0 inline-flex items-center justify-center px-3 py-2 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-light transition-colors"
                           >
                             Lanjutkan Edit
                           </Link>
+                          {project.status === "archived" ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-primary/40 text-[11px] text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+                              disabled={reactivateId === project.id}
+                              onClick={async () => {
+                                setReactivateId(project.id);
+                                const res = await api.patch<ProjectData>(
+                                  `/api/projects/${project.id}`,
+                                  { status: "draft" }
+                                );
+                                if (res.success) {
+                                  setProjects((prev) =>
+                                    prev.map((p) =>
+                                      p.id === project.id ? { ...p, status: "draft" } : p
+                                    )
+                                  );
+                                }
+                                setReactivateId(null);
+                              }}
+                            >
+                              {reactivateId === project.id ? "Mengaktifkan..." : "Aktifkan Kembali"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-gray-300 text-[11px] text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                              disabled={archiveLoading}
+                              onClick={() => {
+                                setArchiveTarget(project);
+                                setArchiveError(null);
+                              }}
+                            >
+                              Arsipkan
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-red-200 text-[11px] text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
@@ -434,19 +548,21 @@ export default function ProjectsPage() {
                             Hapus
                           </button>
                         </div>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-border text-[11px] text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
-                          disabled={publishLoading && publishTarget?.id === project.id}
-                          onClick={() => {
-                            setPublishTarget(project);
-                            setPublishError(null);
-                          }}
-                        >
-                          {project.status === "published"
-                            ? "Lihat & Salin Link"
-                            : "Publikasikan & Lihat Link"}
-                        </button>
+                        {project.status !== "archived" && (
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-border text-[11px] text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            disabled={publishLoading && publishTarget?.id === project.id}
+                            onClick={() => {
+                              setPublishTarget(project);
+                              setPublishError(null);
+                            }}
+                          >
+                            {project.status === "published"
+                              ? "Lihat & Salin Link"
+                              : "Publikasikan & Lihat Link"}
+                          </button>
+                        )}
                       </div>
                     </article>
                   ))}

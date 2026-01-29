@@ -135,6 +135,8 @@ export default function ElementRenderer({
               dateMessageText={element.content?.dateMessageText}
               dateMessageDateColor={element.content?.dateMessageDateColor}
               dateMessageTextColor={element.content?.dateMessageTextColor}
+              dateMessageDateAlign={element.content?.dateMessageDateAlign}
+              dateMessageTextAlign={element.content?.dateMessageTextAlign}
             />
           </div>
         );
@@ -147,6 +149,10 @@ export default function ElementRenderer({
               coupleNames={element.content?.coupleNames}
               quote={element.content?.quote}
               guestName={element.content?.guestName}
+              dateAlign={element.content?.dateAlign}
+              coupleNamesAlign={element.content?.coupleNamesAlign}
+              quoteAlign={element.content?.quoteAlign}
+              guestBlockAlign={element.content?.guestBlockAlign}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -160,6 +166,9 @@ export default function ElementRenderer({
               subtitle={element.content?.subtitle}
               coupleNames={element.content?.coupleNames}
               quote={element.content?.quote}
+              subtitleAlign={element.content?.subtitleAlign}
+              coupleNamesAlign={element.content?.coupleNamesAlign}
+              quoteAlign={element.content?.quoteAlign}
               backgroundImages={element.content?.backgroundImages || []}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
@@ -172,8 +181,13 @@ export default function ElementRenderer({
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <QuoteSection
               quote={element.content?.quote}
+              primaryQuote={element.content?.primaryQuote}
+              secondaryQuote={element.content?.secondaryQuote}
               author={element.content?.author}
-              imageUrl={element.content?.imageUrl}
+              quoteAlign={element.content?.quoteAlign}
+              secondaryQuoteAlign={element.content?.secondaryQuoteAlign}
+              secondaryQuoteColor={element.content?.secondaryQuoteColor}
+              authorAlign={element.content?.authorAlign}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -186,7 +200,8 @@ export default function ElementRenderer({
             <ReligiousGreeting
               greeting={element.content?.greeting}
               message={element.content?.message}
-              imageUrl={element.content?.imageUrl}
+              greetingAlign={element.content?.greetingAlign}
+              messageAlign={element.content?.messageAlign}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -209,6 +224,12 @@ export default function ElementRenderer({
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
               type={element.content?.type}
+              nameAlign={element.content?.nameAlign}
+              fullNameAlign={element.content?.fullNameAlign}
+              relationAlign={element.content?.relationAlign}
+              fatherNameAlign={element.content?.fatherNameAlign}
+              motherNameAlign={element.content?.motherNameAlign}
+              addressAlign={element.content?.addressAlign}
             />
           </div>
         );
@@ -228,6 +249,9 @@ export default function ElementRenderer({
               mapButtonTextColor={element.content?.mapButtonTextColor}
               invitationMessage={element.content?.invitationMessage}
               invitationMessageColor={element.content?.invitationMessageColor}
+              invitationMessageAlign={element.content?.invitationMessageAlign}
+              closingMessageAlign={element.content?.closingMessageAlign}
+              closingTextAlign={element.content?.closingTextAlign}
               design={element.content?.design as EventDetailsDesign | undefined}
               cardBackgroundColor={element.content?.cardBackgroundColor}
               cardOpacity={element.content?.cardOpacity}
@@ -245,6 +269,9 @@ export default function ElementRenderer({
             <PhotoGalleryGrid
               images={element.content?.images || []}
               columns={element.content?.columns || 2}
+              title={element.content?.title}
+              titleColor={element.content?.titleColor}
+              titleAlign={element.content?.titleAlign}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -260,6 +287,10 @@ export default function ElementRenderer({
               designerCredit={element.content?.designerCredit}
               socialLinks={element.content?.socialLinks}
               audioUrl={element.content?.audioUrl}
+              logoUrl={element.content?.logoUrl}
+              coupleNamesAlign={element.content?.coupleNamesAlign}
+              messageAlign={element.content?.messageAlign}
+              designerCreditAlign={element.content?.designerCreditAlign}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />

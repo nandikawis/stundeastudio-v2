@@ -40,13 +40,23 @@ const QUOTE_DECORATIVE_IMAGES: Record<string, { src: string; alt: string }> = {
 type QuoteDecorativeStyle = keyof typeof QUOTE_DECORATIVE_IMAGES;
 
 interface QuoteSectionProps extends CurveDividerProps, DecorativeFlowersProps {
+  /** Legacy combined quote; kept for backward compatibility. */
   quote?: string;
+  /** Primary (Sanskrit) part of the quote. */
+  primaryQuote?: string;
+  /** Secondary (Indonesian) translation part of the quote. */
+  secondaryQuote?: string;
   author?: string;
   // Use a named decorative style backed by /public/quotedecorative PNGs.
   // We intentionally do NOT support arbitrary image URLs here anymore.
   quoteDecorativeStyle?: QuoteDecorativeStyle;
   quoteColor?: string;
+  secondaryQuoteColor?: string;
   authorColor?: string;
+  /** Text alignment controls */
+  quoteAlign?: "left" | "center" | "right" | "justify";
+  secondaryQuoteAlign?: "left" | "center" | "right" | "justify";
+  authorAlign?: "left" | "center" | "right" | "justify";
   backgroundColor?: string;
   backgroundImageUrl?: string;
   backgroundImages?: Array<{ url: string; alt?: string; order?: number }> | string[];
@@ -55,10 +65,16 @@ interface QuoteSectionProps extends CurveDividerProps, DecorativeFlowersProps {
 
 export default function QuoteSection({
   quote = "Ihaiva stam mā vi yaustam, Visvām āyur vyasnutam. Krindantau putrair naptrbhih, Modamānau sve grhe.\n\nWahai pasangan suami-isteri, semoga kalian tetap bersatu dan tidak pernah terpisahkan. Semoga kalian mencapai hidup penuh kebahagiaan, tinggal di rumah yang penuh kegembiraan bersama seluruh keturunanmu.",
+  primaryQuote,
+  secondaryQuote,
   author = "Rg Veda X.85.42.",
   quoteDecorativeStyle,
   quoteColor,
+  secondaryQuoteColor,
   authorColor,
+  quoteAlign = "center",
+  secondaryQuoteAlign,
+  authorAlign = "center",
   backgroundColor,
   backgroundImageUrl,
   backgroundImages,
@@ -99,6 +115,33 @@ export default function QuoteSection({
     sectionStyle.backgroundColor = '#ffffff';
   }
 
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      default:
+        return "text-center";
+    }
+  };
+
+  const quoteAlignClass = mapAlignToClass(quoteAlign);
+  const secondaryQuoteAlignClass = mapAlignToClass(secondaryQuoteAlign || quoteAlign);
+  const authorAlignClass = mapAlignToClass(authorAlign);
+
+  // Backwards compatible split: if explicit primary/secondary are not provided,
+  // derive them from the legacy "quote" field using the existing double-newline separator.
+  const [legacyPrimary, legacySecondary] = (quote || "").split("\n\n");
+  const displayPrimaryQuote =
+    (primaryQuote && primaryQuote.trim().length > 0) ? primaryQuote : legacyPrimary;
+  const displaySecondaryQuote =
+    (secondaryQuote && secondaryQuote.trim().length > 0)
+      ? secondaryQuote
+      : legacySecondary;
+
   return (
     <section 
       className={`py-16 px-6 w-full relative ${className}`}
@@ -134,17 +177,36 @@ export default function QuoteSection({
 
         {/* Quote Text */}
         <div className="mb-6">
-          <p className="text-base md:text-lg leading-relaxed whitespace-pre-line mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "#374151" }}>
-            <strong className="italic">{quote.split('\n\n')[0]}</strong>
-          </p>
-          <p className="text-sm md:text-base leading-relaxed whitespace-pre-line" style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "#4b5563" }}>
-            {quote.split('\n\n')[1]}
-          </p>
+          {displayPrimaryQuote && (
+            <p
+              className={`text-base md:text-lg leading-relaxed whitespace-pre-line mb-4 ${quoteAlignClass}`}
+              style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "#374151" }}
+            >
+              <strong className="italic">{displayPrimaryQuote}</strong>
+            </p>
+          )}
+          {displaySecondaryQuote && (
+            <p
+              className={`text-sm md:text-base leading-relaxed whitespace-pre-line ${secondaryQuoteAlignClass}`}
+              style={{ fontFamily: "var(--font-dm-sans)", color: secondaryQuoteColor || quoteColor || "#4b5563" }}
+            >
+              {displaySecondaryQuote}
+            </p>
+          )}
         </div>
 
         {/* Author */}
         {author && (
-          <p className="text-sm italic flex items-center justify-center gap-2" style={{ fontFamily: "var(--font-dm-sans)", color: authorColor || "#6b7280" }}>
+          <p
+            className={`text-sm italic flex items-center gap-2 ${authorAlignClass} ${
+              authorAlign === 'center'
+                ? 'justify-center'
+                : authorAlign === 'right'
+                ? 'justify-end'
+                : 'justify-start'
+            }`}
+            style={{ fontFamily: "var(--font-dm-sans)", color: authorColor || "#6b7280" }}
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>

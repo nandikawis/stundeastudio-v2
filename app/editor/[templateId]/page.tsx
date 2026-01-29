@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { mockTemplates } from "../../lib/templates";
 import { mockProjects, ProjectData } from "../../lib/mockData";
 import TemplateRenderer from "../../components/invitation/TemplateRenderer";
@@ -37,7 +38,12 @@ function compressImage(dataUrl: string, maxWidth = 1920, quality = 0.8): Promise
       }
       
       ctx.drawImage(img, 0, 0, width, height);
-      const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+      // Preserve original image format where possible to keep things like PNG transparency.
+      const header = dataUrl.split(",")[0] || "";
+      const mimeMatch = header.match(/data:(.*?);base64/);
+      const originalMime = mimeMatch?.[1] || "image/jpeg";
+      const outputMime = originalMime === "image/png" ? "image/png" : "image/jpeg";
+      const compressedDataUrl = canvas.toDataURL(outputMime, outputMime === "image/jpeg" ? quality : 1.0);
       resolve(compressedDataUrl);
     };
     img.onerror = reject;
@@ -76,6 +82,7 @@ export default function EditorPage({
 }: {
   params: Promise<{ templateId: string }>;
 }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const param = resolvedParams.templateId;
   const template = !isProjectId(param) ? mockTemplates.find((t) => t.slug === param) : null;
@@ -93,6 +100,7 @@ export default function EditorPage({
     backgroundImages?: Array<{ url: string; alt?: string; order?: number }>;
     imageUrl?: string;
     images?: { url: string; alt?: string; order?: number }[];
+    logoUrl?: string;
   };
   const [previewImages, setPreviewImages] = useState<Record<string, SectionPreview>>({});
   const musicInputRef = useRef<HTMLInputElement | null>(null);
@@ -250,7 +258,8 @@ export default function EditorPage({
           (preview.backgroundImageUrl?.startsWith("data:") ?? false) ||
           (Array.isArray(preview.backgroundImages) && preview.backgroundImages.some((img) => img.url?.startsWith("data:"))) ||
           (preview.imageUrl?.startsWith("data:") ?? false) ||
-          (Array.isArray(preview.images) && preview.images.some((img) => img.url?.startsWith("data:")))
+          (Array.isArray(preview.images) && preview.images.some((img) => img.url?.startsWith("data:"))) ||
+          (preview.logoUrl?.startsWith("data:") ?? false)
         );
       });
       
@@ -289,6 +298,9 @@ export default function EditorPage({
         if (field !== "images" && sectionPreview.images !== undefined) {
           rest.images = sectionPreview.images;
         }
+        if (field !== "logoUrl" && sectionPreview.logoUrl !== undefined) {
+          rest.logoUrl = sectionPreview.logoUrl;
+        }
         
         if (Object.keys(rest).length === 0) {
           // Remove section entry if no other preview fields
@@ -322,7 +334,7 @@ export default function EditorPage({
       handleProjectUpdate(updatedProject);
 
       // For destructive clears on single-image fields, persist immediately
-      if (isProjectId(updatedProject.id) && (field === "backgroundImages" || field === "imageUrl")) {
+      if (isProjectId(updatedProject.id) && (field === "backgroundImages" || field === "imageUrl" || field === "logoUrl")) {
         // Fire and forget – no need to await here
         void persistProject(updatedProject);
       }
@@ -414,6 +426,14 @@ export default function EditorPage({
           }
         });
       }
+      if (preview.logoUrl?.startsWith("data:")) {
+        dataUrls.push({
+          dataUrl: preview.logoUrl,
+          fileName: `logo-${sectionId}.jpg`,
+          sectionId,
+          field: "logoUrl",
+        });
+      }
     });
     
     // Extract from component_data (in case some data URLs slipped through)
@@ -480,7 +500,9 @@ export default function EditorPage({
   const saveProject = async () => {
     if (!project) return;
     
-    if (isProjectId(project.id)) {
+    const isUnsavedTemplate = !isProjectId(project.id);
+
+    if (isProjectId(project.id) || isUnsavedTemplate) {
       setIsSaving(true);
       setSaveSuccess(false);
       setSaveStatus("saving");
@@ -492,12 +514,11 @@ export default function EditorPage({
         // Upload images if there are any
         let urlMap = new Map<string, string>();
         if (dataUrls.length > 0) {
-          // Compress images before uploading to reduce payload size
           const compressedImages = await Promise.all(
             dataUrls.map(async ({ dataUrl, fileName }) => ({
               base64Image: await compressImage(dataUrl),
               fileName,
-              originalDataUrl: dataUrl, // Keep original for mapping
+              originalDataUrl: dataUrl,
             }))
           );
           
@@ -514,7 +535,6 @@ export default function EditorPage({
             return;
           }
           
-          // Create mapping: originalDataUrl -> storageUrl
           compressedImages.forEach(({ originalDataUrl }, idx) => {
             if (uploadRes.data && uploadRes.data[idx]) {
               urlMap.set(originalDataUrl, uploadRes.data[idx].url);
@@ -522,13 +542,11 @@ export default function EditorPage({
           });
         }
         
-        // Replace data URLs with storage URLs in component_data
         let updatedComponentData = project.component_data;
         if (urlMap.size > 0) {
           updatedComponentData = replaceDataUrls(project.component_data, urlMap);
         }
         
-        // Merge previewImages into component_data (replacing with storage URLs)
         const mergedComponentData = { ...updatedComponentData };
         Object.entries(previewImages).forEach(([sectionId, preview]) => {
           if (!mergedComponentData[sectionId]) {
@@ -550,27 +568,55 @@ export default function EditorPage({
               url: urlMap.get(img.url) || img.url,
             }));
           }
+          if (preview.logoUrl) {
+            sectionData.logoUrl = urlMap.get(preview.logoUrl) || preview.logoUrl;
+          }
         });
         
-        // Strip legacy background keys so only backgroundImages is stored
         const finalComponentData = stripLegacyBackgroundKeys(mergedComponentData);
         const updatedProject: ProjectData = {
           ...project,
           component_data: finalComponentData,
         };
         
-        await persistProject(updatedProject);
+        if (isUnsavedTemplate) {
+          // First save: create project via API; after this, auto-save will be used
+          const createRes = await api.post<{ id: string } | Record<string, unknown>>("/api/projects", {
+            template_slug: param,
+            name: updatedProject.name,
+            page_structure: updatedProject.page_structure,
+            component_data: finalComponentData,
+            event_date: updatedProject.event_date ?? undefined,
+            event_time: updatedProject.event_time ?? undefined,
+            venue_name: updatedProject.venue_name ?? undefined,
+            venue_address: updatedProject.venue_address ?? undefined,
+            venue_coordinates: updatedProject.venue_coordinates ?? undefined,
+          });
+          if (!createRes.success || !createRes.data) {
+            setSaveStatus("error");
+            setIsSaving(false);
+            return;
+          }
+          const newId = String((createRes.data as { id: string }).id);
+          setPreviewImages({});
+          setProject({ ...updatedProject, id: newId });
+          setSaveStatus("saved");
+          setSaveSuccess(true);
+          setIsSaving(false);
+          setTimeout(() => {
+            setSaveSuccess(false);
+            setSaveStatus("idle");
+          }, 3000);
+          router.replace(`/editor/${newId}`);
+          return;
+        }
         
-        // Clear previewImages after successful save
+        await persistProject(updatedProject);
         setPreviewImages({});
         setProject(updatedProject);
-        
-        // Show success
         setSaveStatus("saved");
         setSaveSuccess(true);
         setIsSaving(false);
-        
-        // Auto-hide success message after 3 seconds
         setTimeout(() => {
           setSaveSuccess(false);
           setSaveStatus("idle");
@@ -686,7 +732,7 @@ export default function EditorPage({
               </div>
               {/* Mobile Screen */}
               <div className="overflow-y-auto" style={{ height: 'calc(100vh - 4rem - 2.5rem)', maxHeight: '800px' }}>
-                <TemplateRenderer project={project} />
+                <TemplateRenderer project={project} isPreview />
               </div>
             </div>
           </div>
@@ -739,7 +785,7 @@ export default function EditorPage({
               disabled={saveStatus === "saving"}
               className="px-4 py-2 bg-primary text-white rounded-full text-sm hover:bg-primary-light transition-all disabled:opacity-50"
             >
-              Simpan
+              {project && !isProjectId(project.id) ? "Simpan Proyek" : "Simpan"}
             </button>
           </div>
         </div>
@@ -871,6 +917,7 @@ export default function EditorPage({
                   ...(previewData.backgroundImages !== undefined ? { backgroundImages: previewData.backgroundImages } : {}),
                   ...(previewData.imageUrl !== undefined ? { imageUrl: previewData.imageUrl } : {}),
                   ...(previewData.images !== undefined ? { images: previewData.images } : {}),
+                  ...(previewData.logoUrl !== undefined ? { logoUrl: previewData.logoUrl } : {}),
                 };
               })()}
               onUpdate={handleSectionFieldUpdate}

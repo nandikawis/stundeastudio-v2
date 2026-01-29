@@ -39,6 +39,8 @@ interface ImageCarouselProps extends CurveDividerProps, DecorativeFlowersProps {
   dateMessageText?: string;
   dateMessageDateColor?: string;
   dateMessageTextColor?: string;
+  dateMessageDateAlign?: "left" | "center" | "right" | "justify";
+  dateMessageTextAlign?: "left" | "center" | "right" | "justify";
 }
 
 export default function ImageCarousel({
@@ -73,7 +75,9 @@ export default function ImageCarousel({
   dateMessageDate,
   dateMessageText,
   dateMessageDateColor,
-  dateMessageTextColor
+  dateMessageTextColor,
+  dateMessageDateAlign = "center",
+  dateMessageTextAlign = "center"
 }: ImageCarouselProps) {
   // Normalize legacy "minimal" (from saved project data) to "landscape"
   const carouselDesignResolved =
@@ -135,6 +139,20 @@ export default function ImageCarousel({
 
   const goToNext = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      case "center":
+      default:
+        return "text-center";
+    }
   };
 
   // Show placeholder slots when editable or when empty
@@ -312,7 +330,7 @@ export default function ImageCarousel({
               />
               {dateMessageDate && (
                 <div 
-                  className="text-sm font-medium whitespace-nowrap"
+                  className={`text-sm font-medium whitespace-nowrap ${mapAlignToClass(dateMessageDateAlign)}`}
                   style={{ fontFamily: "var(--font-dm-sans)", color: dateMessageDateColor || "#8b7355" }}
                 >
                   {dateMessageDate}
@@ -321,7 +339,7 @@ export default function ImageCarousel({
             </div>
             {dateMessageText && (
               <p 
-                className="text-sm leading-relaxed break-words"
+                className={`text-sm leading-relaxed break-words ${mapAlignToClass(dateMessageTextAlign)}`}
                 style={{ 
                   fontFamily: "var(--font-dm-sans)", 
                   color: dateMessageTextColor || "#4a4a4a",

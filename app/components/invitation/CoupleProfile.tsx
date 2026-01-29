@@ -31,6 +31,12 @@ interface CoupleProfileProps extends CurveDividerProps, DecorativeFlowersProps {
   imageStyle?: ImageContainerStyle;
   glowColor?: string;
   type?: "groom" | "bride";
+  nameAlign?: "left" | "center" | "right" | "justify";
+  fullNameAlign?: "left" | "center" | "right" | "justify";
+  relationAlign?: "left" | "center" | "right" | "justify";
+  fatherNameAlign?: "left" | "center" | "right" | "justify";
+  motherNameAlign?: "left" | "center" | "right" | "justify";
+  addressAlign?: "left" | "center" | "right" | "justify";
   nameColor?: string;
   fullNameColor?: string;
   relationColor?: string;
@@ -58,6 +64,12 @@ export default function CoupleProfile({
   imageStyle = "circular",
   glowColor = "#b49549",
   type = "groom",
+  nameAlign = "center",
+  fullNameAlign = "center",
+  relationAlign = "center",
+  fatherNameAlign = "center",
+  motherNameAlign = "center",
+  addressAlign = "center",
   nameColor,
   fullNameColor,
   relationColor,
@@ -77,6 +89,20 @@ export default function CoupleProfile({
   className = ""
 }: CoupleProfileProps) {
   const isGroom = type === "groom";
+
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      case "center":
+      default:
+        return "text-center";
+    }
+  };
 
   // Build background style for section
   const sectionStyle: React.CSSProperties = {};
@@ -302,30 +328,45 @@ export default function CoupleProfile({
         )}
 
         {/* Name */}
-        <h4 className="text-2xl font-semibold mb-2" style={{ fontFamily: "var(--font-playfair)", color: nameColor || "#1f2937" }}>
+        <h4 
+          className={`text-2xl font-semibold mb-2 ${mapAlignToClass(nameAlign)}`} 
+          style={{ fontFamily: "var(--font-playfair)", color: nameColor || "#1f2937" }}
+        >
           {name}
         </h4>
 
         {/* Full Name */}
-        <h5 className="text-lg mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: fullNameColor || "#374151" }}>
+        <h5 
+          className={`text-lg mb-4 ${mapAlignToClass(fullNameAlign)}`} 
+          style={{ fontFamily: "var(--font-dm-sans)", color: fullNameColor || "#374151" }}
+        >
           {fullName}
         </h5>
 
         {/* Relation */}
-        <p className="text-sm mb-2" style={{ fontFamily: "var(--font-dm-sans)", color: relationColor || "#4b5563" }}>
+        <p 
+          className={`text-sm mb-2 ${mapAlignToClass(relationAlign)}`} 
+          style={{ fontFamily: "var(--font-dm-sans)", color: relationColor || "#4b5563" }}
+        >
           {relation}
         </p>
 
         {/* Parents */}
         {parents.father && (
           <>
-            <p className="text-sm mb-1" style={{ fontFamily: "var(--font-dm-sans)", color: fatherNameColor || "#374151" }}>
+            <p 
+              className={`text-sm mb-1 ${mapAlignToClass(fatherNameAlign)}`} 
+              style={{ fontFamily: "var(--font-dm-sans)", color: fatherNameColor || "#374151" }}
+            >
               {parents.father}
             </p>
             <p className="text-sm text-gray-500 mb-1" style={{ fontFamily: "var(--font-dm-sans)" }}>
               &
             </p>
-            <p className="text-sm mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: motherNameColor || "#374151" }}>
+            <p 
+              className={`text-sm mb-4 ${mapAlignToClass(motherNameAlign)}`} 
+              style={{ fontFamily: "var(--font-dm-sans)", color: motherNameColor || "#374151" }}
+            >
               {parents.mother}
             </p>
           </>
@@ -333,7 +374,10 @@ export default function CoupleProfile({
 
         {/* Address */}
         {address && (
-          <p className="text-xs mt-4" style={{ fontFamily: "var(--font-dm-sans)", color: addressColor || "#4b5563" }}>
+          <p 
+            className={`text-xs mt-4 ${mapAlignToClass(addressAlign)}`} 
+            style={{ fontFamily: "var(--font-dm-sans)", color: addressColor || "#4b5563" }}
+          >
             {address}
           </p>
         )}

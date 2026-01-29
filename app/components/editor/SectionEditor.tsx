@@ -18,7 +18,7 @@ interface SectionEditorProps {
   };
   // Preview-only image data, keyed by section ID. Allows showing local
   // data URLs without persisting them in ProjectData/localStorage.
-  previewImages?: Record<string, { backgroundImageUrl?: string; backgroundImages?: Array<{ url: string; alt?: string; order?: number }>; imageUrl?: string; images?: any[] }>;
+  previewImages?: Record<string, { backgroundImageUrl?: string; backgroundImages?: Array<{ url: string; alt?: string; order?: number }>; imageUrl?: string; images?: any[]; logoUrl?: string }>;
 }
 
 export default function SectionEditor({

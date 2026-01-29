@@ -68,6 +68,25 @@ export default async function WeddingInvitationPage({
 
   const project = dbRowToProjectData(res.data);
 
+  // Only allow access to published projects on the public wedding-invitation URL
+  if (project.status !== "published") {
+    const isArchived = project.status === "archived";
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="max-w-md mx-auto p-6 rounded-2xl bg-white shadow-lg text-center">
+          <h1 className="text-lg font-semibold text-primary mb-2">
+            {isArchived ? "Undangan telah diarsipkan" : "Undangan belum dipublikasikan"}
+          </h1>
+          <p className="text-sm text-gray-600">
+            {isArchived
+              ? "Undangan ini telah diarsipkan oleh pemilik. Link tidak lagi aktif."
+              : "Undangan ini belum dipublikasikan oleh pemilik. Silakan cek kembali nanti atau hubungi pemilik undangan."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <TemplateRenderer project={project} isStandaloneInvitation />

@@ -10,7 +10,7 @@ interface ColorPickerProps {
 export default function ColorPicker({ label, value, onChange, defaultValue = '#000000' }: ColorPickerProps) {
   return (
     <div className="flex items-center gap-2">
-      <label className="text-xs text-muted">{label}:</label>
+      {label && <label className="text-xs text-muted">{label}:</label>}
       <input
         type="color"
         value={value || defaultValue}

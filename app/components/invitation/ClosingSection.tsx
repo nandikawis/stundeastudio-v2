@@ -14,6 +14,10 @@ interface ClosingSectionProps extends CurveDividerProps, DecorativeFlowersProps 
     instagram?: string;
   };
   audioUrl?: string;
+  logoUrl?: string;
+  coupleNamesAlign?: "left" | "center" | "right" | "justify";
+  messageAlign?: "left" | "center" | "right" | "justify";
+  designerCreditAlign?: "left" | "center" | "right" | "justify";
   coupleNamesColor?: string;
   messageColor?: string;
   designerCreditColor?: string;
@@ -29,6 +33,10 @@ export default function ClosingSection({
   designerCredit = "Invitation by Putri Grafika",
   socialLinks = {},
   audioUrl,
+  logoUrl,
+  coupleNamesAlign = "center",
+  messageAlign = "center",
+  designerCreditAlign = "center",
   coupleNamesColor,
   messageColor,
   designerCreditColor,
@@ -84,6 +92,20 @@ export default function ClosingSection({
     sectionStyle.background = 'linear-gradient(to bottom, #ffffff, #f9fafb, #111827)';
   }
 
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      case "center":
+      default:
+        return "text-center";
+    }
+  };
+
   return (
     <>
       <section 
@@ -107,22 +129,44 @@ export default function ClosingSection({
           style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
         >
           {/* Spacer */}
-          <div className="h-8" />
+          <div className="h-36" />
 
           {/* Couple Names */}
-          <h2 className="text-4xl md:text-5xl font-bold mb-8" style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}>
+          <h2
+            className={`text-4xl md:text-5xl font-bold mb-8 ${mapAlignToClass(coupleNamesAlign)}`}
+            style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}
+          >
             {coupleNames}
           </h2>
 
           {/* Thank You Message */}
-          <p className="text-base md:text-lg leading-relaxed mb-12" style={{ fontFamily: "var(--font-dm-sans)", color: messageColor || "rgba(255, 255, 255, 0.9)" }}>
+          <p
+            className={`text-base md:text-lg leading-relaxed mb-12 ${mapAlignToClass(messageAlign)}`}
+            style={{ fontFamily: "var(--font-dm-sans)", color: messageColor || "rgba(255, 255, 255, 0.9)" }}
+          >
             {message}
           </p>
+
+          {/* Logo Image */}
+          {logoUrl && (
+            <div className="mb-8 flex justify-center">
+              <Image
+                src={logoUrl}
+                alt="Closing section logo"
+                width={96}
+                height={96}
+                className="object-contain max-h-24 max-w-[120px]"
+              />
+            </div>
+          )}
 
           {/* Designer Credit */}
           {designerCredit && (
             <div className="mb-8">
-              <p className="text-sm" style={{ fontFamily: "var(--font-dm-sans)", color: designerCreditColor || "rgba(255, 255, 255, 0.7)" }}>
+              <p
+                className={`text-sm ${mapAlignToClass(designerCreditAlign)}`}
+                style={{ fontFamily: "var(--font-dm-sans)", color: designerCreditColor || "rgba(255, 255, 255, 0.7)" }}
+              >
                 {designerCredit}
               </p>
             </div>

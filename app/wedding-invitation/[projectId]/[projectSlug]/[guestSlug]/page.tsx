@@ -49,7 +49,7 @@ export default async function PersonalizedWeddingInvitationPage({
   if (!res.success || !res.data) {
     // Show a simple error instead of triggering a 404 so we can see what's wrong
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background ">
         <div className="max-w-md mx-auto p-6 rounded-2xl bg-white shadow-lg text-center">
           <h1 className="text-lg font-semibold text-red-600 mb-2">Tidak bisa memuat undangan</h1>
           <p className="text-sm text-gray-700 mb-2">
@@ -70,6 +70,25 @@ export default async function PersonalizedWeddingInvitationPage({
   }
 
   const project = dbRowToProjectData(res.data);
+
+  // Only allow access to published projects on the public wedding-invitation URL
+  if (project.status !== "published") {
+    const isArchived = project.status === "archived";
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="max-w-md mx-auto p-6 rounded-2xl bg-white shadow-lg text-center">
+          <h1 className="text-lg font-semibold text-primary mb-2">
+            {isArchived ? "Undangan telah diarsipkan" : "Undangan belum dipublikasikan"}
+          </h1>
+          <p className="text-sm text-gray-600">
+            {isArchived
+              ? "Undangan ini telah diarsipkan oleh pemilik. Link tidak lagi aktif."
+              : "Undangan ini belum dipublikasikan oleh pemilik. Silakan cek kembali nanti atau hubungi pemilik undangan."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Derive a display name directly from the guest slug
   const guestDisplayNameFromSlug = decodeURIComponent(guestSlug)

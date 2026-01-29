@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Template } from "../../lib/templates";
-import { api, getAccessToken } from "../../lib/api";
+import { getAccessToken } from "../../lib/api";
 
 interface TemplateCardProps {
   template: Template;
@@ -12,28 +11,16 @@ interface TemplateCardProps {
 
 export default function TemplateCard({ template }: TemplateCardProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleUseTemplate = async (e: React.MouseEvent) => {
+  const handleUseTemplate = (e: React.MouseEvent) => {
     e.preventDefault();
     const token = getAccessToken();
     if (!token) {
       router.push("/login");
       return;
     }
-    setLoading(true);
-    setError(null);
-    const res = await api.post<{ id: string }>("/api/projects", {
-      template_slug: template.slug,
-      name: template.name,
-    });
-    if (res.success && res.data?.id) {
-      router.push(`/editor/${res.data.id}`);
-    } else {
-      setError(res.success === false ? res.error : "Gagal membuat proyek");
-      setLoading(false);
-    }
+    // Open editor with template slug only; project is created only when user clicks "Simpan"
+    router.push(`/editor/${template.slug}`);
   };
 
   return (
@@ -66,21 +53,12 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           </div>
         )}
 
-        {/* Hover CTA / Loading */}
+        {/* Hover CTA */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 bg-black/20">
-          {loading ? (
-            <div className="px-6 py-3 bg-white rounded-full text-sm text-primary">Membuat proyek...</div>
-          ) : (
-            <div className="px-6 py-3 bg-white text-primary rounded-full font-medium text-sm shadow-lg">
-              Gunakan Template
-            </div>
-          )}
-        </div>
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/20">
-            <div className="px-6 py-3 bg-white rounded-full text-sm text-primary">Membuat proyek...</div>
+          <div className="px-6 py-3 bg-white text-primary rounded-full font-medium text-sm shadow-lg">
+            Gunakan Template
           </div>
-        )}
+        </div>
       </div>
 
       {/* Content */}
@@ -93,7 +71,6 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         <p className="text-sm text-muted line-clamp-2 mb-3">
           {template.description}
         </p>
-        {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
         {/* Category Badge */}
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-1 bg-accent/10 text-accent-dark text-xs font-medium rounded-full">

@@ -12,6 +12,10 @@ interface HeroSectionProps extends DecorativeFlowersProps {
   subtitleColor?: string;
   coupleNamesColor?: string;
   quoteColor?: string;
+  /** Text alignment controls */
+  subtitleAlign?: "left" | "center" | "right" | "justify";
+  coupleNamesAlign?: "left" | "center" | "right" | "justify";
+  quoteAlign?: "left" | "center" | "right" | "justify";
   backgroundColor?: string;
   curveColor?: string;
   topCurveColor?: string;
@@ -30,6 +34,9 @@ export default function HeroSection({
   subtitleColor,
   coupleNamesColor,
   quoteColor,
+  subtitleAlign = "center",
+  coupleNamesAlign = "center",
+  quoteAlign = "center",
   backgroundColor,
   curveColor,
   topCurveColor,
@@ -70,6 +77,23 @@ export default function HeroSection({
       sectionStyle.background = 'linear-gradient(to bottom, #111827, #1f2937, #111827)';
     }
   }
+
+  const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
+    switch (align) {
+      case "left":
+        return "text-left";
+      case "right":
+        return "text-right";
+      case "justify":
+        return "text-justify";
+      default:
+        return "text-center";
+    }
+  };
+
+  const subtitleAlignClass = mapAlignToClass(subtitleAlign);
+  const coupleNamesAlignClass = mapAlignToClass(coupleNamesAlign);
+  const quoteAlignClass = mapAlignToClass(quoteAlign);
 
   return (
     <section 
@@ -118,13 +142,22 @@ export default function HeroSection({
         className="relative z-10 w-full px-6 pt-16 pb-32  text-center text-white"
         style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
       >
-        <p className="text-lg mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: subtitleColor || "rgba(255, 255, 255, 0.9)" }}>
+        <p
+          className={`text-lg mb-4 ${subtitleAlignClass}`}
+          style={{ fontFamily: "var(--font-dm-sans)", color: subtitleColor || "rgba(255, 255, 255, 0.9)" }}
+        >
           {subtitle}
         </p>
-        <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}>
+        <h2
+          className={`text-4xl md:text-5xl font-bold mb-6 ${coupleNamesAlignClass}`}
+          style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}
+        >
           {coupleNames}
         </h2>
-        <p className="text-base md:text-lg italic max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.9)" }}>
+        <p
+          className={`text-base md:text-lg italic max-w-2xl mx-auto leading-relaxed ${quoteAlignClass}`}
+          style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.9)" }}
+        >
           "{quote}"
         </p>
       </div>

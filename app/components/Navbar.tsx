@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { setAccessToken, getAccessToken } from "../lib/api";
 
@@ -10,6 +11,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
   const ticking = useRef(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<any | null>(null);
@@ -17,6 +22,37 @@ export default function Navbar() {
   useEffect(() => {
     checkLoginStatus();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        const target = e.target as HTMLElement;
+        if (!target.closest("[data-profile-dropdown]")) setProfileOpen(false);
+      }
+    };
+    if (profileOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [profileOpen]);
+
+  useEffect(() => {
+    if (!profileOpen) {
+      setDropdownPosition(null);
+      return;
+    }
+    const btn = profileButtonRef.current;
+    if (!btn) return;
+    const update = () => {
+      const r = btn.getBoundingClientRect();
+      setDropdownPosition({ top: r.bottom + 8, left: r.right - 160 });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [profileOpen]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -117,7 +153,7 @@ export default function Navbar() {
             {/* Animated BAR */}
             <div
               className={[
-                "overflow-hidden mx-auto",
+                "mx-auto",
                 // glass morphism look
                 "backdrop-blur-xl backdrop-saturate-150 border border-white/20",
                 scrolled
@@ -137,7 +173,6 @@ export default function Navbar() {
                   borderBottomLeftRadius: borderRadius,
                   borderBottomRightRadius: borderRadius,
                   transform: "translateZ(0)",
-                  contain: "layout style paint",
                 } as React.CSSProperties
               }
             >
@@ -187,13 +222,79 @@ export default function Navbar() {
                     Kontak
                   </Link>
 
-                  {/* CTA Button */}
-                  <Link
-                    href="/login"
-                    className="px-5 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/20"
-                  >
-                    Mulai Sekarang
-                  </Link>
+                  {/* CTA / Projects + Profile when logged in */}
+                  {isLoggedIn ? (
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href="/projects"
+                        className="px-5 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/20"
+                      >
+                        Projects
+                      </Link>
+                      <div className="relative overflow-visible" ref={profileRef}>
+                        <button
+                          ref={profileButtonRef}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileOpen((v) => !v);
+                          }}
+                          className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center hover:bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                          aria-label="Profile menu"
+                          aria-expanded={profileOpen}
+                        >
+                          {userData?.name ? (
+                            <span className="text-sm font-semibold">
+                              {userData.name.charAt(0).toUpperCase()}
+                            </span>
+                          ) : userData?.email ? (
+                            <span className="text-sm font-semibold">
+                              {userData.email.charAt(0).toUpperCase()}
+                            </span>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          )}
+                        </button>
+                        {typeof document !== "undefined" &&
+                          createPortal(
+                            <AnimatePresence>
+                              {profileOpen && dropdownPosition && (
+                                <motion.div
+                                  data-profile-dropdown
+                                  initial={{ opacity: 0, y: -8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -8 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="fixed py-1 w-40 rounded-xl border border-white/20 bg-white/95 backdrop-blur-xl shadow-lg z-[9999]"
+                                  style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProfileOpen(false);
+                                      logout();
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                  >
+                                    Logout
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>,
+                            document.body
+                          )}
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="px-5 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/20"
+                    >
+                      Mulai Sekarang
+                    </Link>
+                  )}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -276,13 +377,52 @@ export default function Navbar() {
                     >
                       Kontak
                     </Link>
-                    <Link
-                      href="/login"
-                      onClick={() => setMenuOpen(false)}
-                      className="block py-2 px-3 mt-2 text-center bg-primary text-white rounded-full font-medium hover:bg-primary-light transition-colors"
-                    >
-                      Mulai Sekarang
-                    </Link>
+                    {isLoggedIn ? (
+                      <>
+                        <Link
+                          href="/projects"
+                          onClick={() => setMenuOpen(false)}
+                          className="block py-2 px-3 mt-2 text-center bg-primary text-white rounded-full font-medium hover:bg-primary-light transition-colors"
+                        >
+                          Projects
+                        </Link>
+                        <div className="flex items-center gap-3 mt-2 pt-2 border-t border-primary/10">
+                          <div className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center flex-shrink-0">
+                            {userData?.name ? (
+                              <span className="text-sm font-semibold">
+                                {userData.name.charAt(0).toUpperCase()}
+                              </span>
+                            ) : userData?.email ? (
+                              <span className="text-sm font-semibold">
+                                {userData.email.charAt(0).toUpperCase()}
+                              </span>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMenuOpen(false);
+                              logout();
+                            }}
+                            className="flex-1 py-2 px-3 rounded-full text-sm font-medium text-primary border border-primary/30 hover:bg-primary/10 transition-colors"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <Link
+                        href="/login"
+                        onClick={() => setMenuOpen(false)}
+                        className="block py-2 px-3 mt-2 text-center bg-primary text-white rounded-full font-medium hover:bg-primary-light transition-colors"
+                      >
+                        Mulai Sekarang
+                      </Link>
+                    )}
                   </div>
                 </motion.div>
               )}
