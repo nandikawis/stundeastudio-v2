@@ -102,6 +102,8 @@ export default function SectionEditor({
           ...preview,
         };
 
+        const isCoverSection = componentConfig.type === 'CoverSection';
+        
         const props = {
           ...componentConfig.config,
           ...mergedData,
@@ -110,8 +112,14 @@ export default function SectionEditor({
           eventTime: (mergedData as any).eventTime || eventData?.eventTime || project.event_time,
           venueName: (mergedData as any).venueName || eventData?.venueName || project.venue_name,
           venueAddress: (mergedData as any).venueAddress || eventData?.venueAddress || project.venue_address,
+          // Pass isEditor and callbacks for CoverSection
+          ...(isCoverSection ? { 
+            isEditor: true,
+            onEditContent: () => handleSectionClick(componentConfig.id, 'content'),
+            onChangeDesign: () => handleSectionClick(componentConfig.id, 'design'),
+          } : {}),
         };
-
+        
         return (
           <div
             key={componentConfig.id}
@@ -119,8 +127,8 @@ export default function SectionEditor({
               isSelected ? 'ring-2 ring-accent ring-offset-2' : ''
             }`}
           >
-            {/* Section Overlay - Click to Edit */}
-            {!isSelected && (
+            {/* Section Overlay - Click to Edit (hide for CoverSection since buttons are inside) */}
+            {!isSelected && !isCoverSection && (
               <>
                 {/* Hover background - non-blocking */}
                 <div className="absolute inset-0 bg-transparent group-hover:bg-accent/5 transition-all pointer-events-none z-40" />

@@ -17,6 +17,9 @@ export default function ProjectsPage() {
   const [deleteTarget, setDeleteTarget] = useState<ProjectData | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [publishTarget, setPublishTarget] = useState<ProjectData | null>(null);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUserId =
@@ -118,12 +121,137 @@ export default function ProjectsPage() {
     );
   };
 
+  const PublishModal = () => {
+    if (!publishTarget) return null;
+
+    const isAlreadyPublished = publishTarget.status === "published";
+    // Use project name directly (URL-encoded) instead of slug column
+    const projectName = publishTarget.name || publishTarget.id;
+    const encodedName = encodeURIComponent(projectName);
+    // Public-facing wedding invitation URL (separate route namespace)
+    const basePath = `/wedding-invitation/${publishTarget.id}/${encodedName}`;
+    const examplePath = `${basePath}/NamaTamu`;
+    const fullExampleUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${examplePath}`
+        : examplePath;
+
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+          <h3 className="text-lg font-semibold text-primary mb-2">
+            {isAlreadyPublished ? "Undangan sudah dipublikasikan" : "Publikasikan Undangan"}
+          </h3>
+          <p className="text-sm text-muted mb-4">
+            Undangan{" "}
+            <span className="font-semibold">
+              "{publishTarget.name || "Tanpa Nama"}"
+            </span>{" "}
+            akan dapat diakses dengan link di bawah ini. Kamu bisa mengubah bagian
+            terakhir link dengan nama tamu, misalnya{" "}
+            <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">
+              Albert&amp;Rose
+            </code>
+            .
+          </p>
+
+          {publishError && (
+            <p className="text-xs text-red-600 mb-3">{publishError}</p>
+          )}
+
+          {!isAlreadyPublished && (
+            <button
+              type="button"
+              className="w-full mb-4 px-4 py-2 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-light transition-colors disabled:opacity-60"
+              disabled={publishLoading}
+              onClick={async () => {
+                setPublishLoading(true);
+                setPublishError(null);
+                const res = await api.patch<ProjectData>(
+                  `/api/projects/${publishTarget.id}`,
+                  { status: "published" }
+                );
+                if (res.success && res.data) {
+                  setProjects((prev) =>
+                    prev.map((p) =>
+                      p.id === publishTarget.id ? { ...p, status: "published" } : p
+                    )
+                  );
+                  setPublishTarget((prev) =>
+                    prev ? { ...prev, status: "published" } : prev
+                  );
+                } else {
+                  setPublishError(
+                    res.success === false
+                      ? res.error || "Gagal mempublikasikan undangan."
+                      : "Gagal mempublikasikan undangan."
+                  );
+                }
+                setPublishLoading(false);
+              }}
+            >
+              {publishLoading ? "Memublikasikan..." : "Publikasikan Sekarang"}
+            </button>
+          )}
+
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-primary mb-1">
+              Link Undangan:
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <code className="block text-[11px] bg-gray-100 px-2 py-1 rounded break-all">
+                  {fullExampleUrl}
+                </code>
+              </div>
+              <button
+                type="button"
+                className="shrink-0 px-3 py-1.5 rounded-full border border-border text-[11px] text-primary hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  if (typeof window === "undefined") return;
+                  void navigator.clipboard.writeText(fullExampleUrl);
+                }}
+              >
+                Salin
+              </button>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-muted mb-4">
+            Format:{" "}
+            <code className="bg-gray-100 px-1 py-0.5 rounded">
+              /wedding-invitation/{publishTarget.id}/{encodedName}/NamaTamu
+            </code>
+            . Ubah <code className="bg-gray-100 px-1 py-0.5 rounded">NamaTamu</code>{" "}
+            menjadi nama tamu yang ingin kamu kirimi link.
+          </p>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-full border border-border text-xs text-muted hover:bg-gray-50 transition-colors"
+              onClick={() => {
+                setPublishTarget(null);
+                setPublishError(null);
+                setPublishLoading(false);
+              }}
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
 
       {/* Delete confirmation modal */}
       <DeleteModal />
+      {/* Publish modal */}
+      <PublishModal />
 
       <section className="pt-28 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -286,23 +414,38 @@ export default function ProjectsPage() {
                         </p>
                       </div>
 
-                      <div className="mt-auto flex gap-2">
-                        <Link
-                          href={`/editor/${project.id}`}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-light transition-colors"
-                        >
-                          Lanjutkan Edit
-                        </Link>
+                      <div className="mt-auto flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/editor/${project.id}`}
+                            className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-light transition-colors"
+                          >
+                            Lanjutkan Edit
+                          </Link>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-red-200 text-[11px] text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                            disabled={deletingId === project.id}
+                            onClick={() => {
+                              setDeleteTarget(project);
+                              setDeleteError(null);
+                            }}
+                          >
+                            Hapus
+                          </button>
+                        </div>
                         <button
                           type="button"
-                          className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-red-200 text-[11px] text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                          disabled={deletingId === project.id}
+                          className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-border text-[11px] text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                          disabled={publishLoading && publishTarget?.id === project.id}
                           onClick={() => {
-                            setDeleteTarget(project);
-                            setDeleteError(null);
+                            setPublishTarget(project);
+                            setPublishError(null);
                           }}
                         >
-                          Hapus
+                          {project.status === "published"
+                            ? "Lihat & Salin Link"
+                            : "Publikasikan & Lihat Link"}
                         </button>
                       </div>
                     </article>

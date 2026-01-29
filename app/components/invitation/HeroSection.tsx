@@ -115,7 +115,7 @@ export default function HeroSection({
 
       {/* Content */}
       <div 
-        className="relative z-10 w-full px-6 py-16 text-center text-white"
+        className="relative z-10 w-full px-6 pt-16 pb-32  text-center text-white"
         style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
       >
         <p className="text-lg mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: subtitleColor || "rgba(255, 255, 255, 0.9)" }}>

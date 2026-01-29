@@ -8,9 +8,16 @@ interface TemplateRendererProps {
   project: ProjectData;
   guestName?: string;
   isPreview?: boolean;
+  /** When true, used on standalone public invitation pages (full viewport canvas) */
+  isStandaloneInvitation?: boolean;
 }
 
-export default function TemplateRenderer({ project, guestName, isPreview = false }: TemplateRendererProps) {
+export default function TemplateRenderer({
+  project,
+  guestName,
+  isPreview = false,
+  isStandaloneInvitation = false,
+}: TemplateRendererProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -30,7 +37,7 @@ export default function TemplateRenderer({ project, guestName, isPreview = false
 
   return (
     <>
-      <div className="min-h-screen w-full bg-background">
+      <div className="relative min-h-screen w-full bg-background">
         {sortedComponents.map((componentConfig) => {
           const Component = componentRegistry[componentConfig.type];
           
@@ -53,6 +60,9 @@ export default function TemplateRenderer({ project, guestName, isPreview = false
             venueName: componentData.venueName || project.venue_name,
             venueAddress: componentData.venueAddress || project.venue_address,
             guestName: guestName,
+            // Extra context flags for sections like CoverSection
+            isPreview,
+            isStandaloneInvitation,
           };
 
           return (

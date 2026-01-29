@@ -507,7 +507,7 @@ export default function SectionPropertiesPanel({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">Quote</label>
+              <label className="block text-sm font-medium text-primary mb-2">Greeting / Salam</label>
               <textarea
                 value={componentData.quote || ''}
                 onChange={(e) => handleFieldUpdate('quote', e.target.value)}
@@ -524,6 +524,116 @@ export default function SectionPropertiesPanel({
                 />
               </div>
             </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">Guest Location Text</label>
+              <input
+                type="text"
+                value={componentData.guestLocationText || ''}
+                onChange={(e) => handleFieldUpdate('guestLocationText', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                placeholder="Di Tempat"
+              />
+              <div className="mt-2">
+                <ColorPicker
+                  label="Location Text Color"
+                  value={componentData.guestLocationColor || '#ffffff'}
+                  onChange={(value) => handleFieldUpdate('guestLocationColor', value)}
+                  defaultValue="#ffffff"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">Design Style</label>
+              <select
+                value={componentData.design || 'simple'}
+                onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+              >
+                <option value="simple">Simple (No Image Container)</option>
+                <option value="with-container">With Image Container</option>
+              </select>
+              <p className="text-xs text-muted mt-1">Choose whether to use image container styles</p>
+            </div>
+            {componentData.design === 'with-container' && (
+              <>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-primary mb-2">Cover Image</label>
+                  <ImageFilePicker
+                    images={componentData.imageUrl && componentData.imageUrl.trim()
+                      ? [{
+                          url: componentData.imageUrl,
+                          name: componentData.imageUrl.startsWith('data:')
+                            ? (componentData.coverImageName || 'Cover Image')
+                            : componentData.imageUrl.split('/').pop() || 'Cover Image',
+                        }]
+                      : []}
+                    onImagesChange={(items) => {
+                      if (items.length > 0) {
+                        handleFieldUpdate('imageUrl', items[0].url);
+                        // Store the filename for data URLs so we can show it later
+                        if (items[0].url.startsWith('data:') && items[0].name) {
+                          handleFieldUpdate('coverImageName', items[0].name);
+                        }
+                      } else {
+                        handleFieldUpdate('imageUrl', '');
+                        handleFieldUpdate('coverImageName', '');
+                      }
+                    }}
+                    multiple={false}
+                    label="Choose Cover Image"
+                  />
+                </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-primary mb-2">Image Container Style</label>
+                  <select
+                    value={componentData.imageStyle || 'circular'}
+                    onChange={(e) => handleFieldUpdate('imageStyle', e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  >
+                    <optgroup label="Circular">
+                      <option value="circular">Circular - Classic</option>
+                      <option value="circular-gradient">Circular - Gradient Border</option>
+                      <option value="circular-glow">Circular - Glow Effect</option>
+                    </optgroup>
+                    <optgroup label="Rounded">
+                      <option value="rounded-elegant">Rounded - Elegant Frame</option>
+                      <option value="rounded-modern">Rounded - Modern Gradient</option>
+                      <option value="rounded-glow">Rounded - Glow Effect</option>
+                    </optgroup>
+                    <optgroup label="Oval">
+                      <option value="oval-vintage">Oval - Vintage Frame</option>
+                      <option value="oval-classic">Oval - Classic Frame</option>
+                      <option value="oval-glow">Oval - Glow Effect</option>
+                    </optgroup>
+                    <optgroup label="Hexagon">
+                      <option value="hexagon-glow">Hexagon - Glow Effect</option>
+                      <option value="hexagon-classic">Hexagon - Classic Frame</option>
+                      <option value="hexagon-modern">Hexagon - Modern Dark</option>
+                    </optgroup>
+                    <optgroup label="Square">
+                      <option value="square-frame">Square - Framed</option>
+                      <option value="square-elegant">Square - Elegant Dark</option>
+                      <option value="square-glow">Square - Glow Effect</option>
+                    </optgroup>
+                  </select>
+                  <p className="text-xs text-muted mt-1">Choose an eye-catching style for the cover image</p>
+                </div>
+                {(componentData.imageStyle === 'circular-glow' || 
+                  componentData.imageStyle === 'rounded-glow' || 
+                  componentData.imageStyle === 'oval-glow' || 
+                  componentData.imageStyle === 'hexagon-glow' || 
+                  componentData.imageStyle === 'square-glow') && (
+                  <div className="mt-4">
+                    <ColorPicker
+                      label="Glow Color"
+                      value={componentData.glowColor || '#b49549'}
+                      onChange={(value) => handleFieldUpdate('glowColor', value)}
+                      defaultValue="#b49549"
+                    />
+                  </div>
+                )}
+              </>
+            )}
             {renderDecorativeFlowersSection()}
             {renderCurveDividers()}
             {renderBackgroundSection()}
@@ -591,10 +701,14 @@ export default function SectionPropertiesPanel({
               <label className="block text-sm font-medium text-primary mb-2">Background Images</label>
               <ImageFilePicker
                 images={Array.isArray(componentData.backgroundImages)
-                  ? componentData.backgroundImages.map((url: string, index: number) => ({
-                      url: url,
-                      name: url.startsWith('data:') ? `Background ${index + 1}` : url.split('/').pop() || `Background ${index + 1}`,
-                    }))
+                  ? componentData.backgroundImages.map((item: string | { url: string; alt?: string; order?: number }, index: number) => {
+                      // Handle both string and object formats
+                      const url = typeof item === 'string' ? item : (item?.url || '');
+                      const name = url.startsWith('data:') 
+                        ? `Background ${index + 1}` 
+                        : url.split('/').pop() || `Background ${index + 1}`;
+                      return { url, name };
+                    })
                   : []}
                 onImagesChange={(items) => {
                   handleFieldUpdate('backgroundImages', items.map(item => item.url));
