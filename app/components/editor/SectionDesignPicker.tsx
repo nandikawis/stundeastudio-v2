@@ -19,59 +19,48 @@ interface SectionDesignPickerProps {
 const designVariants: Record<string, DesignOption[]> = {
   'CoverSection': [
     {
-      id: 'cover-1',
-      name: 'Classic Cover',
-      preview: 'cover-classic',
+      id: 'cover-simple',
+      name: 'Simple (No Image Container)',
+      preview: 'cover-simple',
       componentType: 'CoverSection',
-      defaultData: {}
+      defaultData: { design: 'simple' }
     },
     {
-      id: 'cover-2',
-      name: 'Elegant Cover',
-      preview: 'cover-elegant',
+      id: 'cover-with-container',
+      name: 'With Image Container',
+      preview: 'cover-with-container',
       componentType: 'CoverSection',
-      defaultData: {}
-    }
-  ],
-  'HeroSection': [
-    {
-      id: 'hero-1',
-      name: 'Full Screen Hero',
-      preview: 'hero-fullscreen',
-      componentType: 'HeroSection',
-      defaultData: {}
-    },
-    {
-      id: 'hero-2',
-      name: 'Centered Hero',
-      preview: 'hero-centered',
-      componentType: 'HeroSection',
-      defaultData: {}
-    }
-  ],
-  'QuoteSection': [
-    {
-      id: 'quote-1',
-      name: 'With Image',
-      preview: 'quote-image',
-      componentType: 'QuoteSection',
-      defaultData: {}
-    },
-    {
-      id: 'quote-2',
-      name: 'Text Only',
-      preview: 'quote-text',
-      componentType: 'QuoteSection',
-      defaultData: {}
+      defaultData: { design: 'with-container' }
     }
   ],
   'ImageCarousel': [
     {
-      id: 'carousel-1',
-      name: 'Standard Carousel',
-      preview: 'carousel-standard',
+      id: 'carousel-classic',
+      name: 'Classic (Full Width)',
+      preview: 'carousel-classic',
       componentType: 'ImageCarousel',
-      defaultData: {}
+      defaultData: { carouselDesign: 'classic' }
+    },
+    {
+      id: 'carousel-framed',
+      name: 'Framed Card',
+      preview: 'carousel-framed',
+      componentType: 'ImageCarousel',
+      defaultData: { carouselDesign: 'framed' }
+    },
+    {
+      id: 'carousel-filmstrip',
+      name: 'Filmstrip Thumbnails',
+      preview: 'carousel-filmstrip',
+      componentType: 'ImageCarousel',
+      defaultData: { carouselDesign: 'filmstrip' }
+    },
+    {
+      id: 'carousel-landscape',
+      name: 'Landscape',
+      preview: 'carousel-landscape',
+      componentType: 'ImageCarousel',
+      defaultData: { carouselDesign: 'landscape' }
     }
   ],
   'PhotoGalleryGrid': [

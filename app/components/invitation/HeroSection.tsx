@@ -1,14 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
+
+/** Accepts string URLs or `{ url }` objects (legacy / migrated editor data). */
+export function normalizeHeroBackgroundImages(
+  raw: unknown
+): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      if (typeof entry === "string") return entry.trim();
+      if (
+        entry &&
+        typeof entry === "object" &&
+        typeof (entry as { url?: string }).url === "string"
+      ) {
+        return (entry as { url: string }).url.trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+}
 
 interface HeroSectionProps extends DecorativeFlowersProps {
   subtitle?: string;
   coupleNames?: string;
   quote?: string;
-  /** Slideshow images only; no single-image background. */
-  backgroundImages?: string[];
+  /** Slideshow images (strings or `{ url }` per section). */
+  backgroundImages?: (string | { url: string; alt?: string; order?: number })[];
   subtitleColor?: string;
   coupleNamesColor?: string;
   quoteColor?: string;
@@ -24,6 +44,8 @@ interface HeroSectionProps extends DecorativeFlowersProps {
   topCurveStyle?: 'gentle' | 'wave' | 'smooth';
   bottomCurveStyle?: 'gentle' | 'wave' | 'smooth';
   className?: string;
+  /** Compact layout for template cards / thumbnails: fixed height, no slideshow, lighter visuals */
+  previewMode?: boolean;
 }
 
 export default function HeroSection({
@@ -46,9 +68,24 @@ export default function HeroSection({
   bottomCurveStyle = 'gentle',
   decorativeFlowers = false,
   flowerStyle = 'beage',
-  className = ""
+  className = "",
+  previewMode = false
 }: HeroSectionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const normalizedUrls = useMemo(
+    () => normalizeHeroBackgroundImages(backgroundImages),
+    [backgroundImages]
+  );
+
+  const slideshowUrls = useMemo(() => {
+    if (previewMode && normalizedUrls.length > 1) {
+      return [normalizedUrls[0]];
+    }
+    return normalizedUrls;
+  }, [previewMode, normalizedUrls]);
+
+  const effectiveFlowers = previewMode ? false : decorativeFlowers;
 
   // Curve SVG paths for different styles
   const curvePaths = {
@@ -57,25 +94,37 @@ export default function HeroSection({
     smooth: "M0,0c200,0,300,40,500,40c200,0,300-40,500-40v100H0V0z" // Smooth rounded curve
   };
 
-  // Auto-rotate background images
+  // Keep slide index valid when removing images (e.g. 2 → 1 slide after slideshow was on index 1)
   useEffect(() => {
-    if (backgroundImages.length <= 1) return;
+    setCurrentImageIndex((prev) => {
+      if (slideshowUrls.length === 0) return 0;
+      return prev % slideshowUrls.length;
+    });
+  }, [slideshowUrls.length]);
+
+  // Auto-rotate background images (disabled in previewMode)
+  useEffect(() => {
+    if (previewMode) return;
+    if (slideshowUrls.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
+      setCurrentImageIndex((prev) => (prev + 1) % slideshowUrls.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [backgroundImages.length]);
+  }, [slideshowUrls.length, previewMode]);
 
-  // When no slideshow images, use backgroundColor or default gradient (no single-image background)
+  // No images: gradient or solid color. With images: optional color underlay behind slides
   const sectionStyle: React.CSSProperties = {};
-  if (!backgroundImages?.length) {
+  if (!slideshowUrls.length) {
     if (backgroundColor) {
       sectionStyle.backgroundColor = backgroundColor;
     } else {
-      sectionStyle.background = 'linear-gradient(to bottom, #111827, #1f2937, #111827)';
+      sectionStyle.background =
+        "linear-gradient(to bottom, #111827, #1f2937, #111827)";
     }
+  } else if (backgroundColor) {
+    sectionStyle.backgroundColor = backgroundColor;
   }
 
   const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
@@ -95,25 +144,31 @@ export default function HeroSection({
   const coupleNamesAlignClass = mapAlignToClass(coupleNamesAlign);
   const quoteAlignClass = mapAlignToClass(quoteAlign);
 
+  const sectionHeightClass = previewMode
+    ? "h-full min-h-0 w-full"
+    : "min-h-screen";
+
+  const curveSvgClass = previewMode ? "h-8 sm:h-10" : "h-16";
+
   return (
     <section 
-      className={`relative min-h-screen w-full flex items-end justify-center overflow-hidden ${className}`}
+      className={`relative ${sectionHeightClass} w-full flex items-end justify-center overflow-hidden ${className}`}
       style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
     >
       {/* Background Slideshow with Ken Burns Effect */}
-      {backgroundImages.length > 0 && (
+      {slideshowUrls.length > 0 && (
         <div className="absolute inset-0 z-0">
-          {backgroundImages.map((image, index) => (
+          {slideshowUrls.map((imageUrl, index) => (
             <div
-              key={index}
+              key={`${index}-${imageUrl.slice(0, 48)}`}
               className={`absolute inset-0 transition-opacity duration-1000 ${
                 index === currentImageIndex ? "opacity-100" : "opacity-0"
               }`}
             >
               <div
-                className="absolute inset-0 bg-cover bg-center animate-ken-burns"
+                className={`absolute inset-0 bg-cover bg-center ${previewMode ? "" : "animate-ken-burns"}`}
                 style={{
-                  backgroundImage: `url(${image})`,
+                  backgroundImage: `url(${imageUrl})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat"
@@ -130,34 +185,42 @@ export default function HeroSection({
       {/* SVG Curve Divider at Top */}
       {showTopCurve && (
         <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16" style={{ fill: topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
             <path d={curvePaths[topCurveStyle]} />
           </svg>
         </div>
       )}
 
       {/* Decorative Flowers */}
-      {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
+      {renderDecorativeFlowers({ decorativeFlowers: effectiveFlowers, flowerStyle, showTopCurve, showBottomCurve })}
 
       {/* Content */}
       <div 
-        className="relative z-10 w-full px-6 pt-16 pb-32  text-center text-white"
-        style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+        className={`relative z-10 w-full text-center text-white ${
+          previewMode ? "px-4 pt-8 pb-16 sm:pb-20" : "px-6 pt-16 pb-32"
+        }`}
+        style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
       >
         <p
-          className={`text-lg mb-4 ${subtitleAlignClass}`}
+          className={`${previewMode ? "text-xs sm:text-sm mb-2" : "text-lg mb-4"} ${subtitleAlignClass}`}
           style={{ fontFamily: "var(--font-dm-sans)", color: subtitleColor || "rgba(255, 255, 255, 0.9)" }}
         >
           {subtitle}
         </p>
         <h2
-          className={`text-4xl md:text-5xl font-bold mb-6 ${coupleNamesAlignClass}`}
+          className={`${
+            previewMode ? "text-xl sm:text-2xl md:text-3xl mb-2 sm:mb-3" : "text-4xl md:text-5xl mb-6"
+          } font-bold ${coupleNamesAlignClass}`}
           style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}
         >
           {coupleNames}
         </h2>
         <p
-          className={`text-base md:text-lg italic max-w-2xl mx-auto leading-relaxed ${quoteAlignClass}`}
+          className={`${
+            previewMode
+              ? "text-[10px] sm:text-xs italic max-w-full mx-auto leading-snug line-clamp-3"
+              : "text-base md:text-lg italic max-w-2xl mx-auto leading-relaxed"
+          } ${quoteAlignClass}`}
           style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.9)" }}
         >
           "{quote}"
@@ -167,7 +230,7 @@ export default function HeroSection({
       {/* SVG Curve Divider at Bottom */}
       {showBottomCurve && (
         <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16" style={{ fill: curveColor || '#ffffff' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: curveColor || '#ffffff' }}>
             <path d={curvePaths[bottomCurveStyle]} />
           </svg>
         </div>

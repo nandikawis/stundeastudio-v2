@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import TemplateCard from "./TemplateCard";
-import { Template, getAllCategories, getTemplatesByCategory, searchTemplates, categoryLabels } from "../../lib/templates";
+import { Template, categoryLabels } from "../../lib/templates";
 
 interface TemplateGridProps {
   templates: Template[];
@@ -12,28 +12,30 @@ export default function TemplateGrid({ templates: initialTemplates }: TemplateGr
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Filter templates based on category and search
+  const categories = useMemo(
+    () => Array.from(new Set(initialTemplates.map((t) => t.category))),
+    [initialTemplates]
+  );
+
+  // Filter from props only (same source as the page) — avoids any mismatch with module-level helpers
   const filteredTemplates = useMemo(() => {
-    let filtered = initialTemplates;
+    let filtered =
+      selectedCategory === "all"
+        ? initialTemplates
+        : initialTemplates.filter((t) => t.category === selectedCategory);
 
-    // Filter by category
-    if (selectedCategory !== "all") {
-      filtered = getTemplatesByCategory(selectedCategory);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      filtered = searchTemplates(searchQuery);
-      // Also apply category filter if not "all"
-      if (selectedCategory !== "all") {
-        filtered = filtered.filter(t => t.category === selectedCategory);
-      }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      filtered = filtered.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q) ||
+          t.category.toLowerCase().includes(q)
+      );
     }
 
     return filtered;
   }, [selectedCategory, searchQuery, initialTemplates]);
-
-  const categories = getAllCategories();
 
   return (
     <div className="w-full">

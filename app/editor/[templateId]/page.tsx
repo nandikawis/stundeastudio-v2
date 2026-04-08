@@ -323,6 +323,12 @@ export default function EditorPage({
         delete newSectionData.backgroundImageUrl;
         delete newSectionData.backgroundImageName;
       }
+      // Clearing imageUrl must also clear display-name fields in the same write. A second
+      // synchronous update (e.g. coverImageName: '') used stale project and re-applied the old imageUrl.
+      if (field === "imageUrl" && value === "") {
+        newSectionData.coverImageName = "";
+        newSectionData.profileImageName = "";
+      }
 
       const updatedProject: ProjectData = {
         ...project,

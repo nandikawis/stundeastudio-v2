@@ -171,6 +171,7 @@ export default function ElementRenderer({
               coupleNamesAlign={element.content?.coupleNamesAlign}
               quoteAlign={element.content?.quoteAlign}
               backgroundImages={element.content?.backgroundImages || []}
+              backgroundColor={element.content?.backgroundColor}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />

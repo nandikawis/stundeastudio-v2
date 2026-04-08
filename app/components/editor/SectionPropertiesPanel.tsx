@@ -726,8 +726,8 @@ export default function SectionPropertiesPanel({
                             handleFieldUpdate('coverImageName', items[0].name);
                           }
                         } else {
+                          // Single update: editor clears coverImageName/profileImageName with imageUrl
                           handleFieldUpdate('imageUrl', '');
-                          handleFieldUpdate('coverImageName', '');
                         }
                       }}
                       multiple={false}
@@ -939,6 +939,57 @@ export default function SectionPropertiesPanel({
                   Selected images will be added to the slideshow and can be seen in the preview immediately.
                 </p>
               </FieldGroup>
+              <div className="mt-4 pt-4 border-t border-border/60">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-primary">Background Color</label>
+                  <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-border">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!componentData.backgroundColor) {
+                          handleFieldUpdate('backgroundColor', '#1f2937');
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        componentData.backgroundColor
+                          ? 'bg-white text-primary shadow-sm border border-border'
+                          : 'text-muted hover:text-primary'
+                      }`}
+                    >
+                      Color
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFieldUpdate('backgroundColor', '')}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        !componentData.backgroundColor
+                          ? 'bg-white text-primary shadow-sm border border-border'
+                          : 'text-muted hover:text-primary'
+                      }`}
+                    >
+                      No Color
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={componentData.backgroundColor || '#1f2937'}
+                    onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+                    className="w-10 h-10 border border-border rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={componentData.backgroundColor || ''}
+                    onChange={(e) => handleFieldUpdate('backgroundColor', e.target.value)}
+                    placeholder="#1f2937"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                  />
+                </div>
+                <p className="text-xs text-muted mt-2">
+                  Shown behind the slideshow (or full section when there are no images).
+                </p>
+              </div>
             </SectionGroup>
 
             <SectionGroup title="Decorations" defaultOpen={false}>
@@ -1445,17 +1496,16 @@ export default function SectionPropertiesPanel({
                           : componentData.imageUrl.split('/').pop() || 'Profile Image',
                       }]
                     : []}
-                  onImagesChange={(items) => {
-                    if (items.length > 0) {
-                      handleFieldUpdate('imageUrl', items[0].url);
-                      if (items[0].url.startsWith('data:') && items[0].name) {
-                        handleFieldUpdate('profileImageName', items[0].name);
+                    onImagesChange={(items) => {
+                      if (items.length > 0) {
+                        handleFieldUpdate('imageUrl', items[0].url);
+                        if (items[0].url.startsWith('data:') && items[0].name) {
+                          handleFieldUpdate('profileImageName', items[0].name);
+                        }
+                      } else {
+                        handleFieldUpdate('imageUrl', '');
                       }
-                    } else {
-                      handleFieldUpdate('imageUrl', '');
-                      handleFieldUpdate('profileImageName', '');
-                    }
-                  }}
+                    }}
                   multiple={false}
                   label="Choose Image"
                 />

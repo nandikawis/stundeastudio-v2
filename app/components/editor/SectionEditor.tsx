@@ -168,7 +168,20 @@ export default function SectionEditor({
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <SectionDesignPicker
               sectionType={project.page_structure.find(s => s.id === selectedSectionId)?.type || ''}
-              currentDesign={project.component_data[selectedSectionId]?.designId}
+              currentDesign={(() => {
+                if (!selectedSectionId || !project) return undefined;
+                const sectionType = project.page_structure.find((s) => s.id === selectedSectionId)?.type;
+                const data = project.component_data[selectedSectionId] as Record<string, unknown> | undefined;
+                if (!data) return undefined;
+                if (sectionType === "ImageCarousel") {
+                  const did = data.designId;
+                  if (typeof did === "string" && did) return did;
+                  const cd = data.carouselDesign;
+                  if (typeof cd === "string" && cd) return `carousel-${cd}`;
+                }
+                const did = data.designId;
+                return typeof did === "string" ? did : undefined;
+              })()}
               onSelectDesign={handleDesignSelect}
               onClose={() => {
                 setShowDesignPicker(false);
