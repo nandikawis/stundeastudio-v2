@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { setAccessToken, getAccessToken } from "../lib/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -179,20 +180,16 @@ export default function Navbar() {
               <div className="flex items-center justify-between gap-6">
                 {/* Logo + Brand */}
                 <Link href="/" className="flex items-center gap-3 whitespace-nowrap group">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span
-                      className="text-white font-bold text-sm md:text-base"
-                      style={{ fontFamily: "var(--font-playfair)" }}
-                    >
-                      S
-                    </span>
+                  <div className="w-[140px] md:w-[170px] h-[34px] md:h-[40px] overflow-hidden rounded-md">
+                    <Image
+                      src="/11.png"
+                      alt="Stundea Studio logo"
+                      width={340}
+                      height={40}
+                      className="w-full h-full object-contain"
+                      priority
+                    />
                   </div>
-                  <span
-                    className="text-base md:text-lg font-semibold text-primary group-hover:text-accent-dark transition-colors"
-                    style={{ fontFamily: "var(--font-playfair)" }}
-                  >
-                    Stundea Studio
-                  </span>
                 </Link>
 
                 {/* Desktop Navigation */}

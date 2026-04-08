@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -87,101 +88,78 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <span className="text-accent-dark text-sm font-medium uppercase tracking-wider">Fitur Unggulan</span>
-            <h2 
-              className="text-3xl md:text-4xl font-bold text-primary mt-3"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              Semua yang Anda Butuhkan
-            </h2>
-            <p className="text-muted mt-4 max-w-2xl mx-auto">
-              Fitur lengkap untuk membuat undangan pernikahan digital yang profesional dan berkesan
-            </p>
-          </div>
+      <section id="features" className="relative py-24 bg-white overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="group p-8 rounded-2xl border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 bg-card">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                <svg className="w-7 h-7 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Template Premium</h3>
-              <p className="text-muted leading-relaxed">
-                Pilih dari 50+ template elegan yang dirancang oleh desainer profesional. Sesuaikan warna, font, dan layout sesuai selera.
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+            <div>
+              <span className="text-accent-dark text-sm font-medium uppercase tracking-wider">
+                Fitur Unggulan
+              </span>
+              <h2
+                className="text-3xl md:text-4xl font-bold text-primary mt-3 mb-4"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Lebih dari Sekadar Undangan Digital
+              </h2>
+              <p className="text-muted mb-8 max-w-xl">
+                Rancang undangan yang indah, kelola tamu lebih rapi, dan bagikan momen spesial
+                Anda dengan pengalaman mobile yang elegan.
               </p>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    title: "Template Premium & Mudah Dikustomisasi",
+                    desc: "Ubah teks, warna, foto, dan susunan section tanpa coding.",
+                  },
+                  {
+                    title: "RSVP + Manajemen Tamu",
+                    desc: "Pantau kehadiran tamu dan kelola daftar undangan dengan lebih efisien.",
+                  },
+                  {
+                    title: "Link, QR, Musik & Countdown",
+                    desc: "Bagikan cepat via link/QR dengan sentuhan interaktif yang berkesan.",
+                  },
+                  {
+                    title: "Mobile-first dan Siap Dibagikan",
+                    desc: "Tampilan cantik di HP agar pengalaman tamu tetap optimal.",
+                  },
+                ].map((feature) => (
+                  <div
+                    key={feature.title}
+                    className="group p-5 rounded-2xl border border-border bg-background hover:bg-white hover:border-accent/40 transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 w-6 h-6 rounded-full bg-accent/15 text-accent-dark flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-base md:text-lg font-semibold text-primary">{feature.title}</h3>
+                        <p className="text-sm text-muted mt-1">{feature.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Feature 2 */}
-            <div className="group p-8 rounded-2xl border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 bg-card">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                <svg className="w-7 h-7 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="relative flex items-center justify-center">
+         
+              <div className="relative w-[200px] sm:w-[140px] md:w-[540px] rounded-3xl  p-2 md:p-2.5  ">
+                <Image
+                  src="/invitation_design.png"
+                  alt="Preview desain undangan Stundea Studio"
+                  width={800}
+                  height={800}
+                  className="w-full h-auto object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.14)]"
+                  priority
+                />
               </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">RSVP Online</h3>
-              <p className="text-muted leading-relaxed">
-                Kelola konfirmasi kehadiran tamu dengan mudah. Lihat siapa yang akan hadir dan pantau jumlah tamu secara real-time.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="group p-8 rounded-2xl border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 bg-card">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                <svg className="w-7 h-7 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Manajemen Tamu</h3>
-              <p className="text-muted leading-relaxed">
-                Import daftar tamu dari Excel, kirim undangan massal via WhatsApp, dan kelola database tamu dengan efisien.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="group p-8 rounded-2xl border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 bg-card">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                <svg className="w-7 h-7 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Musik & Animasi</h3>
-              <p className="text-muted leading-relaxed">
-                Tambahkan musik latar yang romantis dan animasi halus untuk membuat undangan Anda lebih hidup dan berkesan.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="group p-8 rounded-2xl border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 bg-card">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                <svg className="w-7 h-7 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">QR Code & Link</h3>
-              <p className="text-muted leading-relaxed">
-                Dapatkan QR code dan link unik untuk setiap undangan. Mudah dibagikan via media sosial atau dicetak.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="group p-8 rounded-2xl border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 bg-card">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                <svg className="w-7 h-7 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Peta Lokasi</h3>
-              <p className="text-muted leading-relaxed">
-                Integrasikan Google Maps untuk menunjukkan lokasi acara. Tamu bisa langsung navigasi ke venue dengan satu klik.
-              </p>
             </div>
           </div>
         </div>
@@ -190,52 +168,52 @@ export default function Home() {
       {/* How It Works Section */}
       <section className="py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-14">
             <span className="text-accent-dark text-sm font-medium uppercase tracking-wider">Cara Kerja</span>
-            <h2 
+            <h2
               className="text-3xl md:text-4xl font-bold text-primary mt-3"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               Buat Undangan dalam 3 Langkah
             </h2>
+            <p className="text-muted mt-4 max-w-2xl mx-auto">
+              Prosesnya sederhana, tapi hasilnya tetap terlihat premium dan personal.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            {/* Step 1 */}
-            <div className="text-center relative">
-              <div className="w-16 h-16 rounded-full bg-accent text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6" style={{ fontFamily: "var(--font-playfair)" }}>
-                1
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Pilih Template</h3>
-              <p className="text-muted">
-                Jelajahi koleksi template premium kami dan pilih yang paling sesuai dengan tema pernikahan Anda.
-              </p>
-              {/* Connector Line */}
-              <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-accent to-accent/30" />
-            </div>
+          <div className="relative max-w-5xl mx-auto rounded-3xl border border-border bg-white/80 backdrop-blur-sm p-6 md:p-10 overflow-hidden">
+            <div className="absolute -top-28 left-1/2 -translate-x-1/2 w-[420px] h-[220px] bg-accent/15 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute inset-y-8 left-[28px] md:left-[39px] w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent" />
 
-            {/* Step 2 */}
-            <div className="text-center relative">
-              <div className="w-16 h-16 rounded-full bg-accent text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6" style={{ fontFamily: "var(--font-playfair)" }}>
-                2
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Kustomisasi</h3>
-              <p className="text-muted">
-                Masukkan detail acara, unggah foto, pilih musik, dan sesuaikan desain sesuai keinginan Anda.
-              </p>
-              {/* Connector Line */}
-              <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-accent to-accent/30" />
-            </div>
+            <div className="relative space-y-8">
+              {[
+                {
+                  step: "01",
+                  title: "Pilih Template",
+                  text: "Jelajahi koleksi template premium kami dan pilih yang paling sesuai dengan tema pernikahan Anda.",
+                },
+                {
+                  step: "02",
+                  title: "Kustomisasi",
+                  text: "Masukkan detail acara, unggah foto, pilih musik, dan sesuaikan desain sesuai keinginan Anda.",
+                },
+                {
+                  step: "03",
+                  title: "Bagikan",
+                  text: "Dapatkan link undangan dan bagikan ke semua tamu melalui WhatsApp, media sosial, atau QR code.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="relative pl-16 md:pl-20">
+                  <div className="absolute left-0 top-1.5 w-14 h-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 flex items-center justify-center">
+                    <span className="text-sm font-semibold tracking-wider">{item.step}</span>
+                  </div>
 
-            {/* Step 3 */}
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-accent text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6" style={{ fontFamily: "var(--font-playfair)" }}>
-                3
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Bagikan</h3>
-              <p className="text-muted">
-                Dapatkan link undangan dan bagikan ke semua tamu melalui WhatsApp, media sosial, atau QR code.
-              </p>
+                  <div className="rounded-2xl border border-border/80 bg-white p-5 md:p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+                    <h3 className="text-xl font-semibold text-primary mb-2">{item.title}</h3>
+                    <p className="text-muted leading-relaxed">{item.text}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -427,7 +405,7 @@ export default function Home() {
               </div>
               <div className="text-left">
                 <div className="font-semibold text-primary">WhatsApp</div>
-                <div className="text-muted text-sm">+62 812 3456 7890</div>
+                <div className="text-muted text-sm">+62813-3753-1477</div>
               </div>
             </div>
 
