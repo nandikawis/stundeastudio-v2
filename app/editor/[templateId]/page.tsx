@@ -94,6 +94,7 @@ export default function EditorPage({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [mobileMusicOpen, setMobileMusicOpen] = useState(false);
 
   type SectionPreview = {
     backgroundImageUrl?: string;
@@ -105,6 +106,28 @@ export default function EditorPage({
   const [previewImages, setPreviewImages] = useState<Record<string, SectionPreview>>({});
   const musicInputRef = useRef<HTMLInputElement | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const syncBodyScroll = () => {
+      const mobile = mq.matches;
+      if (mobile && (selectedSectionId || mobileMusicOpen)) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+    };
+    syncBodyScroll();
+    mq.addEventListener("change", syncBodyScroll);
+    return () => {
+      mq.removeEventListener("change", syncBodyScroll);
+      document.body.style.overflow = "";
+    };
+  }, [selectedSectionId, mobileMusicOpen]);
+
+  useEffect(() => {
+    if (selectedSectionId) setMobileMusicOpen(false);
+  }, [selectedSectionId]);
 
   // Load: by project id (API) or by template slug (localStorage / mock / build from template)
   useEffect(() => {
@@ -637,6 +660,20 @@ export default function EditorPage({
     }
   };
 
+  const getMergedComponentData = (sectionId: string) => {
+    if (!project) return {};
+    const baseData = project.component_data[sectionId] || {};
+    const previewData = previewImages[sectionId];
+    if (!previewData) return baseData;
+    return {
+      ...baseData,
+      ...(previewData.backgroundImages !== undefined ? { backgroundImages: previewData.backgroundImages } : {}),
+      ...(previewData.imageUrl !== undefined ? { imageUrl: previewData.imageUrl } : {}),
+      ...(previewData.images !== undefined ? { images: previewData.images } : {}),
+      ...(previewData.logoUrl !== undefined ? { logoUrl: previewData.logoUrl } : {}),
+    };
+  };
+
   if (loadError) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
@@ -751,12 +788,51 @@ export default function EditorPage({
   return (
     <>
       <SaveModal />
-      <main className="min-h-screen bg-background">
+      <main className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
+      {/* Single file input for music (shared by desktop + mobile UI) */}
+      <input
+        ref={musicInputRef}
+        type="file"
+        accept="audio/*"
+        className="hidden"
+        aria-hidden
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file || !project) return;
+
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const base64 = reader.result as string;
+              const res = await api.post<{ url: string }>("/api/upload/audio", {
+                base64Audio: base64,
+                fileName: file.name,
+              });
+              if (res.success && res.data?.url) {
+                const updatedProject: ProjectData = {
+                  ...project,
+                  background_music_url: res.data.url,
+                };
+                handleProjectUpdate(updatedProject);
+                setMobileMusicOpen(false);
+              }
+            } catch (err) {
+              console.error("Failed to upload audio", err);
+            } finally {
+              e.target.value = "";
+            }
+          };
+          reader.readAsDataURL(file);
+        }}
+      />
       {/* Toolbar */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+      <div
+        className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-border shadow-sm"
+        style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <input
                 type="text"
                 value={project?.name ?? ""}
@@ -766,41 +842,57 @@ export default function EditorPage({
                   const updated: ProjectData = { ...project, name: e.target.value };
                   handleProjectUpdate(updated);
                 }}
-                className="text-lg font-semibold text-primary bg-transparent border-b border-transparent focus:border-accent focus:outline-none px-1 py-0.5"
+                className="text-base sm:text-lg font-semibold text-primary bg-transparent border-b border-transparent focus:border-accent focus:outline-none px-1 py-0.5 min-w-0 w-full max-w-[min(100%,14rem)] sm:max-w-md"
                 style={{ fontFamily: "var(--font-playfair)" }}
               />
             </div>
             {(template ?? project?.template_slug) && (
-              <span className="px-2 py-1 bg-accent/10 text-accent-dark text-xs rounded-full">
+              <span className="hidden sm:inline-flex shrink-0 px-2 py-1 bg-accent/10 text-accent-dark text-xs rounded-full truncate max-w-[10rem] lg:max-w-none">
                 {template?.name ?? project?.template_slug ?? ""}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            {saveStatus === "saving" && <span className="text-sm text-muted">Menyimpan...</span>}
-            {saveStatus === "saved" && <span className="text-sm text-green-600">Tersimpan</span>}
-            {saveStatus === "error" && <span className="text-sm text-red-600">Gagal menyimpan</span>}
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap">
             <button
-              onClick={() => setIsPreviewMode(true)}
-              className="px-4 py-2 border border-border text-primary rounded-full text-sm hover:bg-background transition-all"
+              type="button"
+              onClick={() => setMobileMusicOpen(true)}
+              className="lg:hidden px-3 py-2 rounded-full text-sm font-medium border border-border text-primary hover:bg-background transition-colors"
             >
-              Preview
+              Musik
             </button>
-            <button
-              onClick={saveProject}
-              disabled={saveStatus === "saving"}
-              className="px-4 py-2 bg-primary text-white rounded-full text-sm hover:bg-primary-light transition-all disabled:opacity-50"
-            >
-              {project && !isProjectId(project.id) ? "Simpan Proyek" : "Simpan"}
-            </button>
+            <div className="text-xs sm:text-sm shrink-0 min-w-0">
+              {saveStatus === "saving" && <span className="text-muted">Menyimpan...</span>}
+              {saveStatus === "saved" && <span className="text-green-600">Tersimpan</span>}
+              {saveStatus === "error" && <span className="text-red-600">Gagal</span>}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsPreviewMode(true)}
+                className="px-3 sm:px-4 py-2 border border-border text-primary rounded-full text-sm hover:bg-background transition-all"
+              >
+                Preview
+              </button>
+              <button
+                type="button"
+                onClick={saveProject}
+                disabled={saveStatus === "saving"}
+                className="px-3 sm:px-4 py-2 bg-primary text-white rounded-full text-sm hover:bg-primary-light transition-all disabled:opacity-50 min-h-[44px] sm:min-h-0"
+              >
+                <span className="sm:hidden">Simpan</span>
+                <span className="hidden sm:inline">
+                  {project && !isProjectId(project.id) ? "Simpan Proyek" : "Simpan"}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="pt-20 flex h-[calc(100vh-5rem)]">
-        {/* Left Sidebar - Background Music */}
-        <div className="w-64 border-r border-border bg-white overflow-y-auto">
-          <div className="p-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-28 sm:pt-20 lg:flex-row">
+        {/* Left Sidebar - Background Music (desktop) — own scroll, fixed width */}
+        <div className="hidden min-h-0 shrink-0 overflow-y-auto border-r border-border bg-white lg:flex lg:w-64">
+          <div className="p-4 w-full">
             <h3 className="font-semibold text-primary mb-4">Background Music</h3>
             <p className="text-xs text-muted mb-3">
               Unggah musik latar untuk undangan ini. Musik akan diputar di halaman undangan.
@@ -814,11 +906,8 @@ export default function EditorPage({
                   type="button"
                   onClick={async () => {
                     if (!project) return;
-                    // Set to undefined for local state (so UI updates immediately)
                     const updatedProject: ProjectData = { ...project, background_music_url: undefined };
-                    // Update local state
                     setProject(updatedProject);
-                    // Persist immediately with explicit null so backend clears the field
                     if (isProjectId(updatedProject.id)) {
                       await persistProject(updatedProject);
                     }
@@ -833,37 +922,6 @@ export default function EditorPage({
                 <label className="block text-sm font-medium text-primary mb-1">
                   Unggah file audio
                 </label>
-                <input
-                  ref={musicInputRef}
-                  type="file"
-                  accept="audio/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file || !project) return;
-
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                      try {
-                        const base64 = reader.result as string;
-                        const res = await api.post<{ url: string }>("/api/upload/audio", {
-                          base64Audio: base64,
-                          fileName: file.name,
-                        });
-                        if (res.success && res.data?.url) {
-                          const updatedProject: ProjectData = {
-                            ...project,
-                            background_music_url: res.data.url,
-                          };
-                          handleProjectUpdate(updatedProject);
-                        }
-                      } catch (err) {
-                        console.error("Failed to upload audio", err);
-                      }
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                />
                 <button
                   type="button"
                   onClick={() => musicInputRef.current?.click()}
@@ -880,10 +938,10 @@ export default function EditorPage({
           </div>
         </div>
 
-        {/* Center - Canvas (1:1 with Preview) */}
-        <div className="flex-1 overflow-y-auto bg-gray-100">
-          <div className="flex justify-center items-start py-8">
-            <div className="w-[375px] bg-white shadow-lg">
+        {/* Center - Canvas (1:1 with Preview) — own scroll */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-gray-100">
+          <div className="flex justify-center items-start px-2 pb-4 pt-6 sm:px-4 sm:py-8">
+            <div className="w-full max-w-[375px] bg-white shadow-lg">
               {project ? (
                 <SectionEditor
                   project={project}
@@ -907,25 +965,12 @@ export default function EditorPage({
           </div>
         </div>
 
-        {/* Right Sidebar - Properties Panel */}
-        <div className="w-80 border-l border-border bg-white overflow-y-auto">
+        {/* Right Sidebar - Properties Panel (desktop) — own scroll */}
+        <div className="hidden min-h-0 w-80 shrink-0 overflow-y-auto overscroll-y-contain border-l border-border bg-white lg:flex lg:flex-col">
           {selectedSectionId && project ? (
             <SectionPropertiesPanel
-              section={project.page_structure.find(s => s.id === selectedSectionId)!}
-              componentData={(() => {
-                const baseData = project.component_data[selectedSectionId] || {};
-                const previewData = previewImages[selectedSectionId];
-                if (!previewData) return baseData;
-                
-                // Merge preview data, ensuring empty values override base data
-                return {
-                  ...baseData,
-                  ...(previewData.backgroundImages !== undefined ? { backgroundImages: previewData.backgroundImages } : {}),
-                  ...(previewData.imageUrl !== undefined ? { imageUrl: previewData.imageUrl } : {}),
-                  ...(previewData.images !== undefined ? { images: previewData.images } : {}),
-                  ...(previewData.logoUrl !== undefined ? { logoUrl: previewData.logoUrl } : {}),
-                };
-              })()}
+              section={project.page_structure.find((s) => s.id === selectedSectionId)!}
+              componentData={getMergedComponentData(selectedSectionId)}
               onUpdate={handleSectionFieldUpdate}
               onClose={() => setSelectedSectionId(null)}
             />
@@ -938,8 +983,8 @@ export default function EditorPage({
                 </p>
                 <div className="text-left space-y-2 text-xs text-muted">
                   <p>• Hover over sections to see edit buttons</p>
-                  <p>• Click "Edit Content" to edit text and data</p>
-                  <p>• Click "Change Design" to change section design</p>
+                  <p>• Click &quot;Edit Content&quot; to edit text and data</p>
+                  <p>• Click &quot;Change Design&quot; to change section design</p>
                   <p>• Editor matches preview 1:1</p>
                 </div>
               </div>
@@ -947,6 +992,90 @@ export default function EditorPage({
           )}
         </div>
       </div>
+
+      {/* Mobile: full-screen section properties — scrollable body */}
+      {selectedSectionId && project && (
+        <div className="fixed inset-0 z-[55] flex flex-col bg-white lg:hidden">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[env(safe-area-inset-bottom)]"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <SectionPropertiesPanel
+              section={project.page_structure.find((s) => s.id === selectedSectionId)!}
+              componentData={getMergedComponentData(selectedSectionId)}
+              onUpdate={handleSectionFieldUpdate}
+              onClose={() => setSelectedSectionId(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile: background music sheet */}
+      {mobileMusicOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label="Tutup"
+            onClick={() => setMobileMusicOpen(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl pb-[env(safe-area-inset-bottom)]">
+            <div className="sticky top-0 flex items-center justify-between border-b border-border bg-white px-4 py-3 rounded-t-2xl">
+              <h3 className="font-semibold text-primary">Musik latar</h3>
+              <button
+                type="button"
+                onClick={() => setMobileMusicOpen(false)}
+                className="px-3 py-1.5 text-sm font-medium text-primary rounded-full hover:bg-background"
+              >
+                Tutup
+              </button>
+            </div>
+            <div className="p-4">
+              <p className="text-xs text-muted mb-3">
+                Unggah musik latar untuk undangan ini. Musik akan diputar di halaman undangan.
+              </p>
+              {project?.background_music_url ? (
+                <div className="space-y-3">
+                  <audio controls className="w-full">
+                    <source src={project.background_music_url} type="audio/mpeg" />
+                  </audio>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!project) return;
+                      const updatedProject: ProjectData = { ...project, background_music_url: undefined };
+                      setProject(updatedProject);
+                      if (isProjectId(updatedProject.id)) {
+                        await persistProject(updatedProject);
+                      }
+                    }}
+                    className="text-xs text-red-600 underline"
+                  >
+                    Hapus musik
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-primary mb-1">
+                    Unggah file audio
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => musicInputRef.current?.click()}
+                    className="inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-medium text-white min-h-[44px]"
+                    style={{ backgroundColor: "#42768E" }}
+                  >
+                    Pilih Musik Latar
+                  </button>
+                  <p className="text-[11px] text-muted">
+                    Format yang didukung: MP3, OGG, dll. Disarankan &lt; 5MB.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
     </>
   );

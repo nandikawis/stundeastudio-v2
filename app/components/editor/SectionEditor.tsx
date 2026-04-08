@@ -131,9 +131,9 @@ export default function SectionEditor({
             {!isSelected && !isCoverSection && (
               <>
                 {/* Hover background - non-blocking */}
-                <div className="absolute inset-0 bg-transparent group-hover:bg-accent/5 transition-all pointer-events-none z-40" />
-                {/* Edit buttons - only these are interactive */}
-                <div className="absolute top-2 right-2 opacity-100 group-hover:opacity-100 transition-opacity flex gap-2 z-50 pointer-events-auto">
+                <div className="absolute inset-0 z-[25] bg-transparent group-hover:bg-accent/5 transition-all pointer-events-none" />
+                {/* Above section curves/content (z-10), below editor toolbar (z-40) */}
+                <div className="pointer-events-auto absolute top-2 right-2 z-[30] flex gap-2 opacity-100 transition-opacity group-hover:opacity-100">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -164,7 +164,7 @@ export default function SectionEditor({
 
       {/* Design Picker Modal */}
       {showDesignPicker && selectedSectionId && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-[65] flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <SectionDesignPicker
               sectionType={project.page_structure.find(s => s.id === selectedSectionId)?.type || ''}
