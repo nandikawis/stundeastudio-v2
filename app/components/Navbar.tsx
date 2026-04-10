@@ -19,6 +19,7 @@ export default function Navbar() {
   const ticking = useRef(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<any | null>(null);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     checkLoginStatus();
@@ -81,6 +82,7 @@ export default function Navbar() {
         localStorage.removeItem("user_data");
         setIsLoggedIn(false);
         setUserData(null);
+        setIsCreator(false);
       }
     } catch (error) {
       console.error("Error logging out:", error);
@@ -89,6 +91,7 @@ export default function Navbar() {
       localStorage.removeItem("user_data");
       setIsLoggedIn(false);
       setUserData(null);
+      setIsCreator(false);
     }
   };
 
@@ -106,14 +109,31 @@ export default function Navbar() {
       if (data.success) {
         setIsLoggedIn(true);
         setUserData(data.data.user);
+        setIsCreator(String(data?.data?.user?.role || "").toLowerCase() === "creator");
         localStorage.setItem("user_uuid", data.data.user.id);
         localStorage.setItem("user_data", JSON.stringify(data.data.user));
         if (data.data.session?.access_token) {
           setAccessToken(data.data.session.access_token);
         }
+        // If role is not included in check-session response, fetch profile as fallback.
+        if (!data?.data?.user?.role) {
+          const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
+            credentials: "include",
+            headers,
+          });
+          const profileJson = await profileRes.json().catch(() => null);
+          const role = String(profileJson?.data?.role || "").toLowerCase();
+          if (role === "creator") {
+            setIsCreator(true);
+            const mergedUser = { ...data.data.user, role: profileJson.data.role };
+            setUserData(mergedUser);
+            localStorage.setItem("user_data", JSON.stringify(mergedUser));
+          }
+        }
       } else {
         setIsLoggedIn(false);
         setUserData(null);
+        setIsCreator(false);
         setAccessToken(null);
         localStorage.removeItem("user_uuid");
         localStorage.removeItem("user_data");
@@ -122,6 +142,7 @@ export default function Navbar() {
       console.error("Error checking session:", error);
       setIsLoggedIn(false);
       setUserData(null);
+      setIsCreator(false);
       setAccessToken(null);
       localStorage.removeItem("user_uuid");
       localStorage.removeItem("user_data");
@@ -222,6 +243,14 @@ export default function Navbar() {
                   {/* CTA / Projects + Profile when logged in */}
                   {isLoggedIn ? (
                     <div className="flex items-center gap-3">
+                      {isCreator && (
+                        <Link
+                          href="/creator/templates"
+                          className="px-5 py-2 border border-primary text-primary rounded-full text-sm font-medium hover:bg-primary/10 transition-all"
+                        >
+                          Template Saya
+                        </Link>
+                      )}
                       <Link
                         href="/projects"
                         className="px-5 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/20"
@@ -376,6 +405,15 @@ export default function Navbar() {
                     </Link>
                     {isLoggedIn ? (
                       <>
+                        {isCreator && (
+                          <Link
+                            href="/creator/templates"
+                            onClick={() => setMenuOpen(false)}
+                            className="block py-2 px-3 mt-2 text-center border border-primary text-primary rounded-full font-medium hover:bg-primary/10 transition-colors"
+                          >
+                            Template Saya
+                          </Link>
+                        )}
                         <Link
                           href="/projects"
                           onClick={() => setMenuOpen(false)}

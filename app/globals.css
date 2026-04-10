@@ -44,22 +44,34 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
+/*
+ * No global ::-webkit-scrollbar styling: a fixed 8px thumb reads as “always on” and
+ * prevents overlay scrollbars (hidden until scroll) on Chrome/Safari/macOS.
+ * OS / browser defaults handle when the bar is shown.
+ */
 
-::-webkit-scrollbar-track {
-  background: var(--background);
+/*
+ * Phone mockup preview: no scrollbar at all (real devices don’t show a desktop-style bar).
+ */
+.phone-mockup-scroll {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+.phone-mockup-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+.phone-mockup-scroll * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.phone-mockup-scroll *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
 /* Animations */

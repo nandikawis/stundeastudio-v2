@@ -166,7 +166,11 @@ export default function Login() {
         setAccessToken(token ?? null);
         setShowSuccessModal(true);
         setTimeout(() => {
-          router.push("/");
+          const params = new URLSearchParams(window.location.search);
+          const r = params.get("redirect");
+          const next =
+            r && r.startsWith("/") && !r.startsWith("//") ? r : "/";
+          router.push(next);
         }, 3000);
       }
     } catch (error) {

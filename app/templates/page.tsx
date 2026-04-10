@@ -1,7 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import TemplateGrid from "../components/templates/TemplateGrid";
-import { mockTemplates } from "../lib/templates";
+import TemplatesCatalog from "../components/templates/TemplatesCatalog";
 
 export const metadata = {
   title: "Template Undangan | Stundea Studio",
@@ -62,7 +61,7 @@ export default function TemplatesPage() {
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.4s", animationFillMode: "forwards" }}
         >
-          <TemplateGrid templates={mockTemplates} />
+          <TemplatesCatalog />
         </div>
       </section>
 

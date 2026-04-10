@@ -2,7 +2,16 @@
 
 import { useState, useMemo } from "react";
 import TemplateCard from "./TemplateCard";
-import { Template, categoryLabels } from "../../lib/templates";
+import type { Template } from "../../lib/templates";
+
+function uniqueSortedValues<T>(items: T[], keyFn: (t: T) => string): string[] {
+  const set = new Set<string>();
+  for (const item of items) {
+    const raw = keyFn(item).trim();
+    set.add(raw || "—");
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
 
 interface TemplateGridProps {
   templates: Template[];
@@ -10,19 +19,31 @@ interface TemplateGridProps {
 
 export default function TemplateGrid({ templates: initialTemplates }: TemplateGridProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedStyle, setSelectedStyle] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const categories = useMemo(
-    () => Array.from(new Set(initialTemplates.map((t) => t.category))),
+  const categoryOptions = useMemo(
+    () => uniqueSortedValues(initialTemplates, (t) => t.category),
     [initialTemplates]
   );
 
-  // Filter from props only (same source as the page) — avoids any mismatch with module-level helpers
+  const styleOptions = useMemo(() => uniqueSortedValues(initialTemplates, (t) => t.style), [initialTemplates]);
+
   const filteredTemplates = useMemo(() => {
-    let filtered =
-      selectedCategory === "all"
-        ? initialTemplates
-        : initialTemplates.filter((t) => t.category === selectedCategory);
+    let filtered = initialTemplates;
+
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((t) => {
+        const v = t.category.trim() || "—";
+        return v === selectedCategory;
+      });
+    }
+    if (selectedStyle !== "all") {
+      filtered = filtered.filter((t) => {
+        const v = t.style.trim() || "—";
+        return v === selectedStyle;
+      });
+    }
 
     const q = searchQuery.trim().toLowerCase();
     if (q) {
@@ -30,16 +51,16 @@ export default function TemplateGrid({ templates: initialTemplates }: TemplateGr
         (t) =>
           t.name.toLowerCase().includes(q) ||
           t.description.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q)
+          t.category.toLowerCase().includes(q) ||
+          t.style.toLowerCase().includes(q)
       );
     }
 
     return filtered;
-  }, [selectedCategory, searchQuery, initialTemplates]);
+  }, [selectedCategory, selectedStyle, searchQuery, initialTemplates]);
 
   return (
     <div className="w-full">
-      {/* Search Bar */}
       <div className="mb-8">
         <div className="relative max-w-md mx-auto">
           <input
@@ -65,36 +86,72 @@ export default function TemplateGrid({ templates: initialTemplates }: TemplateGr
         </div>
       </div>
 
-      {/* Category Filters */}
-      <div className="mb-10">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={() => setSelectedCategory("all")}
-            className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-              selectedCategory === "all"
-                ? "bg-primary text-white shadow-md"
-                : "bg-white text-primary border border-border hover:border-accent hover:text-accent-dark"
-            }`}
-          >
-            Semua
-          </button>
-          {categories.map((category) => (
+      <div className="mb-6 space-y-4">
+        <div>
+          <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted mb-3">Kategori</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              type="button"
+              onClick={() => setSelectedCategory("all")}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                selectedCategory === category
+                selectedCategory === "all"
                   ? "bg-primary text-white shadow-md"
                   : "bg-white text-primary border border-border hover:border-accent hover:text-accent-dark"
               }`}
             >
-              {categoryLabels[category] || category}
+              Semua
             </button>
-          ))}
+            {categoryOptions.map((value) => (
+              <button
+                type="button"
+                key={`cat-${value}`}
+                onClick={() => setSelectedCategory(value)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all max-w-[min(100%,14rem)] truncate ${
+                  selectedCategory === value
+                    ? "bg-primary text-white shadow-md"
+                    : "bg-white text-primary border border-border hover:border-accent hover:text-accent-dark"
+                }`}
+                title={value}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted mb-3">Style</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSelectedStyle("all")}
+              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                selectedStyle === "all"
+                  ? "bg-primary text-white shadow-md"
+                  : "bg-white text-primary border border-border hover:border-accent hover:text-accent-dark"
+              }`}
+            >
+              Semua
+            </button>
+            {styleOptions.map((value) => (
+              <button
+                type="button"
+                key={`style-${value}`}
+                onClick={() => setSelectedStyle(value)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all max-w-[min(100%,14rem)] truncate ${
+                  selectedStyle === value
+                    ? "bg-primary text-white shadow-md"
+                    : "bg-white text-primary border border-border hover:border-accent hover:text-accent-dark"
+                }`}
+                title={value}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Results Count */}
       <div className="mb-6 text-center">
         <p className="text-muted text-sm">
           Menampilkan <span className="font-semibold text-primary">{filteredTemplates.length}</span> template
@@ -102,7 +159,6 @@ export default function TemplateGrid({ templates: initialTemplates }: TemplateGr
         </p>
       </div>
 
-      {/* Template Grid */}
       {filteredTemplates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {filteredTemplates.map((template) => (
@@ -125,12 +181,9 @@ export default function TemplateGrid({ templates: initialTemplates }: TemplateGr
             />
           </svg>
           <h3 className="text-xl font-semibold text-primary mb-2">Template tidak ditemukan</h3>
-          <p className="text-muted">
-            Coba cari dengan kata kunci lain atau pilih kategori yang berbeda
-          </p>
+          <p className="text-muted">Coba kata kunci lain atau ubah filter kategori / style</p>
         </div>
       )}
     </div>
   );
 }
-

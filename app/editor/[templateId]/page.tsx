@@ -3,6 +3,12 @@
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { mockTemplates } from "../../lib/templates";
+import {
+  buildProjectDataFromMockTemplate,
+  buildProjectDataFromTemplateApiRow,
+  type PublicTemplateRow,
+} from "../../lib/catalogTemplates";
+import { stripLegacyBackgroundKeys } from "../../lib/projectDataUtils";
 import { mockProjects, ProjectData } from "../../lib/mockData";
 import TemplateRenderer from "../../components/invitation/TemplateRenderer";
 import SectionEditor from "../../components/editor/SectionEditor";
@@ -104,6 +110,10 @@ export default function EditorPage({
     logoUrl?: string;
   };
   const [previewImages, setPreviewImages] = useState<Record<string, SectionPreview>>({});
+  /** When editor opens a DB-published template (not in mockTemplates) */
+  const [remoteTemplateMeta, setRemoteTemplateMeta] = useState<{ name: string; slug: string } | null>(
+    null
+  );
   const musicInputRef = useRef<HTMLInputElement | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -157,6 +167,27 @@ export default function EditorPage({
                   return acc;
                 }, {} as Record<string, unknown>),
               };
+            } else {
+              const tplRes = await api.get<PublicTemplateRow>(`/api/templates/${templateSlug}`);
+              if (tplRes.success && tplRes.data?.page_structure?.length) {
+                const row = tplRes.data;
+                const component_data =
+                  row.component_data && typeof row.component_data === "object"
+                    ? row.component_data
+                    : {};
+                projectData = {
+                  ...projectData,
+                  template_type: row.slug,
+                  template_slug: row.slug,
+                  page_structure: row.page_structure!.map((section) => ({
+                    id: section.id,
+                    type: section.type,
+                    order: section.order,
+                    config: section.config && typeof section.config === "object" ? section.config : {},
+                  })),
+                  component_data: { ...component_data },
+                };
+              }
             }
           }
           setProject(projectData);
@@ -167,81 +198,63 @@ export default function EditorPage({
       return;
     }
 
-    const t = mockTemplates.find((x) => x.slug === param);
-    if (!t) {
-      setLoadError("Template not found");
-      return;
-    }
+    let cancelled = false;
+    setRemoteTemplateMeta(null);
 
-    const savedProjectKey = `project-${param}`;
-    const saved = typeof window !== "undefined" ? localStorage.getItem(savedProjectKey) : null;
-    if (saved) {
-      try {
-        const savedData = JSON.parse(saved);
-        if (savedData.page_structure) {
-          setProject(savedData as ProjectData);
-          return;
+    (async () => {
+      const savedProjectKey = `project-${param}`;
+      const saved = typeof window !== "undefined" ? localStorage.getItem(savedProjectKey) : null;
+      if (saved) {
+        try {
+          const savedData = JSON.parse(saved);
+          if (savedData.page_structure) {
+            if (!cancelled) setProject(savedData as ProjectData);
+            return;
+          }
+          if (savedData.project) {
+            if (!cancelled) setProject(savedData.project as ProjectData);
+            return;
+          }
+        } catch (e) {
+          console.error("Error loading saved project:", e);
         }
-        if (savedData.project) {
-          setProject(savedData.project as ProjectData);
-          return;
-        }
-      } catch (e) {
-        console.error("Error loading saved project:", e);
       }
-    }
 
-    const projectKey = `project-${param}`;
-    const mockProject = mockProjects[projectKey];
-    if (mockProject) {
-      setProject(mockProject);
-      return;
-    }
-    if (t.templateData?.sections) {
-      const newProject: ProjectData = {
-        id: projectKey,
-        user_id: "user-1",
-        template_type: t.template_type || t.slug,
-        name: t.name,
-        slug: t.slug,
-        status: "draft",
-        page_structure: t.templateData.sections.map((section) => ({
-          id: section.id,
-          type: section.componentType,
-          order: section.order,
-          config: {},
-        })),
-        component_data: t.templateData.sections.reduce((acc, section) => {
-          acc[section.id] = section.defaultData || {};
-          return acc;
-        }, {} as Record<string, unknown>),
-        is_active: false,
-        view_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setProject(newProject);
-    }
+      const t = mockTemplates.find((x) => x.slug === param);
+      if (t) {
+        const projectKey = `project-${param}`;
+        const mockProject = mockProjects[projectKey];
+        if (mockProject) {
+          if (!cancelled) setProject(mockProject);
+          return;
+        }
+        if (t.templateData?.sections) {
+          const newProject = buildProjectDataFromMockTemplate(t);
+          newProject.id = projectKey;
+          if (!cancelled) setProject(newProject);
+        }
+        return;
+      }
+
+      const tplRes = await api.get<PublicTemplateRow>(`/api/templates/${param}`);
+      if (cancelled) return;
+      if (!tplRes.success || !tplRes.data) {
+        setLoadError(tplRes.success === false ? tplRes.error : "Template not found");
+        return;
+      }
+      const row = tplRes.data;
+      if (!row.page_structure?.length) {
+        setLoadError("Template has no sections");
+        return;
+      }
+      setRemoteTemplateMeta({ name: row.name, slug: row.slug });
+      setProject(buildProjectDataFromTemplateApiRow(row, param));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [param]);
-
-  // Strip legacy background keys and migrate backgroundImageUrl → backgroundImages
-  const stripLegacyBackgroundKeys = (componentData: Record<string, unknown>): Record<string, unknown> => {
-    const out: Record<string, unknown> = {};
-    Object.entries(componentData).forEach(([sectionId, sectionData]) => {
-      if (typeof sectionData === "object" && sectionData !== null) {
-        const data = sectionData as Record<string, unknown>;
-        const { backgroundImageUrl, backgroundImageName, ...rest } = data;
-        const hasArray = Array.isArray(data.backgroundImages) && data.backgroundImages.length > 0;
-        if (typeof backgroundImageUrl === "string" && backgroundImageUrl.trim() && !hasArray) {
-          rest.backgroundImages = [{ url: backgroundImageUrl.trim(), alt: (backgroundImageName as string) || "Background Image", order: 1 }];
-        }
-        out[sectionId] = rest;
-      } else {
-        out[sectionId] = sectionData;
-      }
-    });
-    return out;
-  };
 
   const persistProject = async (updatedProject: ProjectData) => {
     if (isProjectId(updatedProject.id)) {
@@ -774,7 +787,7 @@ export default function EditorPage({
                 <div className="w-32 h-1.5 bg-gray-600 rounded-full"></div>
               </div>
               {/* Mobile Screen */}
-              <div className="overflow-y-auto" style={{ height: 'calc(100vh - 4rem - 2.5rem)', maxHeight: '800px' }}>
+              <div className="phone-mockup-scroll overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 4rem - 2.5rem)', maxHeight: '800px' }}>
                 <TemplateRenderer project={project} isPreview />
               </div>
             </div>
@@ -836,7 +849,7 @@ export default function EditorPage({
               <input
                 type="text"
                 value={project?.name ?? ""}
-                placeholder={template?.name ?? "Nama Proyek"}
+                placeholder={template?.name ?? remoteTemplateMeta?.name ?? "Nama Proyek"}
                 onChange={(e) => {
                   if (!project) return;
                   const updated: ProjectData = { ...project, name: e.target.value };
@@ -846,9 +859,9 @@ export default function EditorPage({
                 style={{ fontFamily: "var(--font-playfair)" }}
               />
             </div>
-            {(template ?? project?.template_slug) && (
+            {(template ?? remoteTemplateMeta ?? project?.template_slug) && (
               <span className="hidden sm:inline-flex shrink-0 px-2 py-1 bg-accent/10 text-accent-dark text-xs rounded-full truncate max-w-[10rem] lg:max-w-none">
-                {template?.name ?? project?.template_slug ?? ""}
+                {template?.name ?? remoteTemplateMeta?.name ?? project?.template_slug ?? ""}
               </span>
             )}
           </div>

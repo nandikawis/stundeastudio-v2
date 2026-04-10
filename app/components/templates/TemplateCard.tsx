@@ -5,8 +5,6 @@ import HeroSection, {
   normalizeHeroBackgroundImages,
 } from "../invitation/HeroSection";
 import { Template, getTemplateHeroDefaultData } from "../../lib/templates";
-import { getAccessToken } from "../../lib/api";
-
 interface TemplateCardProps {
   template: Template;
 }
@@ -56,32 +54,38 @@ function buildHeroPreviewProps(data: Record<string, unknown>) {
 export default function TemplateCard({ template }: TemplateCardProps) {
   const router = useRouter();
 
-  const handleUseTemplate = (e: React.MouseEvent) => {
+  const handleOpenPreview = (e: React.MouseEvent) => {
     e.preventDefault();
-    const token = getAccessToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    router.push(`/editor/${template.slug}`);
+    router.push(`/templates/preview/${template.slug}`);
   };
 
   const heroRaw = getTemplateHeroDefaultData(template);
   const heroProps = buildHeroPreviewProps(heroRaw ?? {});
+  const showThumbnail =
+    template.useThumbnailCardPreview === true && Boolean(template.thumbnailUrl?.trim());
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={handleUseTemplate}
-      onKeyDown={(e) => e.key === "Enter" && handleUseTemplate(e as unknown as React.MouseEvent)}
+      onClick={handleOpenPreview}
+      onKeyDown={(e) => e.key === "Enter" && handleOpenPreview(e as unknown as React.MouseEvent)}
       className="group relative block rounded-2xl overflow-hidden bg-white border border-border hover:border-accent/50 transition-all duration-300 hover:shadow-xl hover:shadow-accent/5 cursor-pointer"
     >
-      {/* Live HeroSection preview (scaled to card) */}
+      {/* Published catalog: thumbnail image; mock: live HeroSection preview */}
       <div className="relative w-full aspect-[2/3] overflow-hidden bg-neutral-900">
-        <div className="absolute inset-0 pointer-events-none select-none">
-          <HeroSection previewMode {...heroProps} />
-        </div>
+        {showThumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={template.thumbnailUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 pointer-events-none select-none">
+            <HeroSection previewMode {...heroProps} />
+          </div>
+        )}
 
         {/* Premium Badge */}
         {template.isPremium && (
@@ -95,7 +99,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         {/* Hover CTA */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 bg-black/25 pointer-events-none">
           <div className="px-6 py-3 bg-white text-primary rounded-full font-medium text-sm shadow-lg">
-            Gunakan Template
+            Lihat Template
           </div>
         </div>
       </div>
@@ -110,9 +114,12 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         <p className="text-sm text-muted line-clamp-2 mb-3">
           {template.description}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="px-2.5 py-1 bg-accent/10 text-accent-dark text-xs font-medium rounded-full">
-            {template.category}
+            {template.category.trim() || "—"}
+          </span>
+          <span className="px-2.5 py-1 bg-primary/5 text-primary text-xs font-medium rounded-full border border-border/80">
+            {template.style.trim() || "—"}
           </span>
         </div>
       </div>

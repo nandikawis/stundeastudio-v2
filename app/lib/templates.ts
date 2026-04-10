@@ -14,7 +14,10 @@ export interface Template {
   name: string;
   slug: string;
   template_type?: string; // For compatibility with editor
-  category: 'modern' | 'classic' | 'romantic' | 'minimalist' | 'elegant' | 'rustic';
+  /** Occasion / event type (e.g. wedding, birthday) — catalog filter "Kategori" */
+  category: string;
+  /** Visual style — values come from DB / creator; public catalog shows raw strings */
+  style: string;
   description: string;
   previewImageUrl: string;
   thumbnailUrl: string;
@@ -33,6 +36,8 @@ export interface Template {
   };
   isPremium: boolean;
   isActive: boolean;
+  /** When set, catalog cards show thumbnailUrl as the preview image instead of live HeroSection */
+  useThumbnailCardPreview?: boolean;
 }
 
 /** Default data for the hero section of a template (for listing previews). */
@@ -179,7 +184,8 @@ export const mockTemplates: Template[] = [
     name: 'Elegant',
     slug: 'elegant-001',
     template_type: 'elegant',
-    category: 'elegant',
+    category: 'wedding',
+    style: 'elegant',
     description: 'Undangan elegan dengan cover & profil berfoto, countdown kartu, carousel framed.',
     previewImageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=600&fit=crop',
@@ -293,7 +299,8 @@ export const mockTemplates: Template[] = [
     name: 'Classic',
     slug: 'classic-002',
     template_type: 'classic',
-    category: 'classic',
+    category: 'wedding',
+    style: 'classic',
     description: 'Tema klasik: cover dan profil tanpa foto, countdown sederhana, carousel filmstrip.',
     previewImageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=600&fit=crop',
@@ -399,7 +406,8 @@ export const mockTemplates: Template[] = [
     name: 'Refined',
     slug: 'refined-003',
     template_type: 'refined',
-    category: 'elegant',
+    category: 'wedding',
+    style: 'elegant',
     description: 'Cover & profil dengan foto, detail acara gaya split, countdown kartu, carousel landscape.',
     previewImageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=600&fit=crop',
@@ -513,7 +521,8 @@ export const mockTemplates: Template[] = [
     name: 'Minimal',
     slug: 'minimal-004',
     template_type: 'minimal',
-    category: 'minimalist',
+    category: 'wedding',
+    style: 'minimalist',
     description: 'Tanpa foto di cover & profil, countdown minimal, detail acara modern-minimal, carousel framed.',
     previewImageUrl: 'https://images.unsplash.com/photo-1606216794079-73f85bbd57d5?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1606216794079-73f85bbd57d5?w=400&h=600&fit=crop',
@@ -622,7 +631,8 @@ export const mockTemplates: Template[] = [
     name: 'Romantic',
     slug: 'romantic-005',
     template_type: 'romantic',
-    category: 'romantic',
+    category: 'wedding',
+    style: 'romantic',
     description: 'Nuansa romantis dengan banyak dekorasi bunga, cover & profil berfoto, carousel filmstrip.',
     previewImageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop',
@@ -737,7 +747,8 @@ export const mockTemplates: Template[] = [
     name: 'Modern',
     slug: 'modern-006',
     template_type: 'modern',
-    category: 'modern',
+    category: 'wedding',
+    style: 'modern',
     description: 'Tema modern dengan dekorasi bunga, profil berfoto, detail acara timeline vertikal, carousel landscape.',
     previewImageUrl: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=400&h=600&fit=crop',
@@ -848,7 +859,8 @@ export const mockTemplates: Template[] = [
     name: 'Blossom',
     slug: 'blossom-007',
     template_type: 'blossom',
-    category: 'romantic',
+    category: 'wedding',
+    style: 'romantic',
     description: 'Nuansa lembut dengan foto prewedding baru, countdown kartu elegan, carousel framed.',
     previewImageUrl: 'https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1529636798458-92182e662485?w=400&h=600&fit=crop',
@@ -962,7 +974,8 @@ export const mockTemplates: Template[] = [
     name: 'Mist',
     slug: 'mist-008',
     template_type: 'mist',
-    category: 'minimalist',
+    category: 'wedding',
+    style: 'minimalist',
     description: 'Tema kabut: hero foto baru, tanpa foto di cover & profil, countdown minimal, filmstrip.',
     previewImageUrl: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=400&h=600&fit=crop',
@@ -1068,7 +1081,8 @@ export const mockTemplates: Template[] = [
     name: 'Verdant',
     slug: 'verdant-009',
     template_type: 'verdant',
-    category: 'elegant',
+    category: 'wedding',
+    style: 'elegant',
     description: 'Hijau garden: detail acara split, carousel landscape, foto couple & galeri baru.',
     previewImageUrl: 'https://images.unsplash.com/photo-1607190074257-dd4b7af0309f?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1607190074257-dd4b7af0309f?w=400&h=600&fit=crop',
@@ -1182,7 +1196,8 @@ export const mockTemplates: Template[] = [
     name: 'Ember',
     slug: 'ember-010',
     template_type: 'ember',
-    category: 'modern',
+    category: 'wedding',
+    style: 'modern',
     description: 'Modern hangat: timeline vertikal, bunga dekoratif, hero & galeri dengan foto baru.',
     previewImageUrl: 'https://images.unsplash.com/photo-1546032996-6dfacbacbf3f?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1546032996-6dfacbacbf3f?w=400&h=600&fit=crop',
@@ -1293,7 +1308,8 @@ export const mockTemplates: Template[] = [
     name: 'Aurora',
     slug: 'aurora-011',
     template_type: 'aurora',
-    category: 'romantic',
+    category: 'wedding',
+    style: 'romantic',
     description: 'Nuansa senja: foto unik per template, countdown kartu, carousel landscape.',
     previewImageUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=600&fit=crop',
@@ -1407,7 +1423,8 @@ export const mockTemplates: Template[] = [
     name: 'Dusk',
     slug: 'dusk-012',
     template_type: 'dusk',
-    category: 'elegant',
+    category: 'wedding',
+    style: 'elegant',
     description: 'Garden dusk aesthetic dengan sepasang foto khusus, event elegant-split, carousel framed.',
     previewImageUrl: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=800&h=1200&fit=crop',
     thumbnailUrl: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=400&h=600&fit=crop',
@@ -1517,34 +1534,45 @@ export const mockTemplates: Template[] = [
   }
 ];
 
-// Category labels
-export const categoryLabels: Record<string, string> = {
+/** Occasion / event type — catalog filter "Kategori" */
+export const templateCategoryLabels: Record<string, string> = {
+  wedding: 'Pernikahan',
+  birthday: 'Ulang tahun',
+  engagement: 'Tunangan',
+  general: 'Umum',
+  party: 'Pesta',
+};
+
+/** Preset labels for creator selects; public catalog uses raw `style` from data */
+export const styleLabels: Record<string, string> = {
   modern: 'Modern',
   classic: 'Klasik',
   romantic: 'Romantis',
   minimalist: 'Minimalis',
   elegant: 'Elegan',
-  rustic: 'Rustic'
+  rustic: 'Rustic',
 };
 
-// Get all unique categories
 export const getAllCategories = (): string[] => {
-  return Array.from(new Set(mockTemplates.map(t => t.category)));
+  return Array.from(new Set(mockTemplates.map((t) => t.category)));
 };
 
-// Filter templates by category
+export const getAllStyles = (): string[] => {
+  return Array.from(new Set(mockTemplates.map((t) => t.style)));
+};
+
 export const getTemplatesByCategory = (category: string): Template[] => {
   if (category === 'all') return mockTemplates;
-  return mockTemplates.filter(t => t.category === category);
+  return mockTemplates.filter((t) => t.category === category);
 };
 
-// Search templates
 export const searchTemplates = (query: string): Template[] => {
   const lowerQuery = query.toLowerCase();
   return mockTemplates.filter(
-    t =>
+    (t) =>
       t.name.toLowerCase().includes(lowerQuery) ||
       t.description.toLowerCase().includes(lowerQuery) ||
-      t.category.toLowerCase().includes(lowerQuery)
+      t.category.toLowerCase().includes(lowerQuery) ||
+      t.style.toLowerCase().includes(lowerQuery)
   );
 };
