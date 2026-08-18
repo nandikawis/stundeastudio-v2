@@ -5,6 +5,7 @@ import HeroSection, {
   normalizeHeroBackgroundImages,
 } from "../invitation/HeroSection";
 import { Template, getTemplateHeroDefaultData } from "../../lib/templates";
+
 interface TemplateCardProps {
   template: Template;
 }
@@ -64,65 +65,60 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   const showThumbnail =
     template.useThumbnailCardPreview === true && Boolean(template.thumbnailUrl?.trim());
 
+  const category = template.category.trim() || "—";
+  const style = template.style.trim() || "—";
+
   return (
-    <div
+    <article
       role="button"
       tabIndex={0}
       onClick={handleOpenPreview}
       onKeyDown={(e) => e.key === "Enter" && handleOpenPreview(e as unknown as React.MouseEvent)}
-      className="group relative block rounded-2xl overflow-hidden bg-white border border-border hover:border-accent/50 transition-all duration-300 hover:shadow-xl hover:shadow-accent/5 cursor-pointer"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-primary/10 bg-white transition-[border-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/25 active:scale-[0.99]"
     >
-      {/* Published catalog: thumbnail image; mock: live HeroSection preview */}
-      <div className="relative w-full aspect-[2/3] overflow-hidden bg-neutral-900">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#0c0c0c]">
         {showThumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={template.thumbnailUrl}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="absolute inset-0 pointer-events-none select-none">
+          <div className="pointer-events-none absolute inset-0 select-none">
             <HeroSection previewMode {...heroProps} />
           </div>
         )}
 
-        {/* Premium Badge */}
         {template.isPremium && (
-          <div className="absolute top-4 right-4 z-20">
-            <span className="px-3 py-1 bg-accent text-white text-xs font-medium rounded-full shadow-sm">
-              Premium
-            </span>
-          </div>
+          <p className="absolute right-4 top-4 z-20 text-[11px] font-medium uppercase tracking-[0.18em] text-white/90">
+            Premium
+          </p>
         )}
 
-        {/* Hover CTA */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 bg-black/25 pointer-events-none">
-          <div className="px-6 py-3 bg-white text-primary rounded-full font-medium text-sm shadow-lg">
-            Lihat Template
-          </div>
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-end justify-start bg-gradient-to-t from-black/45 via-transparent to-transparent p-5 opacity-0 transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:opacity-100">
+          <span className="text-sm font-medium text-white">Lihat template</span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="text-lg font-semibold text-primary group-hover:text-accent-dark transition-colors">
+      <div className="flex flex-1 flex-col px-5 py-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3
+            className="text-xl font-medium tracking-[-0.02em] text-primary"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
             {template.name}
           </h3>
         </div>
-        <p className="text-sm text-muted line-clamp-2 mb-3">
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-primary/50">
           {template.description}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2.5 py-1 bg-accent/10 text-accent-dark text-xs font-medium rounded-full">
-            {template.category.trim() || "—"}
-          </span>
-          <span className="px-2.5 py-1 bg-primary/5 text-primary text-xs font-medium rounded-full border border-border/80">
-            {template.style.trim() || "—"}
-          </span>
-        </div>
+        <p className="mt-4 text-[11px] font-medium uppercase tracking-[0.18em] text-primary/35">
+          {category}
+          <span className="mx-2 text-primary/20">·</span>
+          {style}
+        </p>
       </div>
-    </div>
+    </article>
   );
 }

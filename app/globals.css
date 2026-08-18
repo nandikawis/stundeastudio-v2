@@ -44,6 +44,14 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+body.__noscroll {
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+  position: fixed;
+  width: 100vw;
+}
+
 /*
  * No global ::-webkit-scrollbar styling: a fixed 8px thumb reads as “always on” and
  * prevents overlay scrollbars (hidden until scroll) on Chrome/Safari/macOS.
@@ -198,4 +206,96 @@ section div {
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 100%;
+}
+
+/* Emil Kowalski motion tokens — landing / pricing */
+.landing-root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes landingEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-enter {
+  animation: landingEnter 0.65s var(--ease-out) both;
+}
+
+.landing-enter-1 {
+  animation-delay: 0.08s;
+}
+
+.landing-enter-2 {
+  animation-delay: 0.16s;
+}
+
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.landing-btn:active {
+  transform: scale(0.97);
+}
+
+.landing-btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.landing-btn-primary:hover {
+  background: var(--primary-light);
+  box-shadow: 0 12px 32px rgba(45, 45, 45, 0.12);
+}
+
+.landing-btn-ghost {
+  border: 1px solid rgba(45, 45, 45, 0.14);
+  background: transparent;
+  color: var(--primary);
+}
+
+.landing-btn-ghost:hover {
+  border-color: rgba(45, 45, 45, 0.28);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.landing-btn-on-dark {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: #fff;
+}
+
+.landing-btn-on-dark:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-enter,
+  .landing-enter-1,
+  .landing-enter-2 {
+    animation: none;
+  }
+
+  .landing-btn:active {
+    transform: none;
+  }
 }

@@ -1,30 +1,25 @@
 "use client";
 
-import Link from "next/link";
 import React, { useState, useEffect } from "react";
 
-// Testimonial data
 const testimonials = [
   {
     id: 1,
-    text: "Simple unbelievable! I'm really satisfied by Are Property's work. They are absolutely an amazing team!",
-    author: "Rin H.",
-    role: "Business Owner",
-    image: "/Rin.png",
+    text: "Tenang, elegan, dan tamu langsung paham. Kami hemat tanpa mengurangi kesan.",
+    author: "Anisa & Rizky",
+    role: "Jakarta",
   },
   {
     id: 2,
-    text: "Outstanding service and professional team. They helped me find my dream property!",
-    author: "John D..",
-    role: "Property Owner",
-    image: "/Jhon.png",
+    text: "Template-nya rapi, editornya jelas. Undangan klien saya siap dibagikan dalam hitungan jam.",
+    author: "John D.",
+    role: "Photographer",
   },
   {
     id: 3,
-    text: "The best property platform I've ever used. Intuitive and efficient!",
-    author: "Elly.",
-    role: "Real Estate Agent",
-    image: "/Elly.png",
+    text: "RSVP dan link QR membuat hari H jauh lebih tenang. Intuitif dan efisien.",
+    author: "Elly",
+    role: "Client",
   },
 ];
 
@@ -36,7 +31,6 @@ export default function NavigationLogin({
   const [currentTestimonialIndex, setCurrentTestimonialIndex] =
     useState<number>(0);
 
-  // Auto-rotate testimonials
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTestimonialIndex((prev) => (prev + 1) % testimonials.length);
@@ -46,77 +40,67 @@ export default function NavigationLogin({
   }, []);
 
   return (
-  <>
-  <div className="flex h-screen bg-background overflow-hidden">
-        {/* Main content area - di kiri */}
-        <main className="w-full md:w-[60%] overflow-y-auto bg-background">
+    <>
+      <div className="landing-root flex h-screen overflow-hidden bg-[#f7f6f3] text-primary">
+        {/* Form — left */}
+        <main className="h-full w-full overflow-y-auto bg-[#f7f6f3] md:w-[60%]">
           {children}
         </main>
 
-        {/* Sidebar dengan rounded left corners dan brand background - di kanan */}
-        <aside className="hidden md:block w-[40%] border-l border-border bg-gradient-to-b from-primary to-accent rounded-tl-3xl rounded-bl-3xl text-white">
-          <div className="flex flex-col h-full p-20">
-            {/* Main heading */}
-            <h1 className="text-5xl font-bold mb-4">
-              Start Your Property With Us.
+        {/* Brand panel — right */}
+        <aside className="relative hidden h-full w-[40%] overflow-hidden rounded-bl-3xl rounded-tl-3xl border-l border-primary/10 bg-primary text-white md:block">
+          <div className="flex h-full flex-col px-12 py-16 lg:px-16 lg:py-20">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-white/40">
+              Stundea Studio
+            </p>
+            <h1
+              className="mt-5 max-w-[12ch] text-[clamp(2rem,3.5vw,3.25rem)] font-medium leading-[1.05] tracking-[-0.03em]"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              Undangan digital dengan rasa.
             </h1>
-
-            {/* Subtitle */}
-            <p className="text-xl mb-16">
-              Join - enjoy exclusive features & many more
+            <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-white/50">
+              Masuk untuk mengelola undangan, tamu, dan detail acara kalian.
             </p>
 
-            {/* Testimonial section with card and pagination */}
-            <div className="flex flex-col flex-grow justify-center">
-              {/* Cards Container */}
-              <div className="relative h-[300px]">
+            <div className="mt-auto flex flex-col pt-16">
+              <div className="relative min-h-[160px]">
                 {testimonials.map((testimonial, index) => (
                   <div
                     key={testimonial.id}
-                    className={`absolute w-full transition-all duration-500 ${
+                    className={`absolute inset-x-0 top-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
                       index === currentTestimonialIndex
-                        ? "opacity-100 translate-x-0"
-                        : "opacity-0 translate-x-full"
+                        ? "translate-y-0 opacity-100"
+                        : "pointer-events-none translate-y-3 opacity-0"
                     }`}
+                    aria-hidden={index !== currentTestimonialIndex}
                   >
-                    <div className="bg-white/20 backdrop-blur-sm p-6 rounded-3xl">
-                      <p className="text-lg mb-6">{testimonial.text}</p>
-
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center">
-                          <svg
-                            className="w-8 h-8 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{testimonial.author}</h3>
-                          <p className="text-sm text-white/80">
-                            {testimonial.role}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <blockquote
+                      className="text-xl font-medium leading-snug tracking-[-0.02em] text-white/90 sm:text-2xl"
+                      style={{ fontFamily: "var(--font-playfair)" }}
+                    >
+                      “{testimonial.text}”
+                    </blockquote>
+                    <figcaption className="mt-6 text-sm text-white/45">
+                      {testimonial.author}
+                      <span className="mx-2 text-white/25">·</span>
+                      {testimonial.role}
+                    </figcaption>
                   </div>
                 ))}
               </div>
 
-              {/* Pagination Dots */}
-              <div className="flex gap-2 justify-center relative">
+              <div className="mt-10 flex gap-2" role="tablist" aria-label="Testimoni">
                 {testimonials.map((_, idx) => (
                   <button
                     key={idx}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      idx === currentTestimonialIndex ? "bg-white" : "bg-white/50"
+                    type="button"
+                    role="tab"
+                    aria-selected={idx === currentTestimonialIndex}
+                    className={`h-1.5 rounded-full transition-[width,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                      idx === currentTestimonialIndex
+                        ? "w-6 bg-white"
+                        : "w-1.5 bg-white/30 hover:bg-white/50"
                     }`}
                     onClick={() => setCurrentTestimonialIndex(idx)}
                   />
@@ -126,9 +110,8 @@ export default function NavigationLogin({
           </div>
         </aside>
       </div>
-      
-      {/* Portal container for modal */}
-      <div id="modal-root" className="relative"></div>
+
+      <div id="modal-root" className="relative" />
     </>
   );
 }

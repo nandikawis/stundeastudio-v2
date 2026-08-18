@@ -37,55 +37,13 @@ type Regislogin = {
   signup: boolean;
 };
 
-const styles = `
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes checkmark {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-    60% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-  @keyframes drawCheck {
-    0% {
-      stroke-dashoffset: 100;
-    }
-    100% {
-      stroke-dashoffset: 0;
-    }
-  }
-  body.__noscroll {
-    overflow: hidden !important;
-    touch-action: none !important;
-    overscroll-behavior: none !important;
-    position: fixed;
-    width: 100vw;
-  }
-`;
-
-const darkGold = "var(--accent-dark)";
-const darkGoldHover = "var(--accent)";
-const textDarkGold = "var(--accent-dark)";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const fieldClass =
+  "w-full rounded-xl border border-primary/10 bg-white px-4 py-3.5 text-[15px] text-primary outline-none transition-[border-color] duration-200 placeholder:text-primary/35 focus:border-primary/35";
+
+const fieldClassCompact =
+  "w-full rounded-xl border border-primary/10 bg-white px-3.5 py-2.5 text-sm text-primary outline-none transition-[border-color] duration-200 placeholder:text-primary/35 focus:border-primary/35";
 
 export default function Login() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -110,16 +68,6 @@ export default function Login() {
     countryCode: "+62",
   });
 
-  useEffect(() => {
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = styles;
-    document.head.appendChild(styleSheet);
-    return () => {
-      document.head.removeChild(styleSheet);
-    };
-  }, []);
-
-  // Prevent scrolling on body when login/signup is mounted
   useEffect(() => {
     document.body.classList.add("__noscroll");
     return () => {
@@ -168,37 +116,32 @@ export default function Login() {
         setTimeout(() => {
           const params = new URLSearchParams(window.location.search);
           const r = params.get("redirect");
-          const next =
-            r && r.startsWith("/") && !r.startsWith("//") ? r : "/";
+          const next = r && r.startsWith("/") && !r.startsWith("//") ? r : "/";
           router.push(next);
         }, 3000);
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Login error:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Login error:", error);
       }
       setShowFailLogin(true);
     }
   };
 
-  const handleSignup = async (
-    values: typeof formData,
-  ) => {
-    try { 
+  const handleSignup = async (values: typeof formData) => {
+    try {
       const signupResponse = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(
-          {
-            email: values.email,
-            full_name: values.name,
-            phone: `${values.countryCode}${values.phoneNumber}`,
-            address: values.address,
-            password: values.password,
-          }
-        ),
+        body: JSON.stringify({
+          email: values.email,
+          full_name: values.name,
+          phone: `${values.countryCode}${values.phoneNumber}`,
+          address: values.address,
+          password: values.password,
+        }),
       });
 
       const signupData = await signupResponse.json();
@@ -217,212 +160,179 @@ export default function Login() {
   };
 
   const modalContent = showSuccessModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[99999] animate-[fadeIn_0.3s_ease-in-out]">
-      <div 
-        className="fixed bg-white p-12 rounded-lg shadow-xl transform animate-[fadeIn_0.5s_ease-out] w-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ 
-          willChange: 'transform',
-          backfaceVisibility: 'hidden',
-          zIndex: 99999
-        }}
-      >
-        <div className="text-center">
-          <div className="mb-6 relative">
-            <div 
-              className="w-24 h-24 mx-auto rounded-full bg-green-100 flex items-center justify-center"
-              style={{ 
-                filter: 'none',
-                imageRendering: 'crisp-edges'
-              }}
-            >
-              <svg 
-                viewBox="0 0 24 24" 
-                className="w-14 h-14" 
-                style={{
-                  shapeRendering: 'crispEdges',
-                  transform: 'scale(1.5)'
-                }}
-              >
-                <path 
-                  d="M5 13l4 4L19 7" 
-                  fill="none" 
-                  stroke="#22c55e"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{
-                    strokeDasharray: 100,
-                    strokeDashoffset: 100,
-                    animation: 'drawCheck 0.8s cubic-bezier(0.65, 0, 0.45, 1) forwards'
-                  }}
-                />
-              </svg>
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-[slideUp_0.8s_ease-out]">
-            Login Successful!
-          </h2>
-          <p className="text-gray-600 text-lg animate-[slideUp_0.8s_ease-out_0.2s]">
-            Redirecting to dashboard...
-          </p>
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-primary/40 px-5">
+      <div className="w-full max-w-sm rounded-2xl border border-primary/10 bg-white px-8 py-10 text-center shadow-[0_24px_64px_rgba(45,45,45,0.12)]">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/5">
+          <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden>
+            <path
+              d="M5 13l4 4L19 7"
+              fill="none"
+              stroke="var(--primary)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
+        <h2
+          className="text-2xl font-medium tracking-[-0.02em] text-primary"
+          style={{ fontFamily: "var(--font-playfair)" }}
+        >
+          Berhasil masuk
+        </h2>
+        <p className="mt-3 text-[15px] text-primary/50">
+          Mengarahkan ke dashboard…
+        </p>
       </div>
     </div>
   );
 
   const modalContentFailLogin = showFailLogin && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[99999] animate-[fadeIn_0.3s_ease-in-out]">
-      <div className="fixed bg-white p-12 border border-red-500 rounded-lg shadow-xl transform animate-[fadeIn_0.5s_ease-out] w-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-primary/40 px-5">
+      <div className="relative w-full max-w-sm rounded-2xl border border-primary/10 bg-white px-8 py-10 text-center shadow-[0_24px_64px_rgba(45,45,45,0.12)]">
         <button
+          type="button"
           onClick={() => setShowFailLogin(false)}
-          className="absolute top-4 right-4 text-red-500 hover:text-gray-700"
+          className="absolute right-4 top-4 text-primary/35 transition-colors duration-200 hover:text-primary"
+          aria-label="Tutup"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-[slideUp_0.8s_ease-out]">Login Failed!</h2>
-        <p className="text-gray-600 text-lg animate-[slideUp_0.8s_ease-out_0.2s]">Please check your email and password.</p>
+        <h2
+          className="text-2xl font-medium tracking-[-0.02em] text-primary"
+          style={{ fontFamily: "var(--font-playfair)" }}
+        >
+          Gagal masuk
+        </h2>
+        <p className="mt-3 text-[15px] text-primary/50">
+          Periksa email dan password Anda, lalu coba lagi.
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowFailLogin(false)}
+          className="landing-btn landing-btn-primary mt-8 w-full"
+        >
+          Coba lagi
+        </button>
       </div>
     </div>
   );
 
   return (
     <>
-      <div className="flex items-center justify-center h-screen p-6 overflow-hidden">
-        <div className="w-full bg-white rounded-lg shadow-md h-full p-6">
-          <div 
-            className="flex justify-center w-[250px] mx-auto mb-20 mt-16 py-6"
-            style={{
-              backgroundImage: "url('/11.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat"
-            }}
+      <div className="flex min-h-full items-center justify-center p-6 sm:p-8 lg:p-10">
+        <div className="flex w-full max-w-lg flex-col py-8 sm:py-12">
+          <Link href="/" className="mx-auto mb-12 block">
+            <div className="mx-auto h-[28px] w-[120px] overflow-hidden rounded-md sm:h-[32px] sm:w-[140px]">
+              <Image
+                src="/11.png"
+                alt="Stundea Studio"
+                width={280}
+                height={32}
+                className="h-full w-full object-contain"
+                priority
+              />
+            </div>
+          </Link>
+
+          <p className="text-center text-[11px] font-medium uppercase tracking-[0.28em] text-primary/35">
+            {regislogin.login ? "Masuk" : "Daftar"}
+          </p>
+          <h2
+            className="mt-3 text-center text-[clamp(1.75rem,3vw,2.25rem)] font-medium tracking-[-0.03em] text-primary"
+            style={{ fontFamily: "var(--font-playfair)" }}
           >
-          </div>
-
-          <h2 className="text-center text-2xl font-semibold mb-8 text-black">
-            {regislogin.login ? "Hello, Welcome" : "Create Your Account"}
+            {regislogin.login ? "Selamat datang kembali" : "Buat akun Anda"}
           </h2>
+          <p className="mx-auto mt-3 max-w-sm text-center text-[15px] leading-relaxed text-primary/50">
+            {regislogin.login
+              ? "Masuk untuk mengelola undangan dan tamu."
+              : "Daftar sekali—lalu mulai dari template yang cocok."}
+          </p>
 
-          {/* Toggle Login/Signup */}
-          <div className="flex justify-center mb-8">
-            <div className="relative flex items-center">
-              <div className="w-[200px] h-[40px] bg-gray-200 rounded-full p-1 flex items-center">
-                <div
-                  className={`absolute w-[90px] h-[32px]`}
-                  style={{
-                    background: regislogin.login || regislogin.signup ? darkGold : "",
-                    left: regislogin.login ? "0.25rem" : "6.63rem",
-                    borderRadius: "9999px",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setRegislogin({ login: true, signup: false })}
-                  className={`z-10 flex-1 px-6 py-1.5 rounded-full transition-colors ${
-                    regislogin.login ? "text-white" : "text-gray-800"
-                  }`}
-                  style={{
-                    color: regislogin.login ? "#fff" : textDarkGold
-                  }}
-                >
-                  Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRegislogin({ login: false, signup: true })}
-                  className={`z-10 flex-1 px-6 py-1.5 rounded-full transition-colors ${
-                    regislogin.signup ? "text-white" : "text-gray-800"
-                  }`}
-                  style={{
-                    color: regislogin.signup ? "#fff" : textDarkGold
-                  }}
-                >
-                  Signup
-                </button>
-              </div>
+          {/* Toggle Login / Signup — layout preserved */}
+          <div className="mt-10 flex justify-center">
+            <div className="relative flex h-11 w-[220px] items-center rounded-full border border-primary/10 bg-white p-1">
+              <div
+                className="absolute h-9 w-[104px] rounded-full bg-primary transition-[left] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                style={{
+                  left: regislogin.login ? "0.25rem" : "calc(100% - 104px - 0.25rem)",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setRegislogin({ login: true, signup: false })}
+                className={`relative z-10 flex-1 rounded-full py-1.5 text-sm font-medium transition-colors duration-200 ${
+                  regislogin.login ? "text-white" : "text-primary/55"
+                }`}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegislogin({ login: false, signup: true })}
+                className={`relative z-10 flex-1 rounded-full py-1.5 text-sm font-medium transition-colors duration-200 ${
+                  regislogin.signup ? "text-white" : "text-primary/55"
+                }`}
+              >
+                Signup
+              </button>
             </div>
           </div>
 
           {/* Forms */}
-          <div className="relative">
+          <div className="relative mt-10 min-h-[320px]">
             <div
-              className={`absolute w-full transition-all duration-300 ease-in-out ${
+              className={`absolute w-full transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
                 regislogin.login
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-full"
+                  ? "translate-y-0 opacity-100"
+                  : "pointer-events-none -translate-y-4 opacity-0"
               }`}
             >
               {regislogin.login && (
-                <div className="space-y-6 max-w-md mx-auto">
-                  <div className="space-y-4">
-                    <div>
-                      <input
-                        type="email"
-                        value={loginFormData.email}
-                        onChange={(e) =>
-                          setLoginFormData({ ...loginFormData, email: e.target.value })
-                        }
-                        placeholder="Email"
-                        className="w-full p-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                        style={{
-                          boxShadow: "none",
-                          borderColor: "var(--accent)",
-                          outline: "none"
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="password"
-                        value={loginFormData.password}
-                        onChange={(e) =>
-                          setLoginFormData({ ...loginFormData, password: e.target.value })
-                        }
-                        placeholder="Password"
-                        className="w-full p-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                        style={{
-                          boxShadow: "none",
-                          borderColor: "var(--accent)",
-                          outline: "none"
-                        }}
-                      />
-                    </div>
+                <div className="mx-auto max-w-md space-y-5">
+                  <div className="space-y-3">
+                    <input
+                      type="email"
+                      value={loginFormData.email}
+                      onChange={(e) =>
+                        setLoginFormData({ ...loginFormData, email: e.target.value })
+                      }
+                      placeholder="Email"
+                      className={fieldClass}
+                      autoComplete="email"
+                    />
+                    <input
+                      type="password"
+                      value={loginFormData.password}
+                      onChange={(e) =>
+                        setLoginFormData({
+                          ...loginFormData,
+                          password: e.target.value,
+                        })
+                      }
+                      placeholder="Password"
+                      className={fieldClass}
+                      autoComplete="current-password"
+                    />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleLogin(loginFormData)}
-                    className="w-full text-white py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
-                    style={{
-                      background: darkGold,
-                      color: "#fff",
-                      border: "none",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseOver={e => { (e.target as HTMLElement).style.background = darkGoldHover; }}
-                    onMouseOut={e => { (e.target as HTMLElement).style.background = darkGold; }}
-                    onFocus={e => { (e.target as HTMLElement).style.background = darkGoldHover; }}
-                    onBlur={e => { (e.target as HTMLElement).style.background = darkGold; }}
+                    className="landing-btn landing-btn-primary w-full"
                   >
-                    Login
+                    Masuk
                   </button>
 
                   <div className="text-center">
                     <Link
                       href="/login/forgotpassword"
-                      className="text-sm text-accent-dark hover:text-accent transition-colors"
-                      style={{
-                        color: darkGold,
-                        transition: "color 0.15s"
-                      }}
-                      onMouseOver={e => { (e.target as HTMLElement).style.color = darkGoldHover; }}
-                      onMouseOut={e => { (e.target as HTMLElement).style.color = darkGold; }}
+                      className="text-sm text-primary/50 transition-colors duration-200 hover:text-primary"
                     >
-                      Forgot password?
+                      Lupa password?
                     </Link>
                   </div>
                 </div>
@@ -430,207 +340,147 @@ export default function Login() {
             </div>
 
             <div
-              className={`absolute w-full transition-all duration-300 ease-in-out ${
+              className={`absolute w-full transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
                 regislogin.signup
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-full"
+                  ? "translate-y-0 opacity-100"
+                  : "pointer-events-none translate-y-4 opacity-0"
               }`}
             >
               {regislogin.signup && (
-                <div className="space-y-3 max-w-md h-full mx-auto">
-                  <div className="space-y-3 max-w-md h-full mx-auto">
-                    <h3 className="text-black text-sm font-medium">
-                      Create an Account
-                    </h3>
+                <div className="mx-auto max-w-md space-y-3">
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="Nama lengkap"
+                    className={fieldClassCompact}
+                    autoComplete="name"
+                  />
 
-                    <div >
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                        placeholder="Full Name"
-                        className="w-full p-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                        style={{
-                          boxShadow: "none",
-                          borderColor: "var(--accent)",
-                          outline: "none"
-                        }}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                        placeholder="Email"
-                        className="w-full p-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                        style={{
-                          boxShadow: "none",
-                          borderColor: "var(--accent)",
-                          outline: "none"
-                        }}
-                      />
-                      <div className="relative flex">
-                        <select
-                          value={formData.countryCode}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              countryCode: e.target.value,
-                            })
-                          }
-                          className="absolute left-0 w-[5rem] h-full p-2.5 text-sm bg-white border border-r-0 border-gray-200 rounded-l-lg focus:outline-none focus:ring-2 text-black appearance-none cursor-pointer"
-                          style={{
-                            borderColor: "var(--accent)",
-                            outline: "none",
-                            color: textDarkGold
-                          }}
-                        >
-                          {countries.map((country) => (
-                            <option
-                              key={country.code}
-                              value={country.code}
-                              className="bg-white"
-                            >
-                              {country.flag} {country.code}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="tel"
-                          value={formData.phoneNumber}
-                          onChange={handlePhoneChange}
-                          placeholder="Phone Number"
-                          className="w-full pl-[5.2rem] p-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                          style={{
-                            boxShadow: "none",
-                            borderColor: "var(--accent)",
-                            outline: "none"
-                          }}
-                        />
-                      </div>
-                    </div>
-
+                  <div className="grid grid-cols-2 gap-2">
                     <input
-                      type="text"
-                      value={formData.address}
+                      type="email"
+                      value={formData.email}
                       onChange={(e) =>
-                        setFormData({ ...formData, address: e.target.value })
+                        setFormData({ ...formData, email: e.target.value })
                       }
-                      placeholder="Address"
-                      className="w-full p-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                      style={{
-                        boxShadow: "none",
-                        borderColor: "var(--accent)",
-                        outline: "none"
-                      }}
+                      placeholder="Email"
+                      className={fieldClassCompact}
+                      autoComplete="email"
                     />
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) =>
-                          setFormData({ ...formData, password: e.target.value })
-                        }
-                        placeholder="Strong Password"
-                        className="w-full p-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                        style={{
-                          boxShadow: "none",
-                          borderColor: "var(--accent)",
-                          outline: "none"
-                        }}
-                      />
-                      <input
-                        type="password"
-                        value={formData.retryPassword}
+                    <div className="relative flex">
+                      <select
+                        value={formData.countryCode}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            retryPassword: e.target.value,
+                            countryCode: e.target.value,
                           })
                         }
-                        placeholder="Retry Password"
-                        className="w-full p-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 text-black placeholder-gray-500"
-                        style={{
-                          boxShadow: "none",
-                          borderColor: "var(--accent)",
-                          outline: "none"
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
+                        className="absolute left-0 z-10 h-full w-[4.75rem] cursor-pointer appearance-none rounded-l-xl border border-r-0 border-primary/10 bg-white px-2 text-sm text-primary outline-none"
+                      >
+                        {countries.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.flag} {country.code}
+                          </option>
+                        ))}
+                      </select>
                       <input
-                        type="checkbox"
-                        checked={formData.termsAccepted}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            termsAccepted: e.target.checked,
-                          })
-                        }
-                        className="w-4 h-4 bg-white border-gray-200 rounded focus:ring-0 focus:ring-offset-0"
-                        style={{
-                          accentColor: darkGold,
-                          color: darkGold
-                        }}
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={handlePhoneChange}
+                        placeholder="No. telepon"
+                        className={`${fieldClassCompact} pl-[5rem]`}
+                        autoComplete="tel"
                       />
-                      <span className="text-sm text-gray-600">
-                        I have read and agree to the{" "}
-                        <button
-                          onClick={() => {
-                            alert(
-                              "Terms of Service: This is a sample terms of service agreement that outlines the rules and regulations for using our platform."
-                            );
-                          }}
-                          className="text-sm text-accent-dark hover:text-accent transition-colors"
-                          style={{
-                            color: darkGold,
-                            transition: "color 0.15s"
-                          }}
-                          onMouseOver={e => { (e.target as HTMLElement).style.color = darkGoldHover; }}
-                          onMouseOut={e => { (e.target as HTMLElement).style.color = darkGold; }}
-                        >
-                          Terms of Service
-                        </button>
-                      </span>
                     </div>
+                  </div>
 
-                    <div className="flex justify-center">
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Alamat"
+                    className={fieldClassCompact}
+                    autoComplete="street-address"
+                  />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      placeholder="Password"
+                      className={fieldClassCompact}
+                      autoComplete="new-password"
+                    />
+                    <input
+                      type="password"
+                      value={formData.retryPassword}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          retryPassword: e.target.value,
+                        })
+                      }
+                      placeholder="Ulangi password"
+                      className={fieldClassCompact}
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  <div className="flex items-start gap-2.5 pt-1">
+                    <input
+                      type="checkbox"
+                      checked={formData.termsAccepted}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          termsAccepted: e.target.checked,
+                        })
+                      }
+                      className="mt-0.5 h-4 w-4 rounded border-primary/20 text-primary accent-[var(--primary)]"
+                    />
+                    <span className="text-sm leading-relaxed text-primary/50">
+                      Saya telah membaca dan menyetujui{" "}
                       <button
                         type="button"
                         onClick={() => {
-                          if (!formData.termsAccepted) {
-                            alert("Please accept the Terms of Service");
-                            return;
-                          }
-                          if (formData.password !== formData.retryPassword) {
-                            alert("Passwords do not match");
-                            return;
-                          }
-                          handleSignup(formData);
+                          alert(
+                            "Terms of Service: This is a sample terms of service agreement that outlines the rules and regulations for using our platform."
+                          );
                         }}
-                        className="w-[300px] text-white py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
-                        style={{
-                          background: darkGold,
-                          color: "#fff",
-                          border: "none",
-                          transition: "background 0.2s"
-                        }}
-                        onMouseOver={e => { (e.target as HTMLElement).style.background = darkGoldHover; }}
-                        onMouseOut={e => { (e.target as HTMLElement).style.background = darkGold; }}
-                        onFocus={e => { (e.target as HTMLElement).style.background = darkGoldHover; }}
-                        onBlur={e => { (e.target as HTMLElement).style.background = darkGold; }}
+                        className="text-primary underline decoration-primary/25 underline-offset-2 transition-colors duration-200 hover:decoration-primary/50"
                       >
-                        Sign Up
+                        Syarat Layanan
                       </button>
-                    </div>
+                    </span>
+                  </div>
+
+                  <div className="flex justify-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!formData.termsAccepted) {
+                          alert("Please accept the Terms of Service");
+                          return;
+                        }
+                        if (formData.password !== formData.retryPassword) {
+                          alert("Passwords do not match");
+                          return;
+                        }
+                        handleSignup(formData);
+                      }}
+                      className="landing-btn landing-btn-primary w-full max-w-[300px]"
+                    >
+                      Daftar
+                    </button>
                   </div>
                 </div>
               )}
@@ -638,14 +488,12 @@ export default function Login() {
           </div>
         </div>
       </div>
-      {mounted && modalContent && createPortal(
-        modalContent,
-        document.body
-      )}
-      {mounted && modalContentFailLogin && createPortal(
-        modalContentFailLogin,
-        document.body
-      )}
+      {mounted &&
+        modalContent &&
+        createPortal(modalContent, document.body)}
+      {mounted &&
+        modalContentFailLogin &&
+        createPortal(modalContentFailLogin, document.body)}
     </>
   );
 }

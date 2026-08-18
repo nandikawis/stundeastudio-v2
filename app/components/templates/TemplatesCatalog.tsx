@@ -56,8 +56,8 @@ export default function TemplatesCatalog() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-border bg-white py-16 text-center text-muted">
-        Memuat template…
+      <div className="border-t border-primary/8 py-16">
+        <p className="text-sm text-primary/45">Memuat template…</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function TemplatesCatalog() {
   return (
     <div>
       {fetchError && (
-        <p className="text-center text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4 mb-8">
+        <p className="mb-8 border-l-2 border-primary/20 pl-4 text-sm leading-relaxed text-primary/55">
           {fetchError}. Menampilkan template bawaan.
         </p>
       )}
