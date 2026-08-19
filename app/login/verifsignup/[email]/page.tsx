@@ -172,16 +172,18 @@ export default function VerifSignupPage(): React.JSX.Element {
               ))}
             </div>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                handleSubmit(code.join(""));
-              }}
-              className="landing-btn landing-btn-primary mx-auto block w-full max-w-xs"
-            >
-              Verifikasi
-            </button>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit(code.join(""));
+                }}
+                className="landing-btn landing-btn-primary w-full max-w-xs"
+              >
+                Verifikasi
+              </button>
+            </div>
 
             <div className="text-center">
               {isResendDisabled ? (

@@ -27,17 +27,21 @@ export default function ForgotPasswordPage(): React.JSX.Element {
     setMessage(null);
 
     try {
-      const redirectTo =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/login/verifforgot`
-          : undefined;
+      // Prefer production site URL so emails never get localhost when
+      // someone tests against the live API from a local frontend.
+      const siteOrigin =
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        (typeof window !== "undefined" ? window.location.origin : "");
+      const redirectTo = siteOrigin
+        ? `${siteOrigin.replace(/\/$/, "")}/login/verifforgot`
+        : "https://stundeastudio.com/login/verifforgot";
 
       const response = await fetch(`${API_URL}/api/auth/request-password-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
-          ...(redirectTo ? { redirectTo } : {}),
+          redirectTo,
         }),
       });
 
