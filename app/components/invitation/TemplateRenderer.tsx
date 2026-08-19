@@ -13,9 +13,94 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function isShellElement(el: Element): boolean {
+  return Boolean(
+    el.closest("[data-invite-shell]") ||
+      el.closest("svg") ||
+      (el instanceof HTMLElement &&
+        el.classList.contains("pointer-events-none") &&
+        (el.classList.contains("absolute") ||
+          el.parentElement?.classList.contains("absolute")))
+  );
+}
+
 /**
- * Opacity-only section reveal (no Y slide — that made curves look broken).
- * ScrollTrigger + refresh so above-the-fold sections play after cover opens.
+ * Pick inner content to reveal — not the full section shell (bg / curves).
+ * Explicit `[data-invite-reveal]` wins; otherwise headings, copy, cards, media.
+ */
+function getRevealTargets(root: HTMLElement): HTMLElement[] {
+  const marked = Array.from(
+    root.querySelectorAll<HTMLElement>("[data-invite-reveal]")
+  ).filter((el) => !isShellElement(el));
+  if (marked.length) return marked;
+
+  const scope = root.querySelector("section") ?? root;
+  const raw = Array.from(
+    scope.querySelectorAll<HTMLElement>(
+      [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "p",
+        "blockquote",
+        "figure",
+        "button",
+        "img",
+        "[class*='rounded-2xl']",
+        "[class*='rounded-3xl']",
+      ].join(", ")
+    )
+  );
+
+  const targets: HTMLElement[] = [];
+  const seenCarousel = new WeakSet<Element>();
+
+  for (const el of raw) {
+    if (targets.length >= 14) break;
+    if (isShellElement(el)) continue;
+    if (el.getAttribute("aria-hidden") === "true") continue;
+
+    // Carousel / stacked slides: reveal the frame once, not every slide image
+    const stackParent = el.closest(".relative");
+    if (
+      el.tagName === "IMG" &&
+      stackParent &&
+      stackParent.querySelectorAll("img").length > 2
+    ) {
+      if (seenCarousel.has(stackParent)) continue;
+      seenCarousel.add(stackParent);
+      if (
+        targets.some((t) => t.contains(stackParent) || stackParent.contains(t))
+      ) {
+        continue;
+      }
+      targets.push(stackParent as HTMLElement);
+      continue;
+    }
+
+    if (
+      !el.textContent?.trim() &&
+      el.tagName !== "IMG" &&
+      !el.querySelector("img")
+    ) {
+      continue;
+    }
+
+    if (targets.some((t) => t.contains(el))) continue;
+    for (let i = targets.length - 1; i >= 0; i--) {
+      if (el.contains(targets[i])) targets.splice(i, 1);
+    }
+
+    targets.push(el);
+  }
+
+  return targets;
+}
+
+/**
+ * Section shell stays put (backgrounds/curves don't slide).
+ * Only inner targets (text, images, cards, carousels) fade + rise.
  */
 function FadeInWrap({
   children,
@@ -25,6 +110,7 @@ function FadeInWrap({
 }: {
   children: ReactNode;
   disabled?: boolean;
+  /** Standalone invitation scroll container for ScrollTrigger */
   scrollerEl?: HTMLElement | null;
   className?: string;
 }) {
@@ -32,43 +118,41 @@ function FadeInWrap({
 
   useEffect(() => {
     if (disabled || !ref.current) return;
-    const el = ref.current;
+    const root = ref.current;
+    const targets = getRevealTargets(root);
+    if (!targets.length) return;
+
     const reduce = prefersReducedMotion();
+    const from = reduce
+      ? { opacity: 0 }
+      : { opacity: 0, transform: "translateY(14px)" };
+    const tween = gsap.fromTo(targets, from, {
+      opacity: 1,
+      ...(reduce ? {} : { transform: "translateY(0px)" }),
+      duration: reduce ? 0.35 : 0.45,
+      stagger: reduce ? 0.04 : 0.06,
+      ease: "power2.out",
+      overwrite: "auto",
+      scrollTrigger: {
+        trigger: root,
+        start: "top 88%",
+        once: true,
+        ...(scrollerEl ? { scroller: scrollerEl } : {}),
+      },
+    });
 
-    const tween = gsap.fromTo(
-      el,
-      { opacity: 0 },
-      {
-        opacity: 1,
-        duration: reduce ? 0.2 : 0.5,
-        ease: "power2.out",
-        overwrite: "auto",
-        scrollTrigger: {
-          trigger: el,
-          start: "top 88%",
-          once: true,
-          ...(scrollerEl ? { scroller: scrollerEl } : {}),
-        },
-      }
-    );
-
-    // Layout just appeared (post-cover) — force ST to evaluate in-view sections
     const raf = requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
       cancelAnimationFrame(raf);
       tween.scrollTrigger?.kill();
       tween.kill();
-      gsap.set(el, { clearProps: "opacity" });
+      gsap.set(targets, { clearProps: "opacity,transform" });
     };
   }, [disabled, scrollerEl]);
 
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={disabled ? undefined : { opacity: 0 }}
-    >
+    <div ref={ref} className={className}>
       {children}
     </div>
   );
