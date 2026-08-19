@@ -75,9 +75,9 @@ export default function CreatorTemplatesPage() {
           return;
         }
         setTemplates(Array.isArray(res.data) ? res.data : []);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!mounted) return;
-        setError(e?.message || "Terjadi kesalahan saat memuat halaman");
+        setError(e instanceof Error ? e.message : "Terjadi kesalahan saat memuat halaman");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -92,7 +92,7 @@ export default function CreatorTemplatesPage() {
   const handleRevoke = async (id: string) => {
     if (
       !window.confirm(
-        "Unpublish this template? It will be hidden from the public catalog but you can still edit it."
+        "Unpublish template ini? Akan disembunyikan dari katalog publik, tapi masih bisa diedit."
       )
     ) {
       return;
@@ -101,7 +101,7 @@ export default function CreatorTemplatesPage() {
     try {
       const res = await api.patch(`/api/templates/${id}`, { is_public: false });
       if (!res.success) {
-        window.alert(res.error || "Failed to revoke publication");
+        window.alert(res.error || "Gagal unpublish");
         return;
       }
       await reloadTemplates();
@@ -111,7 +111,7 @@ export default function CreatorTemplatesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="landing-root flex min-h-screen flex-col bg-[#f7f6f3] text-primary">
       <PublishTemplateModal
         open={publishTemplate != null}
         template={publishTemplate}
@@ -119,90 +119,141 @@ export default function CreatorTemplatesPage() {
         onPublished={() => void reloadTemplates()}
       />
       <Navbar />
-      <section className="pt-32 pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 mb-8">
+
+      <div className="flex flex-1 flex-col">
+        <section className="px-5 pb-8 pt-36 sm:px-8 lg:px-14 lg:pt-40">
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-primary">Template Creator</h1>
-              <p className="text-muted mt-2">Kelola template Anda dan buat template baru.</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-primary/40">
+                Creator
+              </p>
+              <h1
+                className="mt-4 max-w-[14ch] text-[clamp(2.25rem,5vw,3.75rem)] font-medium leading-[0.95] tracking-[-0.035em] text-primary"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Template Anda
+              </h1>
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-primary/50">
+                Kelola, edit, dan publikasikan template untuk katalog Stundea.
+              </p>
             </div>
             <Link
               href="/creator/templates/new"
-              className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all"
+              className="landing-btn landing-btn-primary shrink-0"
             >
-              Buat Template
+              Buat template
             </Link>
           </div>
+        </section>
 
-          {loading ? (
-            <div className="rounded-xl border border-border bg-white p-6 text-muted">Memuat template...</div>
-          ) : error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-6">{error}</div>
-          ) : templates.length === 0 ? (
-            <div className="rounded-xl border border-border bg-white p-8 text-center">
-              <p className="text-primary font-medium">Belum ada template</p>
-              <p className="text-muted mt-1">Mulai dengan membuat template pertama Anda.</p>
-              <Link
-                href="/creator/templates/new"
-                className="inline-block mt-4 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all"
-              >
-                Buat Template Pertama
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {templates.map((tpl) => (
-                <div key={tpl.id} className="rounded-xl border border-border bg-white p-5 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-lg font-semibold text-primary">{tpl.name}</p>
-                    <p className="text-sm text-muted mt-1">/{tpl.slug}</p>
-                    <p className="text-xs text-muted mt-2">
-                      {templateCategoryLabels[tpl.category ?? ""] || tpl.category || "—"} •{" "}
-                      {styleLabels[tpl.style ?? ""] || tpl.style || "—"} • {tpl.is_public ? "Public" : "Private"} •{" "}
-                      {tpl.is_active ? "Active" : "Inactive"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <Link
-                      href={`/creator/templates/${tpl.id}/edit`}
-                      className="px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all"
+        <section className="flex-1 px-5 pb-20 sm:px-8 lg:px-14 lg:pb-28">
+          <div className="mx-auto max-w-[1200px]">
+            {loading ? (
+              <p className="border-t border-primary/8 py-12 text-sm text-primary/45">
+                Memuat template…
+              </p>
+            ) : error ? (
+              <p className="border-l-2 border-primary/20 py-4 pl-4 text-sm leading-relaxed text-primary/60">
+                {error}
+              </p>
+            ) : templates.length === 0 ? (
+              <div className="border-t border-primary/8 py-16">
+                <h2
+                  className="text-2xl font-medium tracking-[-0.02em] text-primary"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  Belum ada template
+                </h2>
+                <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-primary/50">
+                  Mulai dengan membuat template pertama Anda.
+                </p>
+                <Link
+                  href="/creator/templates/new"
+                  className="landing-btn landing-btn-primary mt-8 inline-flex"
+                >
+                  Buat template pertama
+                </Link>
+              </div>
+            ) : (
+              <ul className="divide-y divide-primary/8 border-t border-primary/8">
+                {templates.map((tpl) => {
+                  const category =
+                    templateCategoryLabels[tpl.category ?? ""] ||
+                    tpl.category ||
+                    "—";
+                  const style =
+                    styleLabels[tpl.style ?? ""] || tpl.style || "—";
+
+                  return (
+                    <li
+                      key={tpl.id}
+                      className="flex flex-col gap-5 py-8 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/templates/preview/${tpl.slug}`}
-                      className="px-4 py-2 border border-primary text-primary rounded-full text-sm font-medium hover:bg-primary/10 transition-all"
-                    >
-                      Lihat
-                    </Link>
-                    {!tpl.is_public && (
-                      <button
-                        type="button"
-                        onClick={() => setPublishTemplate(tpl)}
-                        className="px-4 py-2 bg-accent text-white rounded-full text-sm font-medium hover:opacity-90 transition-all"
-                      >
-                        Publish
-                      </button>
-                    )}
-                    {tpl.is_public && (
-                      <button
-                        type="button"
-                        disabled={revokingId === tpl.id}
-                        onClick={() => void handleRevoke(tpl.id)}
-                        className="px-4 py-2 border border-amber-700/40 text-amber-900 bg-amber-50 rounded-full text-sm font-medium hover:bg-amber-100 transition-all disabled:opacity-50"
-                      >
-                        {revokingId === tpl.id ? "Revoking…" : "Revoke"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                          <h2
+                            className="text-xl font-medium tracking-[-0.02em] text-primary"
+                            style={{ fontFamily: "var(--font-playfair)" }}
+                          >
+                            {tpl.name}
+                          </h2>
+                          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary/35">
+                            {tpl.is_public ? "Public" : "Private"}
+                            <span className="mx-1.5 text-primary/20">·</span>
+                            {tpl.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-primary/45">/{tpl.slug}</p>
+                        <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] text-primary/35">
+                          {category}
+                          <span className="mx-2 text-primary/20">·</span>
+                          {style}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <Link
+                          href={`/creator/templates/${tpl.id}/edit`}
+                          className="landing-btn landing-btn-primary !px-4 !py-2 text-sm"
+                        >
+                          Edit
+                        </Link>
+                        <Link
+                          href={`/templates/preview/${tpl.slug}`}
+                          className="landing-btn landing-btn-ghost !px-4 !py-2 text-sm"
+                        >
+                          Lihat
+                        </Link>
+                        {!tpl.is_public && (
+                          <button
+                            type="button"
+                            onClick={() => setPublishTemplate(tpl)}
+                            className="landing-btn landing-btn-ghost !px-4 !py-2 text-sm"
+                          >
+                            Publish
+                          </button>
+                        )}
+                        {tpl.is_public && (
+                          <button
+                            type="button"
+                            disabled={revokingId === tpl.id}
+                            onClick={() => void handleRevoke(tpl.id)}
+                            className="landing-btn landing-btn-ghost !px-4 !py-2 text-sm disabled:opacity-50"
+                          >
+                            {revokingId === tpl.id ? "…" : "Unpublish"}
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
+      </div>
+
       <Footer />
     </main>
   );
 }
-
