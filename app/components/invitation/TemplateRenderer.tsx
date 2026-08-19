@@ -107,9 +107,41 @@ function isAlreadyInView(root: HTMLElement, scrollerEl?: HTMLElement | null) {
   return rootRect.top < window.innerHeight * 0.88;
 }
 
+type RevealKind = "heading" | "media" | "copy";
+
+function getRevealKind(el: HTMLElement): RevealKind {
+  const tag = el.tagName;
+  if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "H4") {
+    return "heading";
+  }
+  if (
+    tag === "IMG" ||
+    tag === "FIGURE" ||
+    el.querySelector("img") ||
+    el.className.includes("rounded-2xl") ||
+    el.className.includes("rounded-3xl")
+  ) {
+    return "media";
+  }
+  return "copy";
+}
+
+/** Dramatic but GPU-safe entrances — stronger for media, lighter for body copy. */
+function getRevealFrom(kind: RevealKind, reduce: boolean) {
+  if (reduce) return { opacity: 0 };
+  switch (kind) {
+    case "heading":
+      return { opacity: 0, y: 36, scale: 0.97 };
+    case "media":
+      return { opacity: 0, y: 48, scale: 0.94 };
+    default:
+      return { opacity: 0, y: 28, scale: 0.98 };
+  }
+}
+
 /**
  * Section shell stays put (backgrounds/curves don't slide).
- * Only inner targets (text, images, cards, carousels) fade + rise.
+ * Inner targets get a typed GSAP rise + scale reveal on scroll.
  * Already-on-screen sections stay painted (no opacity:0 flash after cover).
  */
 function FadeInWrap({
@@ -133,20 +165,30 @@ function FadeInWrap({
     if (!targets.length) return;
 
     const reduce = prefersReducedMotion();
-    const from = reduce
-      ? { opacity: 0 }
-      : { opacity: 0, transform: "translateY(14px)" };
-    const to = {
-      opacity: 1,
-      ...(reduce ? {} : { transform: "translateY(0px)" }),
-      duration: reduce ? 0.35 : 0.45,
-      stagger: reduce ? 0.04 : 0.06,
-      ease: "power2.out" as const,
-      overwrite: "auto" as const,
-    };
-
-    let tween: gsap.core.Tween | null = null;
+    let tl: gsap.core.Timeline | null = null;
     let st: ScrollTrigger | null = null;
+
+    const playReveal = () => {
+      tl = gsap.timeline({ defaults: { overwrite: "auto" } });
+
+      targets.forEach((el, i) => {
+        const kind = getRevealKind(el);
+        const from = getRevealFrom(kind, reduce);
+        tl!.fromTo(
+          el,
+          from,
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: reduce ? 0.28 : kind === "media" ? 0.9 : 0.75,
+            ease: reduce ? "power2.out" : "expo.out",
+            transformOrigin: "center center",
+          },
+          reduce ? i * 0.04 : i * 0.1
+        );
+      });
+    };
 
     const raf = requestAnimationFrame(() => {
       ScrollTrigger.refresh();
@@ -155,19 +197,17 @@ function FadeInWrap({
 
       st = ScrollTrigger.create({
         trigger: root,
-        start: "top 88%",
+        start: "top 85%",
         once: true,
         ...(scrollerEl ? { scroller: scrollerEl } : {}),
-        onEnter: () => {
-          tween = gsap.fromTo(targets, from, to);
-        },
+        onEnter: playReveal,
       });
     });
 
     return () => {
       cancelAnimationFrame(raf);
       st?.kill();
-      tween?.kill();
+      tl?.kill();
       gsap.set(targets, { clearProps: "opacity,transform" });
     };
   }, [disabled, scrollerEl]);
