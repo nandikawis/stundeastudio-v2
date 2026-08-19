@@ -13,47 +13,10 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function isShellElement(el: Element): boolean {
-  return Boolean(
-    el.closest("[data-invite-shell]") ||
-      el.closest("svg") ||
-      (el instanceof HTMLElement &&
-        el.classList.contains("pointer-events-none") &&
-        (el.classList.contains("absolute") ||
-          el.parentElement?.classList.contains("absolute")))
-  );
-}
-
 /**
- * Inner content only — never curves, flowers, or full-bleed shells.
- * Prefer `[data-invite-reveal]`; otherwise a small set of text nodes.
+ * Opacity-only section reveal (no Y slide — that made curves look broken).
+ * ScrollTrigger + refresh so above-the-fold sections play after cover opens.
  */
-function getRevealTargets(root: HTMLElement): HTMLElement[] {
-  const marked = Array.from(
-    root.querySelectorAll<HTMLElement>("[data-invite-reveal]")
-  ).filter((el) => !isShellElement(el));
-  if (marked.length) return marked.slice(0, 8);
-
-  const scope = root.querySelector("section") ?? root;
-  const raw = Array.from(
-    scope.querySelectorAll<HTMLElement>("h1, h2, h3, h4, p, blockquote, figure, button")
-  );
-
-  const targets: HTMLElement[] = [];
-  for (const el of raw) {
-    if (targets.length >= 6) break;
-    if (isShellElement(el)) continue;
-    if (el.getAttribute("aria-hidden") === "true") continue;
-    if (!el.textContent?.trim()) continue;
-    if (targets.some((t) => t.contains(el))) continue;
-    for (let i = targets.length - 1; i >= 0; i--) {
-      if (el.contains(targets[i])) targets.splice(i, 1);
-    }
-    targets.push(el);
-  }
-  return targets;
-}
-
 function FadeInWrap({
   children,
   disabled,
@@ -66,38 +29,46 @@ function FadeInWrap({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (disabled || !ref.current) return;
-    const root = ref.current;
-    const targets = getRevealTargets(root);
-    if (!targets.length) return;
-
+    const el = ref.current;
     const reduce = prefersReducedMotion();
-    gsap.set(targets, reduce ? { opacity: 0 } : { opacity: 0, y: 10 });
-    const tween = gsap.to(targets, {
-      opacity: 1,
-      ...(reduce ? {} : { y: 0 }),
-      duration: reduce ? 0.25 : 0.4,
-      stagger: 0.05,
-      ease: "power2.out",
-      overwrite: "auto",
-      scrollTrigger: {
-        trigger: root,
-        start: "top 90%",
-        once: true,
-        ...(scrollerEl && { scroller: scrollerEl }),
-      },
-    });
+
+    const tween = gsap.fromTo(
+      el,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: reduce ? 0.2 : 0.5,
+        ease: "power2.out",
+        overwrite: "auto",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 88%",
+          once: true,
+          ...(scrollerEl ? { scroller: scrollerEl } : {}),
+        },
+      }
+    );
+
+    // Layout just appeared (post-cover) — force ST to evaluate in-view sections
+    const raf = requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
+      cancelAnimationFrame(raf);
       tween.scrollTrigger?.kill();
       tween.kill();
-      gsap.set(targets, { clearProps: "opacity,transform,y" });
+      gsap.set(el, { clearProps: "opacity" });
     };
   }, [disabled, scrollerEl]);
 
   return (
-    <div ref={ref} className={className}>
+    <div
+      ref={ref}
+      className={className}
+      style={disabled ? undefined : { opacity: 0 }}
+    >
       {children}
     </div>
   );
@@ -267,35 +238,48 @@ export default function TemplateRenderer({
       </>
     );
 
+  const coverLayer = (fullScreen: boolean) =>
+    !coverOpen && (
+      <div
+        className={
+          fullScreen
+            ? "absolute inset-0 z-50 h-screen w-full overflow-hidden"
+            : "absolute inset-0 z-50 h-full w-full overflow-hidden"
+        }
+      >
+        {coverComponents.map((cc, i) =>
+          renderSection(cc, i, null, { revealEnabled: false })
+        )}
+      </div>
+    );
+
+  /** Mount content only after cover opens — faster first paint, reliable ST */
+  const contentLayer = (fullScreen: boolean) =>
+    coverOpen ? (
+      <div
+        ref={(el) => setContentScrollEl(el ?? null)}
+        className={
+          fullScreen
+            ? "absolute inset-0 z-0 min-h-screen w-full overflow-y-auto bg-background"
+            : "absolute inset-0 z-0 h-full w-full overflow-y-auto overflow-x-hidden bg-background"
+        }
+      >
+        {/* Wait for scroll container ref so ScrollTrigger gets the right scroller */}
+        {contentScrollEl &&
+          contentComponents.map((cc, i) =>
+            renderSection(cc, i, contentScrollEl, { revealEnabled: true })
+          )}
+      </div>
+    ) : (
+      <div className="absolute inset-0 z-0 bg-background" aria-hidden />
+    );
+
   if (isStandaloneInvitation && coverComponents.length > 0) {
     return (
       <>
         <div className="relative min-h-screen w-full bg-background">
-          {/* Cover paints first (DOM order + z-50) so hero never flashes ahead */}
-          {!coverOpen && (
-            <div className="absolute inset-0 z-50 h-screen w-full overflow-hidden">
-              {coverComponents.map((cc, i) =>
-                renderSection(cc, i, null, { revealEnabled: false })
-              )}
-            </div>
-          )}
-          {/* Content stays mounted but hidden until cover opens */}
-          <div
-            ref={(el) => setContentScrollEl(el ?? null)}
-            className="absolute inset-0 z-0 min-h-screen w-full overflow-y-auto bg-background"
-            style={{
-              opacity: coverOpen ? 1 : 0,
-              visibility: coverOpen ? "visible" : "hidden",
-              pointerEvents: coverOpen ? "auto" : "none",
-            }}
-            aria-hidden={!coverOpen}
-          >
-            {contentComponents.map((cc, i) =>
-              renderSection(cc, i, contentScrollEl, {
-                revealEnabled: coverOpen,
-              })
-            )}
-          </div>
+          {coverLayer(true)}
+          {contentLayer(true)}
         </div>
         {musicControl}
       </>
@@ -306,29 +290,8 @@ export default function TemplateRenderer({
     if (coverComponents.length > 0) {
       return (
         <div className="relative h-full w-full bg-background">
-          {!coverOpen && (
-            <div className="absolute inset-0 z-50 h-full w-full overflow-hidden">
-              {coverComponents.map((cc, i) =>
-                renderSection(cc, i, null, { revealEnabled: false })
-              )}
-            </div>
-          )}
-          <div
-            ref={(el) => setContentScrollEl(el ?? null)}
-            className="absolute inset-0 z-0 h-full w-full overflow-y-auto overflow-x-hidden bg-background"
-            style={{
-              opacity: coverOpen ? 1 : 0,
-              visibility: coverOpen ? "visible" : "hidden",
-              pointerEvents: coverOpen ? "auto" : "none",
-            }}
-            aria-hidden={!coverOpen}
-          >
-            {contentComponents.map((cc, i) =>
-              renderSection(cc, i, contentScrollEl, {
-                revealEnabled: coverOpen,
-              })
-            )}
-          </div>
+          {coverLayer(false)}
+          {contentLayer(false)}
         </div>
       );
     }
