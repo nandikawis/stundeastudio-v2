@@ -1,17 +1,13 @@
 "use client";
 
-import { useRef, useState, useEffect, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { componentRegistry } from "./index";
 import { ProjectData } from "@/app/lib/mockData";
 
-gsap.registerPlugin(ScrollTrigger);
-
-function prefersReducedMotion() {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 function isShellElement(el: Element): boolean {
   return Boolean(
@@ -102,9 +98,9 @@ function isAlreadyInView(root: HTMLElement, scrollerEl?: HTMLElement | null) {
   const rootRect = root.getBoundingClientRect();
   if (scrollerEl) {
     const scrollerRect = scrollerEl.getBoundingClientRect();
-    return rootRect.top < scrollerRect.top + scrollerRect.height * 0.88;
+    return rootRect.top < scrollerRect.top + scrollerRect.height * 0.85;
   }
-  return rootRect.top < window.innerHeight * 0.88;
+  return rootRect.top < window.innerHeight * 0.85;
 }
 
 type RevealKind = "heading" | "media" | "copy";
@@ -126,23 +122,10 @@ function getRevealKind(el: HTMLElement): RevealKind {
   return "copy";
 }
 
-/** Dramatic but GPU-safe entrances — stronger for media, lighter for body copy. */
-function getRevealFrom(kind: RevealKind, reduce: boolean) {
-  if (reduce) return { opacity: 0 };
-  switch (kind) {
-    case "heading":
-      return { opacity: 0, y: 36, scale: 0.97 };
-    case "media":
-      return { opacity: 0, y: 48, scale: 0.94 };
-    default:
-      return { opacity: 0, y: 28, scale: 0.98 };
-  }
-}
-
 /**
- * Section shell stays put (backgrounds/curves don't slide).
- * Inner targets get a typed GSAP rise + scale reveal on scroll.
- * Already-on-screen sections stay painted (no opacity:0 flash after cover).
+ * Official GSAP patterns: useGSAP cleanup, matchMedia (reduced motion),
+ * timeline + ScrollTrigger (ST on the timeline), autoAlpha + transform aliases.
+ * Section shell stays put; already-on-screen sections stay painted.
  */
 function FadeInWrap({
   children,
@@ -152,65 +135,133 @@ function FadeInWrap({
 }: {
   children: ReactNode;
   disabled?: boolean;
-  /** Standalone invitation scroll container for ScrollTrigger */
   scrollerEl?: HTMLElement | null;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (disabled || !ref.current) return;
-    const root = ref.current;
-    const targets = getRevealTargets(root);
-    if (!targets.length) return;
+  useGSAP(
+    () => {
+      if (disabled || !ref.current) return;
+      const root = ref.current;
+      const targets = getRevealTargets(root);
+      if (!targets.length) return;
 
-    const reduce = prefersReducedMotion();
-    let tl: gsap.core.Timeline | null = null;
-    let st: ScrollTrigger | null = null;
-
-    const playReveal = () => {
-      tl = gsap.timeline({ defaults: { overwrite: "auto" } });
-
-      targets.forEach((el, i) => {
-        const kind = getRevealKind(el);
-        const from = getRevealFrom(kind, reduce);
-        tl!.fromTo(
-          el,
-          from,
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: reduce ? 0.28 : kind === "media" ? 0.9 : 0.75,
-            ease: reduce ? "power2.out" : "expo.out",
-            transformOrigin: "center center",
-          },
-          reduce ? i * 0.04 : i * 0.1
-        );
-      });
-    };
-
-    const raf = requestAnimationFrame(() => {
-      ScrollTrigger.refresh();
-      // Hero (and anything already on screen) stays as-is — no blank flash
+      // Hero / above-the-fold: leave painted (cover open must not flash blank)
       if (isAlreadyInView(root, scrollerEl)) return;
 
-      st = ScrollTrigger.create({
-        trigger: root,
-        start: "top 85%",
-        once: true,
-        ...(scrollerEl ? { scroller: scrollerEl } : {}),
-        onEnter: playReveal,
-      });
-    });
+      const headings = targets.filter((el) => getRevealKind(el) === "heading");
+      const media = targets.filter((el) => getRevealKind(el) === "media");
+      const copy = targets.filter((el) => getRevealKind(el) === "copy");
 
-    return () => {
-      cancelAnimationFrame(raf);
-      st?.kill();
-      tl?.kill();
-      gsap.set(targets, { clearProps: "opacity,transform" });
-    };
-  }, [disabled, scrollerEl]);
+      const scrollerOpts = scrollerEl ? { scroller: scrollerEl } : {};
+
+      const mm = gsap.matchMedia();
+      mm.add(
+        {
+          isMotion: "(prefers-reduced-motion: no-preference)",
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+        },
+        (context) => {
+          const reduceMotion = Boolean(context.conditions?.reduceMotion);
+
+          if (reduceMotion) {
+            gsap.set(targets, { autoAlpha: 0 });
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: root,
+                  start: "clamp(top 85%)",
+                  once: true,
+                  toggleActions: "play none none none",
+                  ...scrollerOpts,
+                },
+              })
+              .to(targets, {
+                autoAlpha: 1,
+                duration: 0.28,
+                stagger: 0.04,
+                ease: "power1.out",
+              });
+            return;
+          }
+
+          if (headings.length) {
+            gsap.set(headings, { autoAlpha: 0, y: 40, scale: 0.96 });
+          }
+          if (media.length) {
+            gsap.set(media, { autoAlpha: 0, y: 56, scale: 0.92 });
+          }
+          if (copy.length) {
+            gsap.set(copy, { autoAlpha: 0, y: 32, scale: 0.98 });
+          }
+
+          const tl = gsap.timeline({
+            defaults: { ease: "expo.out", overwrite: "auto" },
+            scrollTrigger: {
+              trigger: root,
+              start: "clamp(top 85%)",
+              once: true,
+              toggleActions: "play none none none",
+              ...scrollerOpts,
+            },
+          });
+
+          tl.addLabel("enter");
+          if (headings.length) {
+            tl.to(
+              headings,
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.85,
+                stagger: { each: 0.12, from: "start" },
+                transformOrigin: "50% 100%",
+              },
+              "enter"
+            );
+          }
+          if (media.length) {
+            tl.to(
+              media,
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 1,
+                stagger: { each: 0.14, from: "start" },
+                transformOrigin: "50% 50%",
+              },
+              "enter+=0.1"
+            );
+          }
+          if (copy.length) {
+            tl.to(
+              copy,
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.75,
+                stagger: { each: 0.08, from: "start" },
+                transformOrigin: "50% 50%",
+              },
+              "enter+=0.18"
+            );
+          }
+        },
+        root
+      );
+
+      return () => mm.revert();
+    },
+    {
+      scope: ref,
+      dependencies: [disabled, scrollerEl],
+      revertOnUpdate: true,
+    }
+  );
 
   return (
     <div ref={ref} className={className}>
@@ -241,6 +292,16 @@ export default function TemplateRenderer({
     null
   );
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // After cover opens, layout/overflow change — recalc ScrollTrigger positions
+  useGSAP(
+    () => {
+      if (!coverOpen || !contentScrollEl) return;
+      const id = requestAnimationFrame(() => ScrollTrigger.refresh());
+      return () => cancelAnimationFrame(id);
+    },
+    { dependencies: [coverOpen, contentScrollEl] }
+  );
 
   const sortedComponents = [...project.page_structure].sort(
     (a, b) => a.order - b.order
