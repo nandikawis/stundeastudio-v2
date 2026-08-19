@@ -12,11 +12,13 @@ function FadeInWrap({
   children,
   disabled,
   scrollerEl,
+  className,
 }: {
   children: ReactNode;
   disabled?: boolean;
   /** When content scrolls inside this element (standalone invitation), pass it so ScrollTrigger fires for sections below the fold */
   scrollerEl?: HTMLElement | null;
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -43,9 +45,9 @@ function FadeInWrap({
       tween.kill();
     };
   }, [disabled, scrollerEl]);
-  if (disabled) return <>{children}</>;
+  if (disabled) return <div className={className}>{children}</div>;
   return (
-    <div ref={ref} style={{ opacity: 0 }}>
+    <div ref={ref} className={className} style={{ opacity: 0 }}>
       {children}
     </div>
   );
@@ -123,6 +125,7 @@ export default function TemplateRenderer({
 
   const renderSection = (
     componentConfig: (typeof sortedComponents)[0],
+    index: number,
     scrollEl?: HTMLDivElement | null
   ) => {
     const Component = componentRegistry[componentConfig.type];
@@ -130,16 +133,19 @@ export default function TemplateRenderer({
       console.warn(`Component type "${componentConfig.type}" not found`);
       return null;
     }
-    const section = (
-      <Component key={componentConfig.id} {...buildProps(componentConfig)} />
-    );
+    // 1px overlap kills sub-pixel hairlines between stacked sections on mobile/tablet
+    const seamClass = index > 0 ? "-mt-px" : undefined;
+    const section = <Component {...buildProps(componentConfig)} />;
     const useFade = !isPreview && componentConfig.type !== "CoverSection";
-    return useFade ? (
-      <FadeInWrap key={componentConfig.id} scrollerEl={scrollEl}>
+    return (
+      <FadeInWrap
+        key={componentConfig.id}
+        disabled={!useFade}
+        scrollerEl={scrollEl}
+        className={seamClass}
+      >
         {section}
       </FadeInWrap>
-    ) : (
-      section
     );
   };
 
@@ -152,12 +158,12 @@ export default function TemplateRenderer({
             ref={(el) => setContentScrollEl(el ?? null)}
             className="absolute inset-0 z-0 min-h-screen w-full overflow-y-auto bg-background"
           >
-            {contentComponents.map((cc) => renderSection(cc, contentScrollEl))}
+            {contentComponents.map((cc, i) => renderSection(cc, i, contentScrollEl))}
           </div>
           {/* Cover layer: only mount while cover is not yet opened; when opened we unmount so content layer is visible */}
           {!coverOpen && (
             <div className="absolute inset-0 z-50 h-screen w-full overflow-hidden">
-              {coverComponents.map((cc) => renderSection(cc))}
+              {coverComponents.map((cc, i) => renderSection(cc, i))}
             </div>
           )}
         </div>
@@ -202,11 +208,11 @@ export default function TemplateRenderer({
             ref={(el) => setContentScrollEl(el ?? null)}
             className="absolute inset-0 z-0 h-full w-full overflow-y-auto overflow-x-hidden bg-background"
           >
-            {contentComponents.map((cc) => renderSection(cc, contentScrollEl))}
+            {contentComponents.map((cc, i) => renderSection(cc, i, contentScrollEl))}
           </div>
           {!coverOpen && (
             <div className="absolute inset-0 z-50 h-full w-full overflow-hidden">
-              {coverComponents.map((cc) => renderSection(cc))}
+              {coverComponents.map((cc, i) => renderSection(cc, i))}
             </div>
           )}
         </div>
@@ -215,7 +221,7 @@ export default function TemplateRenderer({
 
     return (
       <div className="relative h-full w-full overflow-y-auto overflow-x-hidden bg-background">
-        {sortedComponents.map((cc) => renderSection(cc))}
+        {sortedComponents.map((cc, i) => renderSection(cc, i))}
       </div>
     );
   }
@@ -223,7 +229,7 @@ export default function TemplateRenderer({
   return (
     <>
       <div className="relative min-h-screen w-full bg-background">
-        {sortedComponents.map((cc) => renderSection(cc))}
+        {sortedComponents.map((cc, i) => renderSection(cc, i))}
       </div>
 
       {project.background_music_url && (

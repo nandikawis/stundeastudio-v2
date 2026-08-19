@@ -184,7 +184,7 @@ export default function HeroSection({
 
       {/* SVG Curve Divider at Top */}
       {showTopCurve && (
-        <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
+        <div className="pointer-events-none absolute -top-px right-0 left-0 z-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
             <path d={curvePaths[topCurveStyle]} />
           </svg>
@@ -229,7 +229,7 @@ export default function HeroSection({
 
       {/* SVG Curve Divider at Bottom */}
       {showBottomCurve && (
-        <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+        <div className="pointer-events-none absolute right-0 -bottom-px left-0 z-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: curveColor || '#ffffff' }}>
             <path d={curvePaths[bottomCurveStyle]} />
           </svg>

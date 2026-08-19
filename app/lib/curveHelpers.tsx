@@ -24,9 +24,10 @@ export interface CurveDividerProps {
 export const renderTopCurve = (props: CurveDividerProps): React.ReactElement | null => {
   if (props.showTopCurve === false) return null;
   
+  // -1px nudge covers sub-pixel seams between stacked sections on mobile
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16" style={{ fill: props.topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
+    <div className="pointer-events-none absolute -top-px right-0 left-0 z-10">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="h-16 w-full" style={{ fill: props.topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
         <path d={curvePaths[props.topCurveStyle || 'gentle']} />
       </svg>
     </div>
@@ -36,9 +37,10 @@ export const renderTopCurve = (props: CurveDividerProps): React.ReactElement | n
 export const renderBottomCurve = (props: CurveDividerProps): React.ReactElement | null => {
   if (props.showBottomCurve === false) return null;
   
+  // -1px nudge covers sub-pixel seams between stacked sections on mobile
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-16" style={{ fill: props.bottomCurveColor || '#ffffff' }}>
+    <div className="pointer-events-none absolute right-0 -bottom-px left-0 z-10">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="h-16 w-full" style={{ fill: props.bottomCurveColor || '#ffffff' }}>
         <path d={curvePaths[props.bottomCurveStyle || 'gentle']} />
       </svg>
     </div>
