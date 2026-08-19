@@ -98,9 +98,19 @@ function getRevealTargets(root: HTMLElement): HTMLElement[] {
   return targets;
 }
 
+function isAlreadyInView(root: HTMLElement, scrollerEl?: HTMLElement | null) {
+  const rootRect = root.getBoundingClientRect();
+  if (scrollerEl) {
+    const scrollerRect = scrollerEl.getBoundingClientRect();
+    return rootRect.top < scrollerRect.top + scrollerRect.height * 0.88;
+  }
+  return rootRect.top < window.innerHeight * 0.88;
+}
+
 /**
  * Section shell stays put (backgrounds/curves don't slide).
  * Only inner targets (text, images, cards, carousels) fade + rise.
+ * Already-on-screen sections stay painted (no opacity:0 flash after cover).
  */
 function FadeInWrap({
   children,
@@ -126,27 +136,38 @@ function FadeInWrap({
     const from = reduce
       ? { opacity: 0 }
       : { opacity: 0, transform: "translateY(14px)" };
-    const tween = gsap.fromTo(targets, from, {
+    const to = {
       opacity: 1,
       ...(reduce ? {} : { transform: "translateY(0px)" }),
       duration: reduce ? 0.35 : 0.45,
       stagger: reduce ? 0.04 : 0.06,
-      ease: "power2.out",
-      overwrite: "auto",
-      scrollTrigger: {
+      ease: "power2.out" as const,
+      overwrite: "auto" as const,
+    };
+
+    let tween: gsap.core.Tween | null = null;
+    let st: ScrollTrigger | null = null;
+
+    const raf = requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+      // Hero (and anything already on screen) stays as-is — no blank flash
+      if (isAlreadyInView(root, scrollerEl)) return;
+
+      st = ScrollTrigger.create({
         trigger: root,
         start: "top 88%",
         once: true,
         ...(scrollerEl ? { scroller: scrollerEl } : {}),
-      },
+        onEnter: () => {
+          tween = gsap.fromTo(targets, from, to);
+        },
+      });
     });
-
-    const raf = requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
       cancelAnimationFrame(raf);
-      tween.scrollTrigger?.kill();
-      tween.kill();
+      st?.kill();
+      tween?.kill();
       gsap.set(targets, { clearProps: "opacity,transform" });
     };
   }, [disabled, scrollerEl]);
@@ -337,26 +358,27 @@ export default function TemplateRenderer({
       </div>
     );
 
-  /** Mount content only after cover opens — faster first paint, reliable ST */
-  const contentLayer = (fullScreen: boolean) =>
-    coverOpen ? (
-      <div
-        ref={(el) => setContentScrollEl(el ?? null)}
-        className={
-          fullScreen
-            ? "absolute inset-0 z-0 min-h-screen w-full overflow-y-auto bg-background"
-            : "absolute inset-0 z-0 h-full w-full overflow-y-auto overflow-x-hidden bg-background"
-        }
-      >
-        {/* Wait for scroll container ref so ScrollTrigger gets the right scroller */}
-        {contentScrollEl &&
-          contentComponents.map((cc, i) =>
-            renderSection(cc, i, contentScrollEl, { revealEnabled: true })
-          )}
-      </div>
-    ) : (
-      <div className="absolute inset-0 z-0 bg-background" aria-hidden />
-    );
+  /** Always mounted under the cover so hero is painted before open (no white blank). */
+  const contentLayer = (fullScreen: boolean) => (
+    <div
+      ref={(el) => setContentScrollEl(el ?? null)}
+      className={
+        fullScreen
+          ? "absolute inset-0 z-0 min-h-screen w-full bg-background"
+          : "absolute inset-0 z-0 h-full w-full overflow-x-hidden bg-background"
+      }
+      style={{
+        overflowY: coverOpen ? "auto" : "hidden",
+        pointerEvents: coverOpen ? "auto" : "none",
+      }}
+      aria-hidden={!coverOpen}
+    >
+      {contentScrollEl &&
+        contentComponents.map((cc, i) =>
+          renderSection(cc, i, contentScrollEl, { revealEnabled: true })
+        )}
+    </div>
+  );
 
   if (isStandaloneInvitation && coverComponents.length > 0) {
     return (
