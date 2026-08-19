@@ -10,6 +10,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const fieldClass =
   "w-full rounded-xl border border-primary/10 bg-white px-4 py-3.5 text-[15px] text-primary outline-none transition-[border-color] duration-200 placeholder:text-primary/35 focus:border-primary/35";
 
+type ResetCreds =
+  | { kind: "token_hash"; token_hash: string; type: string }
+  | { kind: "code"; code: string }
+  | {
+      kind: "session";
+      access_token: string;
+      refresh_token: string;
+    };
+
 function Logo() {
   return (
     <Link href="/" className="mx-auto mb-12 block">
@@ -27,10 +36,16 @@ function Logo() {
   );
 }
 
+function parseHashParams(): URLSearchParams {
+  if (typeof window === "undefined") return new URLSearchParams();
+  const raw = window.location.hash.replace(/^#/, "");
+  return new URLSearchParams(raw);
+}
+
 function VerifForgotForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [code, setCode] = useState<string | null>(null);
+  const [creds, setCreds] = useState<ResetCreds | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +56,29 @@ function VerifForgotForm() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setCode(searchParams.get("code"));
+    const tokenHash =
+      searchParams.get("token_hash") || searchParams.get("tokenHash");
+    const type = searchParams.get("type") || "recovery";
+    const code = searchParams.get("code");
+    const hash = parseHashParams();
+    const accessToken =
+      searchParams.get("access_token") || hash.get("access_token");
+    const refreshToken =
+      searchParams.get("refresh_token") || hash.get("refresh_token");
+
+    if (tokenHash) {
+      setCreds({ kind: "token_hash", token_hash: tokenHash, type });
+    } else if (accessToken && refreshToken) {
+      setCreds({
+        kind: "session",
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+    } else if (code) {
+      setCreds({ kind: "code", code });
+    } else {
+      setCreds(null);
+    }
     setReady(true);
   }, [searchParams]);
 
@@ -62,17 +99,28 @@ function VerifForgotForm() {
       return;
     }
 
-    if (!code) {
+    if (!creds) {
       setMessage({ type: "error", text: "Tautan reset tidak valid" });
       return;
     }
 
     setIsLoading(true);
     try {
+      const body: Record<string, string> = { new_password: newPassword };
+      if (creds.kind === "token_hash") {
+        body.token_hash = creds.token_hash;
+        body.type = creds.type;
+      } else if (creds.kind === "session") {
+        body.access_token = creds.access_token;
+        body.refresh_token = creds.refresh_token;
+      } else {
+        body.code = creds.code;
+      }
+
       const response = await fetch(`${API_URL}/api/auth/update-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, new_password: newPassword }),
+        body: JSON.stringify(body),
       });
       const data = await response.json().catch(() => ({}));
 
@@ -110,7 +158,7 @@ function VerifForgotForm() {
     );
   }
 
-  if (!code) {
+  if (!creds) {
     return (
       <div className="flex min-h-full items-center justify-center p-6 sm:p-8 lg:p-10">
         <div className="flex w-full max-w-lg flex-col py-8 sm:py-12">
