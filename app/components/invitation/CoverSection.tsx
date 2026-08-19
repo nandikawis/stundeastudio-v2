@@ -188,28 +188,30 @@ export default function CoverSection({
         {/* Editor mode label and buttons */}
         {isEditor && (
           <>
-            <div className="absolute top-2 left-2 z-20 bg-accent text-white px-2 py-1 rounded text-xs font-medium pointer-events-none">
-              Cover Section
+            <div className="pointer-events-none absolute top-2 left-2 z-20 rounded-md bg-black/45 px-2 py-1 text-[10px] font-medium tracking-wide text-white backdrop-blur-sm">
+              Cover
             </div>
             {/* Edit buttons - always visible in editor mode */}
-            <div className="absolute top-2 right-2 z-20 flex gap-2 pointer-events-auto">
+            <div className="pointer-events-auto absolute top-2 right-2 z-20 flex gap-1.5">
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEditContent?.();
                 }}
-                className="px-3 py-1 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-dark transition-all"
+                className="rounded-full border border-white/25 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-primary shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
               >
-                Edit Content
+                Edit konten
               </button>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onChangeDesign?.();
                 }}
-                className="px-3 py-1 bg-gray-600 text-white rounded-full text-xs font-medium hover:bg-gray-700 transition-all"
+                className="rounded-full border border-white/25 bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white shadow-sm backdrop-blur-sm transition-colors hover:bg-black/65"
               >
-                Change Design
+                Ubah desain
               </button>
             </div>
           </>

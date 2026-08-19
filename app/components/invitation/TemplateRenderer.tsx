@@ -56,6 +56,7 @@ function FadeInWrap({
 interface TemplateRendererProps {
   project: ProjectData;
   guestName?: string;
+  guestSlug?: string;
   isPreview?: boolean;
   /** When true, used on standalone public invitation pages (full viewport canvas) */
   isStandaloneInvitation?: boolean;
@@ -64,6 +65,7 @@ interface TemplateRendererProps {
 export default function TemplateRenderer({
   project,
   guestName,
+  guestSlug,
   isPreview = false,
   isStandaloneInvitation = false,
 }: TemplateRendererProps) {
@@ -109,6 +111,8 @@ export default function TemplateRenderer({
       venueName: componentData.venueName || project.venue_name,
       venueAddress: componentData.venueAddress || project.venue_address,
       guestName: guestName,
+      guestSlug: guestSlug,
+      projectId: project.id,
       isPreview,
       previewMode: isPreview,
       isStandaloneInvitation,

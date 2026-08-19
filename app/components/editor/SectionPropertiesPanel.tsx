@@ -3,12 +3,20 @@
 import { useRef, useState } from "react";
 import { ProjectData, ComponentConfig } from "../../lib/mockData";
 import ColorPicker from "./ColorPicker";
+import { getSectionTypeLabel } from "../../lib/sectionDefaults";
 
 interface SectionPropertiesPanelProps {
   section: ComponentConfig;
   componentData: Record<string, any>;
   onUpdate: (sectionId: string, field: string, value: any) => void;
   onClose: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onDelete?: () => void;
+  canDelete?: boolean;
+  deleteBlockedReason?: string;
 }
 
 // Image file item interface for the capsule UI
@@ -26,7 +34,12 @@ interface ImageFilePickerProps {
   label?: string;
 }
 
-function ImageFilePicker({ images, onImagesChange, multiple = true, label = "Choose Image" }: ImageFilePickerProps) {
+function ImageFilePicker({
+  images,
+  onImagesChange,
+  multiple = true,
+  label = "Pilih gambar",
+}: ImageFilePickerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const readFileAsDataUrl = (file: File): Promise<string> => {
@@ -58,24 +71,21 @@ function ImageFilePicker({ images, onImagesChange, multiple = true, label = "Cho
       onImagesChange(newItems.slice(0, 1));
     }
 
-    // Reset input so same file can be selected again
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   const handleRemove = (index: number) => {
-    const updated = images.filter((_, i) => i !== index);
-    onImagesChange(updated);
+    onImagesChange(images.filter((_, i) => i !== index));
   };
 
   return (
-    <div>
+    <div className="space-y-3">
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        className="px-4 py-2 rounded-lg text-white font-medium text-sm transition-all hover:opacity-90"
-        style={{ backgroundColor: "#42768E" }}
+        className="w-full rounded-full border border-primary/15 bg-white px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-[#f7f6f3]"
       >
         {label}
       </button>
@@ -87,58 +97,54 @@ function ImageFilePicker({ images, onImagesChange, multiple = true, label = "Cho
         onChange={handleFileSelect}
         className="hidden"
       />
+
       {images.length > 0 && (
-        <div className="mt-3 space-y-2">
+        <ul className="space-y-2">
           {images.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center rounded-full overflow-hidden h-12"
-              style={{ backgroundColor: "#42768E" }}
+            <li
+              key={`${item.name}-${index}`}
+              className="flex items-center gap-3 rounded-xl border border-primary/10 bg-[#f7f6f3]/80 p-2"
             >
-              {/* Image thumbnail */}
-              <div className="flex-shrink-0 w-16 h-12 bg-white border-r border-[#42768E] flex items-center justify-center overflow-hidden" style={{ borderWidth: '1px' }}>
-                {item.url && item.url.trim() ? (
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-primary/8">
+                {item.url?.trim() ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.url}
-                    alt={item.name || `Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    style={{ display: 'block' }}
+                    alt={item.name || `Gambar ${index + 1}`}
+                    className="h-full w-full object-cover"
                     onError={(e) => {
-                      // Replace with placeholder if image fails to load
                       const target = e.target as HTMLImageElement;
-                      const parent = target.parentElement;
-                      if (parent) {
-                        const placeholder = document.createElement('span');
-                        placeholder.className = 'text-xs text-[#42768E] font-medium';
-                        placeholder.textContent = 'img';
-                        parent.innerHTML = '';
-                        parent.appendChild(placeholder);
-                      }
+                      target.style.display = "none";
                     }}
                   />
                 ) : (
-                  <span className="text-xs text-[#42768E] font-medium">img</span>
+                  <div className="flex h-full w-full items-center justify-center text-[10px] text-primary/40">
+                    img
+                  </div>
                 )}
               </div>
-              {/* Image name */}
-              <div className="flex-1 px-3 py-2 bg-white border-r border-[#42768E] min-w-0 h-full flex items-center" style={{ borderWidth: '1px' }}>
-                <span className="text-sm text-[#42768E] truncate block">{item.name || `Image ${index + 1}`}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-primary">
+                  {item.name || `Gambar ${index + 1}`}
+                </p>
+                <p className="text-[11px] text-primary/40">
+                  {multiple ? `Gambar ${index + 1}` : "Terpilih"}
+                </p>
               </div>
-              {/* Remove button */}
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors mr-1"
-                aria-label="Remove image"
-                title="Remove image"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary/40 transition-colors hover:bg-red-50 hover:text-red-600"
+                aria-label="Hapus gambar"
+                title="Hapus gambar"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
@@ -221,7 +227,14 @@ export default function SectionPropertiesPanel({
   section,
   componentData,
   onUpdate,
-  onClose
+  onClose,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp = false,
+  canMoveDown = false,
+  onDelete,
+  canDelete = true,
+  deleteBlockedReason,
 }: SectionPropertiesPanelProps) {
   const handleFieldUpdate = (field: string, value: any) => {
     onUpdate(section.id, field, value);
@@ -481,7 +494,7 @@ export default function SectionPropertiesPanel({
               }
             }}
             multiple={false}
-            label="Choose Image"
+            label="Pilih gambar"
           />
           <p className="text-xs text-muted mt-1">Background image for the entire section (only one image allowed)</p>
         </div>
@@ -731,7 +744,7 @@ export default function SectionPropertiesPanel({
                         }
                       }}
                       multiple={false}
-                      label="Choose Cover Image"
+                      label="Pilih gambar cover"
                     />
                   </FieldGroup>
 
@@ -933,7 +946,7 @@ export default function SectionPropertiesPanel({
                     handleFieldUpdate('backgroundImages', items.map(item => item.url));
                   }}
                   multiple={true}
-                  label="Choose Image"
+                  label="Pilih gambar"
                 />
                 <p className="text-xs text-muted mt-2">
                   Selected images will be added to the slideshow and can be seen in the preview immediately.
@@ -1507,7 +1520,7 @@ export default function SectionPropertiesPanel({
                       }
                     }}
                   multiple={false}
-                  label="Choose Image"
+                  label="Pilih gambar"
                 />
               </FieldGroup>
 
@@ -2006,7 +2019,7 @@ export default function SectionPropertiesPanel({
                     })));
                   }}
                   multiple={true}
-                  label="Choose Image"
+                  label="Pilih gambar"
                 />
                 <p className="text-xs text-muted mt-2">
                   Selected images will immediately appear in the carousel preview.
@@ -2323,7 +2336,7 @@ export default function SectionPropertiesPanel({
                     })));
                   }}
                   multiple={true}
-                  label="Choose Image"
+                  label="Pilih gambar"
                 />
                 <p className="text-xs text-muted mt-2">
                   Selected images will immediately appear in the gallery preview.
@@ -2490,7 +2503,7 @@ export default function SectionPropertiesPanel({
                     }
                   }}
                   multiple={false}
-                  label="Upload Logo"
+                  label="Unggah logo"
                 />
               </FieldGroup>
             </SectionGroup>
@@ -2530,31 +2543,220 @@ export default function SectionPropertiesPanel({
           </>
         );
 
+      case 'RsvpSection':
+        return (
+          <>
+            <SectionGroup title="Konten RSVP" defaultOpen={true}>
+              <FieldGroup>
+                <FieldLabel>Judul</FieldLabel>
+                <input
+                  type="text"
+                  value={componentData.title || ''}
+                  onChange={(e) => handleFieldUpdate('title', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                  placeholder="Konfirmasi Kehadiran"
+                />
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-xs text-muted whitespace-nowrap">Color:</span>
+                  <div className="flex-1">
+                    <ColorPicker
+                      label=""
+                      value={componentData.titleColor || '#2d2d2d'}
+                      onChange={(value) => handleFieldUpdate('titleColor', value)}
+                      defaultValue="#2d2d2d"
+                    />
+                  </div>
+                </div>
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Subjudul</FieldLabel>
+                <textarea
+                  value={componentData.subtitle || ''}
+                  onChange={(e) => handleFieldUpdate('subtitle', e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                />
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-xs text-muted whitespace-nowrap">Color:</span>
+                  <div className="flex-1">
+                    <ColorPicker
+                      label=""
+                      value={componentData.subtitleColor || '#2d2d2d'}
+                      onChange={(value) => handleFieldUpdate('subtitleColor', value)}
+                      defaultValue="#2d2d2d"
+                    />
+                  </div>
+                </div>
+              </FieldGroup>
+              <p className="text-[11px] leading-relaxed text-muted">
+                Form ditampilkan di editor untuk pratinjau. RSVP aktif di link
+                tamu. Pakai &quot;Ubah desain&quot; untuk 4 gaya form.
+              </p>
+            </SectionGroup>
+            <SectionGroup title="Background" defaultOpen={false}>
+              {renderBackgroundSection()}
+            </SectionGroup>
+            <SectionGroup title="Decorations" defaultOpen={false}>
+              {renderCurveDividers()}
+            </SectionGroup>
+          </>
+        );
+
+      case 'CountdownTimer':
+        return (
+          <>
+            <SectionGroup title="Countdown" defaultOpen={true}>
+              <FieldGroup>
+                <FieldLabel>Target date</FieldLabel>
+                <input
+                  type="datetime-local"
+                  value={
+                    componentData.targetDate
+                      ? (() => {
+                          try {
+                            const d = new Date(componentData.targetDate);
+                            if (Number.isNaN(d.getTime())) return '';
+                            const pad = (n: number) => String(n).padStart(2, '0');
+                            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                          } catch {
+                            return '';
+                          }
+                        })()
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    handleFieldUpdate(
+                      'targetDate',
+                      v ? new Date(v).toISOString() : ''
+                    );
+                  }}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                />
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Design</FieldLabel>
+                <select
+                  value={componentData.design || 'elegant-card'}
+                  onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background text-sm"
+                >
+                  <option value="elegant-card">Elegant card</option>
+                  <option value="simple">Simple</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+            <SectionGroup title="Background" defaultOpen={false}>
+              {renderBackgroundSection()}
+            </SectionGroup>
+            <SectionGroup title="Decorations" defaultOpen={false}>
+              {renderDecorativeFlowersSection()}
+              {renderCurveDividers()}
+            </SectionGroup>
+          </>
+        );
+
+      case 'BlankSection':
+        return (
+          <>
+            <SectionGroup title="Background" defaultOpen={true}>
+              {renderBackgroundSection()}
+            </SectionGroup>
+            <SectionGroup title="Decorations" defaultOpen={false}>
+              {renderCurveDividers()}
+            </SectionGroup>
+          </>
+        );
+
       default:
         return (
-          <div className="text-center py-4 text-sm text-muted">
-            <p>No editable fields for this section type.</p>
+          <div className="py-4 text-center text-sm text-muted">
+            <p>Tidak ada field yang bisa diedit untuk section ini.</p>
           </div>
         );
     }
   };
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-primary">Edit Section</h3>
-        <button
-          onClick={onClose}
-          className="text-muted hover:text-primary text-xl leading-none"
-        >
-          ×
-        </button>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="sticky top-0 z-10 border-b border-primary/8 bg-white/95 px-4 py-3 backdrop-blur-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary/35">
+              Section
+            </p>
+            <h3
+              className="mt-0.5 truncate text-base font-medium tracking-[-0.02em] text-primary"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              {getSectionTypeLabel(section.type)}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-full px-2 py-1 text-lg leading-none text-muted transition-colors hover:bg-background hover:text-primary"
+            aria-label="Tutup"
+          >
+            ×
+          </button>
+        </div>
       </div>
-      <div className="text-xs text-muted mb-4">
-        {section.type}
-      </div>
-      <div className="space-y-4">
+
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
         {renderFields()}
+
+      {(onMoveUp || onMoveDown || onDelete) && (
+        <div className="mt-2 space-y-2 border-t border-primary/8 pt-6">
+          {(onMoveUp || onMoveDown) && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-primary/80">
+                Urutan section
+              </p>
+              <div className="flex gap-2">
+                {onMoveUp && (
+                  <button
+                    type="button"
+                    onClick={onMoveUp}
+                    disabled={!canMoveUp}
+                    className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Naik
+                  </button>
+                )}
+                {onMoveDown && (
+                  <button
+                    type="button"
+                    onClick={onMoveDown}
+                    disabled={!canMoveDown}
+                    className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Turun
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          {onDelete && (
+            <>
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={!canDelete}
+                className="w-full rounded-full border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Hapus section
+              </button>
+              {!canDelete && deleteBlockedReason && (
+                <p className="text-center text-[11px] text-muted">
+                  {deleteBlockedReason}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
       </div>
     </div>
   );

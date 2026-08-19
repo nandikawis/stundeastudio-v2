@@ -17,7 +17,7 @@ const testimonials = [
   },
   {
     id: 3,
-    text: "RSVP dan link QR membuat hari H jauh lebih tenang. Intuitif dan efisien.",
+    text: "RSVP dan link personal membuat hari H jauh lebih tenang. Intuitif dan efisien.",
     author: "Elly",
     role: "Client",
   },

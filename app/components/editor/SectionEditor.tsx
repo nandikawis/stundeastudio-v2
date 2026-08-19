@@ -112,6 +112,8 @@ export default function SectionEditor({
           eventTime: (mergedData as any).eventTime || eventData?.eventTime || project.event_time,
           venueName: (mergedData as any).venueName || eventData?.venueName || project.venue_name,
           venueAddress: (mergedData as any).venueAddress || eventData?.venueAddress || project.venue_address,
+          projectId: project.id,
+          isPreview: true,
           // Pass isEditor and callbacks for CoverSection
           ...(isCoverSection ? { 
             isEditor: true,
@@ -123,34 +125,34 @@ export default function SectionEditor({
         return (
           <div
             key={componentConfig.id}
-            className={`relative w-full group ${
-              isSelected ? 'ring-2 ring-accent ring-offset-2' : ''
+            className={`group relative w-full ${
+              isSelected ? "ring-2 ring-primary/25 ring-offset-2 ring-offset-[#f7f6f3]" : ""
             }`}
           >
             {/* Section Overlay - Click to Edit (hide for CoverSection since buttons are inside) */}
             {!isSelected && !isCoverSection && (
               <>
-                {/* Hover background - non-blocking */}
-                <div className="absolute inset-0 z-[25] bg-transparent group-hover:bg-accent/5 transition-all pointer-events-none" />
-                {/* Above section curves/content (z-10), below editor toolbar (z-40) */}
-                <div className="pointer-events-auto absolute top-2 right-2 z-[30] flex gap-2 opacity-100 transition-opacity group-hover:opacity-100">
+                <div className="pointer-events-none absolute inset-0 z-[25] bg-transparent transition-colors group-hover:bg-primary/[0.03]" />
+                <div className="pointer-events-auto absolute top-2 right-2 z-[30] flex gap-1.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSectionClick(componentConfig.id, 'content');
+                      handleSectionClick(componentConfig.id, "content");
                     }}
-                    className="px-3 py-1 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-dark transition-all"
+                    className="rounded-full border border-black/10 bg-white/95 px-2.5 py-1 text-[11px] font-medium text-primary shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
                   >
-                    Edit Content
+                    Edit konten
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSectionClick(componentConfig.id, 'design');
+                      handleSectionClick(componentConfig.id, "design");
                     }}
-                    className="px-3 py-1 bg-gray-600 text-white rounded-full text-xs font-medium hover:bg-gray-700 transition-all"
+                    className="rounded-full border border-black/10 bg-primary/90 px-2.5 py-1 text-[11px] font-medium text-white shadow-sm transition-colors hover:bg-primary"
                   >
-                    Change Design
+                    Ubah desain
                   </button>
                 </div>
               </>

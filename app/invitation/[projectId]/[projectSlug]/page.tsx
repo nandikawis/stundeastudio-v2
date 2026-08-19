@@ -42,7 +42,9 @@ export default async function InvitationPage({
 }) {
   const { projectId } = await params;
 
-  const res = await api.get<Record<string, unknown>>(`/api/projects/${projectId}`);
+  const res = await api.get<Record<string, unknown>>(
+    `/api/projects/public/${projectId}`
+  );
   if (!res.success || !res.data) {
     notFound();
   }
@@ -51,7 +53,7 @@ export default async function InvitationPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <TemplateRenderer project={project} />
+      <TemplateRenderer project={project} isStandaloneInvitation />
     </div>
   );
 }

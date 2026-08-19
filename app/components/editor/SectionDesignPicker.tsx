@@ -138,6 +138,36 @@ const designVariants: Record<string, DesignOption[]> = {
       componentType: 'CoupleProfile',
       defaultData: { design: 'with-container' }
     }
+  ],
+  'RsvpSection': [
+    {
+      id: 'rsvp-classic',
+      name: 'Classic',
+      preview: 'rsvp-classic',
+      componentType: 'RsvpSection',
+      defaultData: { design: 'classic', designId: 'rsvp-classic' }
+    },
+    {
+      id: 'rsvp-card',
+      name: 'Card',
+      preview: 'rsvp-card',
+      componentType: 'RsvpSection',
+      defaultData: { design: 'card', designId: 'rsvp-card' }
+    },
+    {
+      id: 'rsvp-minimal',
+      name: 'Minimal',
+      preview: 'rsvp-minimal',
+      componentType: 'RsvpSection',
+      defaultData: { design: 'minimal', designId: 'rsvp-minimal' }
+    },
+    {
+      id: 'rsvp-soft',
+      name: 'Soft',
+      preview: 'rsvp-soft',
+      componentType: 'RsvpSection',
+      defaultData: { design: 'soft', designId: 'rsvp-soft' }
+    }
   ]
 };
 

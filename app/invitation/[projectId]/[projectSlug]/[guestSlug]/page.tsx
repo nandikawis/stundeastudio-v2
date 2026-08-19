@@ -42,21 +42,39 @@ export default async function PersonalizedInvitationPage({
 }) {
   const { projectId, guestSlug } = await params;
 
-  const res = await api.get<Record<string, unknown>>(`/api/projects/${projectId}`);
+  const res = await api.get<Record<string, unknown>>(
+    `/api/projects/public/${projectId}`
+  );
   if (!res.success || !res.data) {
     notFound();
   }
 
   const project = dbRowToProjectData(res.data);
 
-  // Derive a display name directly from the guest slug
-  const guestDisplayNameFromSlug = decodeURIComponent(guestSlug)
+  // Prefer guest name from API when available; fallback to slug display
+  let guestDisplayName = decodeURIComponent(guestSlug)
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
+  try {
+    const guestRes = await api.get<{ name: string }>(
+      `/api/projects/public/${projectId}/guests/${guestSlug}`
+    );
+    if (guestRes.success && guestRes.data?.name) {
+      guestDisplayName = guestRes.data.name;
+    }
+  } catch {
+    // keep slug-derived name
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <TemplateRenderer project={project} guestName={guestDisplayNameFromSlug} />
+      <TemplateRenderer
+        project={project}
+        guestName={guestDisplayName}
+        guestSlug={guestSlug}
+        isStandaloneInvitation
+      />
     </div>
   );
 }

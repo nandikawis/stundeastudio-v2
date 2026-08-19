@@ -13,6 +13,7 @@ export { default as CoupleProfile } from "./CoupleProfile";
 export { default as EventDetails } from "./EventDetails";
 export { default as PhotoGalleryGrid } from "./PhotoGalleryGrid";
 export { default as ClosingSection } from "./ClosingSection";
+export { default as RsvpSection } from "./RsvpSection";
 
 // Legacy components (keeping for backward compatibility)
 export { default as HeroImage } from "./HeroImage";
@@ -32,6 +33,7 @@ import CoupleProfile from "./CoupleProfile";
 import EventDetails from "./EventDetails";
 import PhotoGalleryGrid from "./PhotoGalleryGrid";
 import ClosingSection from "./ClosingSection";
+import RsvpSection from "./RsvpSection";
 import HeroImage from "./HeroImage";
 import TitleSection from "./TitleSection";
 import CoupleNames from "./CoupleNames";
@@ -41,6 +43,7 @@ export const componentRegistry: Record<string, React.ComponentType<any>> = {
   BlankSection,
   Hero,
   ImageCarousel,
+  CountdownTimer,
   // New Bayu & Nia style components
   CoverSection,
   HeroSection,
@@ -50,6 +53,7 @@ export const componentRegistry: Record<string, React.ComponentType<any>> = {
   EventDetails,
   PhotoGalleryGrid,
   ClosingSection,
+  RsvpSection,
   // Legacy
   HeroImage,
   TitleSection,

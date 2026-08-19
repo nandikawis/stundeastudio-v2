@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { mockTemplates } from "../../lib/templates";
 import {
   buildProjectDataFromMockTemplate,
@@ -9,10 +10,15 @@ import {
   type PublicTemplateRow,
 } from "../../lib/catalogTemplates";
 import { stripLegacyBackgroundKeys } from "../../lib/projectDataUtils";
-import { mockProjects, ProjectData } from "../../lib/mockData";
+import { mockProjects, ProjectData, type ComponentConfig } from "../../lib/mockData";
 import TemplateRenderer from "../../components/invitation/TemplateRenderer";
 import SectionEditor from "../../components/editor/SectionEditor";
 import SectionPropertiesPanel from "../../components/editor/SectionPropertiesPanel";
+import AddSectionPicker from "../../components/editor/AddSectionPicker";
+import {
+  getSectionDefaults,
+  type AddableSectionType,
+} from "../../lib/sectionDefaults";
 import { api } from "../../lib/api";
 import { useRequireAuth } from "../../lib/useRequireAuth";
 import { clearCachedAuth } from "../../lib/auth";
@@ -104,6 +110,7 @@ export default function EditorPage({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [mobileMusicOpen, setMobileMusicOpen] = useState(false);
+  const [addSectionPickerOpen, setAddSectionPickerOpen] = useState(false);
 
   type SectionPreview = {
     backgroundImageUrl?: string;
@@ -318,6 +325,121 @@ export default function EditorPage({
       // For mock/local template editing, keep storing in localStorage
       localStorage.setItem(`project-${param}`, JSON.stringify(updatedProject));
     }
+  };
+
+  const renumberSectionOrders = (structure: ComponentConfig[]): ComponentConfig[] =>
+    // Trust array order — sorting by `.order` here would undo swaps (stale order values).
+    structure.map((s, i) => ({ ...s, order: i + 1 }));
+
+  const openAddSectionPicker = () => {
+    setAddSectionPickerOpen(true);
+  };
+
+  const handleAddSection = (type: AddableSectionType) => {
+    if (!project) return;
+
+    const id = `sec-${Date.now()}`;
+    const sorted = [...project.page_structure].sort((a, b) => a.order - b.order);
+
+    const newSection: ComponentConfig = {
+      id,
+      type,
+      order: sorted.length + 1,
+      config: {},
+    };
+
+    const updatedProject: ProjectData = {
+      ...project,
+      page_structure: renumberSectionOrders([...sorted, newSection]),
+      component_data: {
+        ...project.component_data,
+        [id]: getSectionDefaults(type),
+      },
+    };
+
+    handleProjectUpdate(updatedProject);
+    setSelectedSectionId(id);
+    setAddSectionPickerOpen(false);
+  };
+
+  const getSectionMoveState = (sectionId: string | null) => {
+    if (!project || !sectionId) {
+      return { canMoveUp: false, canMoveDown: false };
+    }
+    const sorted = [...project.page_structure].sort((a, b) => a.order - b.order);
+    const index = sorted.findIndex((s) => s.id === sectionId);
+    if (index < 0) return { canMoveUp: false, canMoveDown: false };
+
+    const section = sorted[index];
+    // Keep Cover at the top — don't move cover, don't move anything above cover
+    if (section.type === "CoverSection") {
+      return { canMoveUp: false, canMoveDown: false };
+    }
+
+    const prev = index > 0 ? sorted[index - 1] : null;
+    const canMoveUp = index > 0 && prev?.type !== "CoverSection";
+    const canMoveDown = index < sorted.length - 1;
+
+    return { canMoveUp, canMoveDown };
+  };
+
+  const handleMoveSection = (sectionId: string, direction: "up" | "down") => {
+    if (!project) return;
+    const { canMoveUp, canMoveDown } = getSectionMoveState(sectionId);
+    if (direction === "up" && !canMoveUp) return;
+    if (direction === "down" && !canMoveDown) return;
+
+    const sorted = [...project.page_structure].sort((a, b) => a.order - b.order);
+    const index = sorted.findIndex((s) => s.id === sectionId);
+    if (index < 0) return;
+
+    const swapWith = direction === "up" ? index - 1 : index + 1;
+    const next = [...sorted];
+    [next[index], next[swapWith]] = [next[swapWith], next[index]];
+
+    handleProjectUpdate({
+      ...project,
+      page_structure: renumberSectionOrders(next),
+    });
+  };
+
+  const getDeleteBlockedReason = (sectionId: string | null): string | null => {
+    if (!project || !sectionId) return null;
+    const section = project.page_structure.find((s) => s.id === sectionId);
+    if (!section) return null;
+    if (section.type === "CoverSection") {
+      return "Cover tidak bisa dihapus.";
+    }
+    if (project.page_structure.length <= 1) {
+      return "Minimal satu section harus tetap ada.";
+    }
+    return null;
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    if (!project) return;
+    const blocked = getDeleteBlockedReason(sectionId);
+    if (blocked) return;
+    if (!window.confirm("Hapus section ini? Tidak bisa dibatalkan.")) return;
+
+    const sorted = [...project.page_structure].sort((a, b) => a.order - b.order);
+    const page_structure = renumberSectionOrders(
+      sorted.filter((s) => s.id !== sectionId)
+    );
+    const { [sectionId]: _removed, ...component_data } = project.component_data;
+
+    setPreviewImages((prev) => {
+      if (!(sectionId in prev)) return prev;
+      const { [sectionId]: _, ...rest } = prev;
+      return rest;
+    });
+
+    handleProjectUpdate({
+      ...project,
+      page_structure,
+      component_data,
+    });
+    setSelectedSectionId(null);
   };
 
   // Handle section field update
@@ -842,7 +964,7 @@ export default function EditorPage({
   return (
     <>
       <SaveModal />
-      <main className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
+      <main className="flex h-svh min-h-0 flex-col overflow-hidden bg-[#f7f6f3] text-primary">
       {/* Single file input for music (shared by desktop + mobile UI) */}
       <input
         ref={musicInputRef}
@@ -881,49 +1003,60 @@ export default function EditorPage({
       />
       {/* Toolbar */}
       <div
-        className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-border shadow-sm"
+        className="fixed top-0 right-0 left-0 z-40 border-b border-primary/8 bg-[#f7f6f3]/95 backdrop-blur-md"
         style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <input
-                type="text"
-                value={project?.name ?? ""}
-                placeholder={template?.name ?? remoteTemplateMeta?.name ?? "Nama Proyek"}
-                onChange={(e) => {
-                  if (!project) return;
-                  const updated: ProjectData = { ...project, name: e.target.value };
-                  handleProjectUpdate(updated);
-                }}
-                className="text-base sm:text-lg font-semibold text-primary bg-transparent border-b border-transparent focus:border-accent focus:outline-none px-1 py-0.5 min-w-0 w-full max-w-[min(100%,14rem)] sm:max-w-md"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              />
-            </div>
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 lg:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+            <Link
+              href="/projects"
+              className="shrink-0 rounded-full border border-primary/15 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-white/70"
+            >
+              ← Proyek
+            </Link>
+            <input
+              type="text"
+              value={project?.name ?? ""}
+              placeholder={template?.name ?? remoteTemplateMeta?.name ?? "Nama Proyek"}
+              onChange={(e) => {
+                if (!project) return;
+                const updated: ProjectData = { ...project, name: e.target.value };
+                handleProjectUpdate(updated);
+              }}
+              className="w-full min-w-0 max-w-[min(100%,14rem)] border-b border-transparent bg-transparent px-0.5 py-0.5 text-base font-medium tracking-[-0.02em] text-primary outline-none focus:border-primary/25 sm:max-w-md sm:text-lg"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            />
             {(template ?? remoteTemplateMeta ?? project?.template_slug) && (
-              <span className="hidden sm:inline-flex shrink-0 px-2 py-1 bg-accent/10 text-accent-dark text-xs rounded-full truncate max-w-[10rem] lg:max-w-none">
+              <span className="hidden shrink-0 truncate text-[11px] font-medium uppercase tracking-[0.16em] text-primary/35 sm:inline max-w-[12rem]">
                 {template?.name ?? remoteTemplateMeta?.name ?? project?.template_slug ?? ""}
               </span>
             )}
           </div>
-          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end sm:gap-3">
             <button
               type="button"
               onClick={() => setMobileMusicOpen(true)}
-              className="lg:hidden px-3 py-2 rounded-full text-sm font-medium border border-border text-primary hover:bg-background transition-colors"
+              className="rounded-full border border-primary/15 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-white/70 lg:hidden"
             >
               Musik
             </button>
-            <div className="text-xs sm:text-sm shrink-0 min-w-0">
-              {saveStatus === "saving" && <span className="text-muted">Menyimpan...</span>}
-              {saveStatus === "saved" && <span className="text-green-600">Tersimpan</span>}
+            <div className="min-w-0 shrink-0 text-xs text-primary/45 sm:text-sm">
+              {saveStatus === "saving" && <span>Menyimpan…</span>}
+              {saveStatus === "saved" && <span className="text-emerald-700/80">Tersimpan</span>}
               {saveStatus === "error" && <span className="text-red-600">Gagal</span>}
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => openAddSectionPicker()}
+                className="rounded-full border border-primary/15 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-white/70 lg:hidden"
+              >
+                Tambah
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsPreviewMode(true)}
-                className="px-3 sm:px-4 py-2 border border-border text-primary rounded-full text-sm hover:bg-background transition-all"
+                className="rounded-full border border-primary/15 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-white/70 sm:px-4"
               >
                 Preview
               </button>
@@ -931,7 +1064,7 @@ export default function EditorPage({
                 type="button"
                 onClick={saveProject}
                 disabled={saveStatus === "saving"}
-                className="px-3 sm:px-4 py-2 bg-primary text-white rounded-full text-sm hover:bg-primary-light transition-all disabled:opacity-50 min-h-[44px] sm:min-h-0"
+                className="min-h-[44px] rounded-full bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-light disabled:opacity-50 sm:min-h-0 sm:px-4"
               >
                 <span className="sm:hidden">Simpan</span>
                 <span className="hidden sm:inline">
@@ -943,13 +1076,18 @@ export default function EditorPage({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-28 sm:pt-20 lg:flex-row">
-        {/* Left Sidebar - Background Music (desktop) — own scroll, fixed width */}
-        <div className="hidden min-h-0 shrink-0 overflow-y-auto border-r border-border bg-white lg:flex lg:w-64">
-          <div className="p-4 w-full">
-            <h3 className="font-semibold text-primary mb-4">Background Music</h3>
-            <p className="text-xs text-muted mb-3">
-              Unggah musik latar untuk undangan ini. Musik akan diputar di halaman undangan.
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[4.75rem] sm:pt-[3.75rem] lg:flex-row">
+        {/* Left Sidebar - Background Music (desktop) */}
+        <aside className="hidden min-h-0 w-60 shrink-0 flex-col overflow-y-auto border-r border-primary/8 bg-white/70 lg:flex xl:w-64">
+          <div className="border-b border-primary/8 px-4 py-3">
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary/35">
+              Proyek
+            </p>
+            <h3 className="mt-0.5 text-sm font-semibold text-primary">Musik latar</h3>
+          </div>
+          <div className="p-4">
+            <p className="mb-4 text-xs leading-relaxed text-primary/50">
+              Musik diputar di halaman undangan tamu.
             </p>
             {project?.background_music_url ? (
               <div className="space-y-3">
@@ -966,36 +1104,32 @@ export default function EditorPage({
                       await persistProject(updatedProject);
                     }
                   }}
-                  className="text-xs text-red-600 underline"
+                  className="text-xs text-red-600/90 underline"
                 >
                   Hapus musik
                 </button>
               </div>
             ) : (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-primary mb-1">
-                  Unggah file audio
-                </label>
+              <div className="space-y-3">
                 <button
                   type="button"
                   onClick={() => musicInputRef.current?.click()}
-                  className="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-medium text-white"
-                  style={{ backgroundColor: "#42768E" }}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-primary px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-primary-light"
                 >
-                  Pilih Musik Latar
+                  Pilih musik
                 </button>
-                <p className="text-[11px] text-muted">
-                  Format yang didukung: MP3, OGG, dll. Disarankan &lt; 5MB.
+                <p className="text-[11px] leading-relaxed text-primary/40">
+                  MP3 / OGG, disarankan &lt; 5MB.
                 </p>
               </div>
             )}
           </div>
-        </div>
+        </aside>
 
-        {/* Center - Canvas (1:1 with Preview) — own scroll */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-gray-100">
-          <div className="flex justify-center items-start px-2 pb-4 pt-6 sm:px-4 sm:py-8">
-            <div className="w-full max-w-[375px] bg-white shadow-lg">
+        {/* Center - Canvas */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-[#f7f6f3]">
+          <div className="flex items-start justify-center px-2 pt-6 pb-8 sm:px-4 sm:py-10">
+            <div className="w-full max-w-[375px] overflow-hidden bg-white shadow-[0_16px_48px_rgba(45,45,45,0.1)] ring-1 ring-primary/5">
               {project ? (
                 <SectionEditor
                   project={project}
@@ -1011,40 +1145,60 @@ export default function EditorPage({
                   previewImages={previewImages}
                 />
               ) : (
-                <div className="p-8 text-center text-muted">
-                  <p>Loading project...</p>
+                <div className="p-8 text-center text-sm text-primary/45">
+                  <p>Memuat proyek…</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar - Properties Panel (desktop) — own scroll */}
-        <div className="hidden min-h-0 w-80 shrink-0 overflow-y-auto overscroll-y-contain border-l border-border bg-white lg:flex lg:flex-col">
+        {/* Right Sidebar - Properties */}
+        <aside className="hidden min-h-0 w-80 shrink-0 flex-col overflow-hidden border-l border-primary/8 bg-white/70 lg:flex">
           {selectedSectionId && project ? (
-            <SectionPropertiesPanel
-              section={project.page_structure.find((s) => s.id === selectedSectionId)!}
-              componentData={getMergedComponentData(selectedSectionId)}
-              onUpdate={handleSectionFieldUpdate}
-              onClose={() => setSelectedSectionId(null)}
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+              <SectionPropertiesPanel
+                section={project.page_structure.find((s) => s.id === selectedSectionId)!}
+                componentData={getMergedComponentData(selectedSectionId)}
+                onUpdate={handleSectionFieldUpdate}
+                onClose={() => setSelectedSectionId(null)}
+                onMoveUp={() => handleMoveSection(selectedSectionId, "up")}
+                onMoveDown={() => handleMoveSection(selectedSectionId, "down")}
+                canMoveUp={getSectionMoveState(selectedSectionId).canMoveUp}
+                canMoveDown={getSectionMoveState(selectedSectionId).canMoveDown}
+                onDelete={() => handleDeleteSection(selectedSectionId)}
+                canDelete={!getDeleteBlockedReason(selectedSectionId)}
+                deleteBlockedReason={getDeleteBlockedReason(selectedSectionId) ?? undefined}
+              />
+            </div>
           ) : (
-            <div className="p-4">
-              <div className="text-center py-8">
-                <h3 className="font-semibold text-primary mb-2">Section Editor</h3>
-                <p className="text-muted text-sm mb-4">
-                  Click on any section to edit its content
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="border-b border-primary/8 px-4 py-3">
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary/35">
+                  Editor
                 </p>
-                <div className="text-left space-y-2 text-xs text-muted">
-                  <p>• Hover over sections to see edit buttons</p>
-                  <p>• Click &quot;Edit Content&quot; to edit text and data</p>
-                  <p>• Click &quot;Change Design&quot; to change section design</p>
-                  <p>• Editor matches preview 1:1</p>
-                </div>
+                <h3 className="mt-0.5 text-sm font-semibold text-primary">Section</h3>
+              </div>
+              <div className="flex flex-1 flex-col px-4 py-8">
+                <p className="text-center text-sm leading-relaxed text-primary/50">
+                  Pilih section di kanvas untuk mengedit, atau tambah section baru.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => openAddSectionPicker()}
+                  className="mt-6 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-light"
+                >
+                  Tambah section
+                </button>
+                <ul className="mt-8 space-y-2 text-left text-xs leading-relaxed text-primary/40">
+                  <li>Tambah section menaruh di bagian bawah</li>
+                  <li>Pakai Naik / Turun untuk mengatur urutan</li>
+                  <li>Hover section untuk Edit konten / Ubah desain</li>
+                </ul>
               </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
 
       {/* Mobile: full-screen section properties — scrollable body */}
@@ -1059,6 +1213,13 @@ export default function EditorPage({
               componentData={getMergedComponentData(selectedSectionId)}
               onUpdate={handleSectionFieldUpdate}
               onClose={() => setSelectedSectionId(null)}
+              onMoveUp={() => handleMoveSection(selectedSectionId, "up")}
+              onMoveDown={() => handleMoveSection(selectedSectionId, "down")}
+              canMoveUp={getSectionMoveState(selectedSectionId).canMoveUp}
+              canMoveDown={getSectionMoveState(selectedSectionId).canMoveDown}
+              onDelete={() => handleDeleteSection(selectedSectionId)}
+              canDelete={!getDeleteBlockedReason(selectedSectionId)}
+              deleteBlockedReason={getDeleteBlockedReason(selectedSectionId) ?? undefined}
             />
           </div>
         </div>
@@ -1074,12 +1235,17 @@ export default function EditorPage({
             onClick={() => setMobileMusicOpen(false)}
           />
           <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl pb-[env(safe-area-inset-bottom)]">
-            <div className="sticky top-0 flex items-center justify-between border-b border-border bg-white px-4 py-3 rounded-t-2xl">
-              <h3 className="font-semibold text-primary">Musik latar</h3>
+            <div className="sticky top-0 flex items-center justify-between rounded-t-2xl border-b border-primary/8 bg-white px-4 py-3">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary/35">
+                  Proyek
+                </p>
+                <h3 className="text-sm font-semibold text-primary">Musik latar</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setMobileMusicOpen(false)}
-                className="px-3 py-1.5 text-sm font-medium text-primary rounded-full hover:bg-background"
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-primary hover:bg-background"
               >
                 Tutup
               </button>
@@ -1129,6 +1295,13 @@ export default function EditorPage({
             </div>
           </div>
         </div>
+      )}
+
+      {addSectionPickerOpen && (
+        <AddSectionPicker
+          onSelect={handleAddSection}
+          onClose={() => setAddSectionPickerOpen(false)}
+        />
       )}
     </main>
     </>

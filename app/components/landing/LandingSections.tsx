@@ -93,7 +93,7 @@ export default function LandingSections() {
                 d: "Konfirmasi kehadiran terkumpul rapi—siap untuk hari H.",
               },
               {
-                t: "Link & QR",
+                t: "Link personal",
                 d: "Bagikan sekali. Musik, countdown, dan petunjuk arah ikut serta.",
               },
               {
@@ -127,7 +127,7 @@ export default function LandingSections() {
             {[
               { n: "1", t: "Pilih", d: "Template yang cocok dengan karakter kalian." },
               { n: "2", t: "Sesuaikan", d: "Detail acara, foto, dan musik—semuanya visual." },
-              { n: "3", t: "Bagikan", d: "Kirim link atau QR. Selesai." },
+              { n: "3", t: "Bagikan", d: "Kirim link personal ke tamu. Selesai." },
             ].map((s) => (
               <li key={s.n}>
                 <span

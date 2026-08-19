@@ -493,6 +493,12 @@ export default function ProjectsPage() {
                       >
                         Lanjutkan edit
                       </Link>
+                      <Link
+                        href={`/projects/${project.id}/tamu`}
+                        className="landing-btn landing-btn-ghost !px-4 !py-2 text-sm"
+                      >
+                        Tamu / RSVP
+                      </Link>
 
                       {project.status !== "archived" && (
                         <button

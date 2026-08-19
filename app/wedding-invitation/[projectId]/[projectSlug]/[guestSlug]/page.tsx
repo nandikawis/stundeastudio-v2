@@ -90,16 +90,28 @@ export default async function PersonalizedWeddingInvitationPage({
     );
   }
 
-  // Derive a display name directly from the guest slug
-  const guestDisplayNameFromSlug = decodeURIComponent(guestSlug)
+  // Prefer guest name from API when available
+  let guestDisplayName = decodeURIComponent(guestSlug)
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  try {
+    const guestRes = await api.get<{ name: string }>(
+      `/api/projects/public/${projectId}/guests/${guestSlug}`
+    );
+    if (guestRes.success && guestRes.data?.name) {
+      guestDisplayName = guestRes.data.name;
+    }
+  } catch {
+    // keep slug-derived name
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <TemplateRenderer
         project={project}
-        guestName={guestDisplayNameFromSlug}
+        guestName={guestDisplayName}
+        guestSlug={guestSlug}
         isStandaloneInvitation
       />
     </div>
