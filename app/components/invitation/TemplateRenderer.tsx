@@ -8,6 +8,81 @@ import { ProjectData } from "@/app/lib/mockData";
 
 gsap.registerPlugin(ScrollTrigger);
 
+function prefersReducedMotion() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * Pick inner content to reveal — not the full section shell (bg / curves).
+ * Explicit `[data-invite-reveal]` wins; otherwise headings, copy, cards, media.
+ */
+function getRevealTargets(root: HTMLElement): HTMLElement[] {
+  const marked = Array.from(
+    root.querySelectorAll<HTMLElement>("[data-invite-reveal]")
+  );
+  if (marked.length) return marked;
+
+  const scope = root.querySelector("section") ?? root;
+  const raw = Array.from(
+    scope.querySelectorAll<HTMLElement>(
+      [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "p",
+        "blockquote",
+        "figure",
+        "button",
+        "img",
+        "[class*='rounded-2xl']",
+        "[class*='rounded-3xl']",
+      ].join(", ")
+    )
+  );
+
+  const targets: HTMLElement[] = [];
+  const seenCarousel = new WeakSet<Element>();
+
+  for (const el of raw) {
+    if (targets.length >= 14) break;
+    if (el.closest("svg")) continue;
+    if (el.getAttribute("aria-hidden") === "true") continue;
+
+    // Carousel / stacked slides: reveal the frame once, not every slide image
+    const stackParent = el.closest(".relative");
+    if (
+      el.tagName === "IMG" &&
+      stackParent &&
+      stackParent.querySelectorAll("img").length > 2
+    ) {
+      if (seenCarousel.has(stackParent)) continue;
+      seenCarousel.add(stackParent);
+      if (targets.some((t) => t.contains(stackParent) || stackParent.contains(t))) {
+        continue;
+      }
+      targets.push(stackParent as HTMLElement);
+      continue;
+    }
+
+    if (!el.textContent?.trim() && el.tagName !== "IMG" && !el.querySelector("img")) {
+      continue;
+    }
+
+    // Skip nodes nested inside an already-chosen target
+    if (targets.some((t) => t.contains(el))) continue;
+    // Drop previous targets that are parents of this more specific node
+    for (let i = targets.length - 1; i >= 0; i--) {
+      if (el.contains(targets[i])) targets.splice(i, 1);
+    }
+
+    targets.push(el);
+  }
+
+  return targets;
+}
+
 function FadeInWrap({
   children,
   disabled,
@@ -23,31 +98,54 @@ function FadeInWrap({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (disabled || !ref.current) return;
-    const el = ref.current;
-    const tween = gsap.fromTo(
-      el,
-      { opacity: 0, y: 40 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: el,
-          start: "top 88%",
-          once: true,
-          ...(scrollerEl && { scroller: scrollerEl }),
-        },
-      }
-    );
+    const root = ref.current;
+    const targets = getRevealTargets(root);
+    if (!targets.length) return;
+
+    const reduce = prefersReducedMotion();
+    const from = reduce
+      ? { opacity: 0 }
+      : { opacity: 0, transform: "translateY(14px)" };
+    const to = reduce
+      ? {
+          opacity: 1,
+          duration: 0.35,
+          stagger: 0.04,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: root,
+            start: "top 88%",
+            once: true,
+            ...(scrollerEl && { scroller: scrollerEl }),
+          },
+        }
+      : {
+          opacity: 1,
+          transform: "translateY(0px)",
+          duration: 0.45,
+          stagger: 0.06,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: root,
+            start: "top 88%",
+            once: true,
+            ...(scrollerEl && { scroller: scrollerEl }),
+          },
+        };
+
+    gsap.set(targets, from);
+    const tween = gsap.to(targets, to);
+
     return () => {
       tween.scrollTrigger?.kill();
       tween.kill();
+      gsap.set(targets, { clearProps: "opacity,transform" });
     };
   }, [disabled, scrollerEl]);
-  if (disabled) return <div className={className}>{children}</div>;
+
+  // Section shell stays put (backgrounds/curves don't slide). Only inner targets move.
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );
