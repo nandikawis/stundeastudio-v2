@@ -785,34 +785,56 @@ export default function EditorPage({
     return (
       <>
         <SaveModal />
-        <main className="min-h-screen bg-gray-100">
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-border p-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <h2 className="font-semibold text-primary">Preview Mode</h2>
-            <button
-              onClick={() => setIsPreviewMode(false)}
-              className="px-4 py-2 bg-primary text-white rounded-full text-sm hover:bg-primary-light transition-all"
-            >
-              Exit Preview
-            </button>
-          </div>
-        </div>
-        <div className="pt-16 pb-8">
-          {/* Mobile Preview Container */}
-          <div className="flex justify-center items-start min-h-[calc(100vh-4rem)]">
-            <div className="w-[375px] bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border-[10px] border-gray-800">
-              {/* Mobile Status Bar */}
-              <div className="h-6 bg-gray-800 flex items-center justify-center">
-                <div className="w-32 h-1.5 bg-gray-600 rounded-full"></div>
+        <main className="landing-root flex min-h-screen flex-col bg-[#f7f6f3] text-primary">
+          <header className="sticky top-0 z-40 border-b border-primary/8 bg-[#f7f6f3]/90 backdrop-blur-md">
+            <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-14">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary/35">
+                  Preview
+                </p>
+                <h2
+                  className="truncate text-lg font-medium tracking-[-0.02em] text-primary"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  {project.name}
+                </h2>
               </div>
-              {/* Mobile Screen */}
-              <div className="phone-mockup-scroll overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 4rem - 2.5rem)', maxHeight: '800px' }}>
-                <TemplateRenderer project={project} isPreview />
+              <button
+                type="button"
+                onClick={() => setIsPreviewMode(false)}
+                className="landing-btn landing-btn-primary shrink-0"
+              >
+                Keluar preview
+              </button>
+            </div>
+          </header>
+
+          <section className="flex flex-1 flex-col px-5 pb-16 pt-6 sm:px-8 sm:pt-8 lg:px-14">
+            <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col items-center">
+              <p className="mb-6 hidden text-[11px] font-medium uppercase tracking-[0.28em] text-primary/35 sm:block">
+                Seperti di HP tamu
+              </p>
+
+              <div className="flex w-full flex-1 items-center justify-center">
+                <div
+                  className="flex w-full max-w-[390px] flex-col overflow-hidden rounded-[2.25rem] border-[10px] border-neutral-800 bg-white shadow-[0_24px_64px_rgba(45,45,45,0.14)]"
+                  style={{
+                    width: "min(390px, 100%, calc((100dvh - 9rem) * 9 / 19.5))",
+                    aspectRatio: "9 / 19.5",
+                    maxHeight: "min(780px, calc(100dvh - 9rem))",
+                  }}
+                >
+                  <div className="flex h-7 shrink-0 items-center justify-center bg-neutral-800">
+                    <div className="h-1.5 w-28 rounded-full bg-neutral-600" />
+                  </div>
+                  <div className="phone-mockup-scroll min-h-0 flex-1 overflow-hidden">
+                    <TemplateRenderer project={project} isPreview />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
+          </section>
+        </main>
       </>
     );
   }

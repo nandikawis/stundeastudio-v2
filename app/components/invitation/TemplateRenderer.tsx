@@ -108,6 +108,7 @@ export default function TemplateRenderer({
       venueAddress: componentData.venueAddress || project.venue_address,
       guestName: guestName,
       isPreview,
+      previewMode: isPreview,
       isStandaloneInvitation,
     };
     if (componentConfig.type === "CoverSection") {
@@ -189,6 +190,33 @@ export default function TemplateRenderer({
           </>
         )}
       </>
+    );
+  }
+
+  // Phone mockup preview: size to the frame (100%), not the browser viewport
+  if (isPreview) {
+    if (coverComponents.length > 0) {
+      return (
+        <div className="relative h-full w-full bg-background">
+          <div
+            ref={(el) => setContentScrollEl(el ?? null)}
+            className="absolute inset-0 z-0 h-full w-full overflow-y-auto overflow-x-hidden bg-background"
+          >
+            {contentComponents.map((cc) => renderSection(cc, contentScrollEl))}
+          </div>
+          {!coverOpen && (
+            <div className="absolute inset-0 z-50 h-full w-full overflow-hidden">
+              {coverComponents.map((cc) => renderSection(cc))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative h-full w-full overflow-y-auto overflow-x-hidden bg-background">
+        {sortedComponents.map((cc) => renderSection(cc))}
+      </div>
     );
   }
 

@@ -145,7 +145,7 @@ export default function HeroSection({
   const quoteAlignClass = mapAlignToClass(quoteAlign);
 
   const sectionHeightClass = previewMode
-    ? "h-full min-h-0 w-full"
+    ? "min-h-full w-full"
     : "min-h-screen";
 
   const curveSvgClass = previewMode ? "h-8 sm:h-10" : "h-16";

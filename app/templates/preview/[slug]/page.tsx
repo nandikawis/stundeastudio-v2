@@ -100,68 +100,137 @@ export default function TemplatePreviewPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background">
-      <section className="bg-gray-100 pt-6 pb-10 sm:pt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/80 bg-white/90 backdrop-blur-sm rounded-t-xl px-4 py-4 sm:rounded-xl sm:mb-6">
-            <div className="flex items-center gap-3 min-w-0">
-              <Link
-                href="/templates"
-                className="shrink-0 px-3 py-1.5 rounded-full border border-border text-sm font-medium text-primary hover:bg-background transition-colors"
-              >
-                ←
-              </Link>
+    <main className="landing-root flex min-h-screen flex-col bg-[#f7f6f3] text-primary">
+      {/* Top bar */}
+      <header className="sticky top-0 z-40 border-b border-primary/8 bg-[#f7f6f3]/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-14">
+          <div className="flex min-w-0 items-center gap-4">
+            <Link
+              href="/templates"
+              className="landing-btn landing-btn-ghost !px-3 !py-2 text-sm"
+            >
+              ← Template
+            </Link>
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary/35">
+                Preview
+              </p>
               <h1
-                className="text-xl font-semibold text-primary truncate"
+                className="truncate text-lg font-medium tracking-[-0.02em] text-primary"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
-                {project?.name ?? "Preview template"}
+                {project?.name ?? (loading ? "Memuat…" : "Template")}
               </h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              {useError && (
-                <span className="text-sm text-red-600 max-w-full sm:max-w-xs truncate" title={useError}>
-                  {useError}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => void handleUseTemplate()}
-                disabled={using || !project || !!loadError}
-                className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary-light transition-all disabled:opacity-50 min-h-[44px]"
-              >
-                {using ? "Menyimpan…" : "Gunakan Template"}
-              </button>
             </div>
           </div>
 
-          {loading ? (
-            <div className="text-center text-muted py-16">Memuat preview…</div>
-          ) : loadError ? (
-            <div className="text-center py-16">
-              <p className="text-red-600 mb-4">{loadError}</p>
-              <Link href="/templates" className="text-primary underline">
-                Kembali ke daftar template
-              </Link>
-            </div>
-          ) : project ? (
-            <div className="flex justify-center items-start min-h-[calc(100vh-10rem)] pb-8">
-              {/* Same phone mockup as editor preview mode */}
-              <div className="w-[375px] max-w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border-[10px] border-gray-800">
-                <div className="h-6 bg-gray-800 flex items-center justify-center shrink-0">
-                  <div className="w-32 h-1.5 bg-gray-600 rounded-full" />
-                </div>
-                <div
-                  className="phone-mockup-scroll overflow-y-auto overflow-x-hidden"
-                  style={{ height: "calc(100vh - 4rem - 2.5rem)", maxHeight: "800px" }}
-                >
-                  <TemplateRenderer project={project} isPreview />
-                </div>
-              </div>
-            </div>
-          ) : null}
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {useError && (
+              <span
+                className="hidden max-w-[14rem] truncate text-sm text-red-600/90 md:inline"
+                title={useError}
+              >
+                {useError}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => void handleUseTemplate()}
+              disabled={using || !project || !!loadError}
+              className="landing-btn landing-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {using ? "Menyimpan…" : "Gunakan template"}
+            </button>
+          </div>
         </div>
-      </section>
+      </header>
+
+      <div className="flex flex-1 flex-col">
+        {/* Title under header on smaller screens (desktop uses sticky bar) */}
+        <div className="px-5 pt-6 text-center sm:hidden">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary/35">
+            Preview
+          </p>
+          <h1
+            className="mt-1 text-2xl font-medium tracking-[-0.02em] text-primary"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            {project?.name ?? (loading ? "Memuat…" : "Template")}
+          </h1>
+        </div>
+
+        <section className="flex flex-1 flex-col px-5 pb-16 pt-6 sm:px-8 sm:pt-8 lg:px-14">
+          <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col items-center">
+            {loading ? (
+              <p className="py-24 text-center text-sm text-primary/45">
+                Memuat preview…
+              </p>
+            ) : loadError ? (
+              <div className="py-24 text-center">
+                <h2
+                  className="text-2xl font-medium tracking-[-0.02em] text-primary"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  Tidak dapat dimuat
+                </h2>
+                <p className="mx-auto mt-3 max-w-sm text-[15px] text-primary/50">
+                  {loadError}
+                </p>
+                <Link
+                  href="/templates"
+                  className="landing-btn landing-btn-primary mt-8 inline-flex"
+                >
+                  Kembali ke template
+                </Link>
+              </div>
+            ) : project ? (
+              <>
+                <p className="mb-6 hidden text-[11px] font-medium uppercase tracking-[0.28em] text-primary/35 sm:block">
+                  Seperti di HP tamu
+                </p>
+
+                <div className="flex w-full flex-1 items-center justify-center">
+                  <div
+                    className="flex w-full max-w-[390px] flex-col overflow-hidden rounded-[2.25rem] border-[10px] border-neutral-800 bg-white shadow-[0_24px_64px_rgba(45,45,45,0.14)]"
+                    style={{
+                      width: "min(390px, 100%, calc((100dvh - 9rem) * 9 / 19.5))",
+                      aspectRatio: "9 / 19.5",
+                      maxHeight: "min(780px, calc(100dvh - 9rem))",
+                    }}
+                  >
+                    <div className="flex h-7 shrink-0 items-center justify-center bg-neutral-800">
+                      <div className="h-1.5 w-28 rounded-full bg-neutral-600" />
+                    </div>
+                    <div className="phone-mockup-scroll min-h-0 flex-1 overflow-hidden">
+                      <TemplateRenderer project={project} isPreview />
+                    </div>
+                  </div>
+                </div>
+
+                {useError && (
+                  <p className="mt-6 max-w-md text-center text-sm text-red-600/90">
+                    {useError}
+                  </p>
+                )}
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:hidden">
+                  <button
+                    type="button"
+                    onClick={() => void handleUseTemplate()}
+                    disabled={using}
+                    className="landing-btn landing-btn-primary disabled:opacity-50"
+                  >
+                    {using ? "Menyimpan…" : "Gunakan template"}
+                  </button>
+                  <Link href="/templates" className="landing-btn landing-btn-ghost">
+                    Lihat yang lain
+                  </Link>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </section>
+      </div>
 
       <Footer />
     </main>

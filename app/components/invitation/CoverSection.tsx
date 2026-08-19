@@ -153,8 +153,10 @@ export default function CoverSection({
 
   // Determine positioning classes based on editor mode
   const positionClasses = isEditor
-    ? "relative min-h-screen w-full max-w-[375px] mx-auto z-0" // Normal flow, mobile width in editor, low z-index so buttons appear above
-    : "sticky top-0 w-full z-50"; // Sticky overlay inside the mobile screen container in preview/published
+    ? "relative min-h-screen w-full max-w-[375px] mx-auto z-0" // Normal flow, mobile width in editor
+    : isStandaloneInvitation
+      ? "sticky top-0 w-full z-50"
+      : "absolute inset-0 w-full z-50"; // Phone mockup: fill the frame screen
 
   return (
     <>
@@ -166,16 +168,16 @@ export default function CoverSection({
           ...sectionStyle,
           ...(!isEditor
             ? {
-                // In standalone wedding-invitation pages, use full viewport height
                 ...(isStandaloneInvitation
                   ? {
                       height: '100vh',
                       maxHeight: '100vh',
                     }
                   : {
-                      // In editor preview/mobile frame, match the internal screen height
-                      height: 'calc(100vh - 4rem - 2.5rem)',
-                      maxHeight: '800px',
+                      // Phone mockup / editor preview frame — fill parent, not browser viewport
+                      height: '100%',
+                      maxHeight: '100%',
+                      minHeight: '100%',
                     }),
                 willChange: isAnimating ? 'transform, opacity' : 'auto',
               }
