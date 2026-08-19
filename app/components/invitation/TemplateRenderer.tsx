@@ -13,73 +13,44 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function isShellElement(el: Element): boolean {
+  return Boolean(
+    el.closest("[data-invite-shell]") ||
+      el.closest("svg") ||
+      (el instanceof HTMLElement &&
+        el.classList.contains("pointer-events-none") &&
+        (el.classList.contains("absolute") ||
+          el.parentElement?.classList.contains("absolute")))
+  );
+}
+
 /**
- * Pick inner content to reveal — not the full section shell (bg / curves).
- * Explicit `[data-invite-reveal]` wins; otherwise headings, copy, cards, media.
+ * Inner content only — never curves, flowers, or full-bleed shells.
+ * Prefer `[data-invite-reveal]`; otherwise a small set of text nodes.
  */
 function getRevealTargets(root: HTMLElement): HTMLElement[] {
   const marked = Array.from(
     root.querySelectorAll<HTMLElement>("[data-invite-reveal]")
-  );
-  if (marked.length) return marked;
+  ).filter((el) => !isShellElement(el));
+  if (marked.length) return marked.slice(0, 8);
 
   const scope = root.querySelector("section") ?? root;
   const raw = Array.from(
-    scope.querySelectorAll<HTMLElement>(
-      [
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "p",
-        "blockquote",
-        "figure",
-        "button",
-        "img",
-        "[class*='rounded-2xl']",
-        "[class*='rounded-3xl']",
-      ].join(", ")
-    )
+    scope.querySelectorAll<HTMLElement>("h1, h2, h3, h4, p, blockquote, figure, button")
   );
 
   const targets: HTMLElement[] = [];
-  const seenCarousel = new WeakSet<Element>();
-
   for (const el of raw) {
-    if (targets.length >= 14) break;
-    if (el.closest("svg")) continue;
+    if (targets.length >= 6) break;
+    if (isShellElement(el)) continue;
     if (el.getAttribute("aria-hidden") === "true") continue;
-
-    // Carousel / stacked slides: reveal the frame once, not every slide image
-    const stackParent = el.closest(".relative");
-    if (
-      el.tagName === "IMG" &&
-      stackParent &&
-      stackParent.querySelectorAll("img").length > 2
-    ) {
-      if (seenCarousel.has(stackParent)) continue;
-      seenCarousel.add(stackParent);
-      if (targets.some((t) => t.contains(stackParent) || stackParent.contains(t))) {
-        continue;
-      }
-      targets.push(stackParent as HTMLElement);
-      continue;
-    }
-
-    if (!el.textContent?.trim() && el.tagName !== "IMG" && !el.querySelector("img")) {
-      continue;
-    }
-
-    // Skip nodes nested inside an already-chosen target
+    if (!el.textContent?.trim()) continue;
     if (targets.some((t) => t.contains(el))) continue;
-    // Drop previous targets that are parents of this more specific node
     for (let i = targets.length - 1; i >= 0; i--) {
       if (el.contains(targets[i])) targets.splice(i, 1);
     }
-
     targets.push(el);
   }
-
   return targets;
 }
 
@@ -91,7 +62,6 @@ function FadeInWrap({
 }: {
   children: ReactNode;
   disabled?: boolean;
-  /** When content scrolls inside this element (standalone invitation), pass it so ScrollTrigger fires for sections below the fold */
   scrollerEl?: HTMLElement | null;
   className?: string;
 }) {
@@ -103,47 +73,29 @@ function FadeInWrap({
     if (!targets.length) return;
 
     const reduce = prefersReducedMotion();
-    const from = reduce
-      ? { opacity: 0 }
-      : { opacity: 0, transform: "translateY(14px)" };
-    const to = reduce
-      ? {
-          opacity: 1,
-          duration: 0.35,
-          stagger: 0.04,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: root,
-            start: "top 88%",
-            once: true,
-            ...(scrollerEl && { scroller: scrollerEl }),
-          },
-        }
-      : {
-          opacity: 1,
-          transform: "translateY(0px)",
-          duration: 0.45,
-          stagger: 0.06,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: root,
-            start: "top 88%",
-            once: true,
-            ...(scrollerEl && { scroller: scrollerEl }),
-          },
-        };
-
-    gsap.set(targets, from);
-    const tween = gsap.to(targets, to);
+    gsap.set(targets, reduce ? { opacity: 0 } : { opacity: 0, y: 10 });
+    const tween = gsap.to(targets, {
+      opacity: 1,
+      ...(reduce ? {} : { y: 0 }),
+      duration: reduce ? 0.25 : 0.4,
+      stagger: 0.05,
+      ease: "power2.out",
+      overwrite: "auto",
+      scrollTrigger: {
+        trigger: root,
+        start: "top 90%",
+        once: true,
+        ...(scrollerEl && { scroller: scrollerEl }),
+      },
+    });
 
     return () => {
       tween.scrollTrigger?.kill();
       tween.kill();
-      gsap.set(targets, { clearProps: "opacity,transform" });
+      gsap.set(targets, { clearProps: "opacity,transform,y" });
     };
   }, [disabled, scrollerEl]);
 
-  // Section shell stays put (backgrounds/curves don't slide). Only inner targets move.
   return (
     <div ref={ref} className={className}>
       {children}
@@ -169,11 +121,14 @@ export default function TemplateRenderer({
 }: TemplateRendererProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
-  const [contentScrollEl, setContentScrollEl] = useState<HTMLDivElement | null>(null);
+  const [contentScrollEl, setContentScrollEl] = useState<HTMLDivElement | null>(
+    null
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Sort components by order
-  const sortedComponents = [...project.page_structure].sort((a, b) => a.order - b.order);
+  const sortedComponents = [...project.page_structure].sort(
+    (a, b) => a.order - b.order
+  );
 
   const toggleAudio = () => {
     if (audioRef.current && project.background_music_url) {
@@ -188,16 +143,26 @@ export default function TemplateRenderer({
 
   const buildProps = (componentConfig: (typeof sortedComponents)[0]) => {
     const componentData = project.component_data[componentConfig.id] || {};
-    // Ensure image-carousel always has Date & Message and Countdown when missing (e.g. old projects or Elegant/Refined/Minimal)
-    const defaultDateMessage = "Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu di hari yang berbahagia.";
+    const defaultDateMessage =
+      "Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu di hari yang berbahagia.";
     const imageCarouselDefaults =
       componentConfig.id === "image-carousel"
         ? {
-            dateMessageDate: (componentData as Record<string, unknown>).dateMessageDate ?? "31.12.2026",
-            dateMessageText: (componentData as Record<string, unknown>).dateMessageText ?? defaultDateMessage,
-            countdownTargetDate: (componentData as Record<string, unknown>).countdownTargetDate ?? "2026-12-31T08:00:00.000Z",
-            dateMessageDateAlign: (componentData as Record<string, unknown>).dateMessageDateAlign ?? "center",
-            dateMessageTextAlign: (componentData as Record<string, unknown>).dateMessageTextAlign ?? "center",
+            dateMessageDate:
+              (componentData as Record<string, unknown>).dateMessageDate ??
+              "31.12.2026",
+            dateMessageText:
+              (componentData as Record<string, unknown>).dateMessageText ??
+              defaultDateMessage,
+            countdownTargetDate:
+              (componentData as Record<string, unknown>).countdownTargetDate ??
+              "2026-12-31T08:00:00.000Z",
+            dateMessageDateAlign:
+              (componentData as Record<string, unknown>).dateMessageDateAlign ??
+              "center",
+            dateMessageTextAlign:
+              (componentData as Record<string, unknown>).dateMessageTextAlign ??
+              "center",
           }
         : {};
     const base = {
@@ -221,24 +186,30 @@ export default function TemplateRenderer({
     return base;
   };
 
-  // Standalone invitation: render content behind the cover so hero is painted from first load (avoids white flash when opening cover)
-  const coverComponents = sortedComponents.filter((c) => c.type === "CoverSection");
-  const contentComponents = sortedComponents.filter((c) => c.type !== "CoverSection");
+  const coverComponents = sortedComponents.filter(
+    (c) => c.type === "CoverSection"
+  );
+  const contentComponents = sortedComponents.filter(
+    (c) => c.type !== "CoverSection"
+  );
 
   const renderSection = (
     componentConfig: (typeof sortedComponents)[0],
     index: number,
-    scrollEl?: HTMLDivElement | null
+    scrollEl?: HTMLDivElement | null,
+    opts?: { revealEnabled?: boolean }
   ) => {
     const Component = componentRegistry[componentConfig.type];
     if (!Component) {
       console.warn(`Component type "${componentConfig.type}" not found`);
       return null;
     }
-    // 1px overlap kills sub-pixel hairlines between stacked sections on mobile/tablet
     const seamClass = index > 0 ? "-mt-px" : undefined;
     const section = <Component {...buildProps(componentConfig)} />;
-    const useFade = !isPreview && componentConfig.type !== "CoverSection";
+    const useFade =
+      !isPreview &&
+      componentConfig.type !== "CoverSection" &&
+      opts?.revealEnabled !== false;
     return (
       <FadeInWrap
         key={componentConfig.id}
@@ -251,72 +222,113 @@ export default function TemplateRenderer({
     );
   };
 
+  const musicControl =
+    project.background_music_url && (
+      <>
+        <audio ref={audioRef} loop>
+          <source src={project.background_music_url} type="audio/mpeg" />
+        </audio>
+        <button
+          onClick={toggleAudio}
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-white/90 shadow-lg backdrop-blur-sm transition-all hover:bg-white"
+          aria-label={isPlaying ? "Pause audio" : "Play audio"}
+        >
+          <svg
+            className="w-6 h-6 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {isPlaying ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            ) : (
+              <>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </>
+            )}
+          </svg>
+        </button>
+      </>
+    );
+
   if (isStandaloneInvitation && coverComponents.length > 0) {
     return (
       <>
         <div className="relative min-h-screen w-full bg-background">
-          {/* Content layer: sits behind the cover so hero etc. are painted from first load (no white flash when cover opens) */}
+          {/* Cover paints first (DOM order + z-50) so hero never flashes ahead */}
+          {!coverOpen && (
+            <div className="absolute inset-0 z-50 h-screen w-full overflow-hidden">
+              {coverComponents.map((cc, i) =>
+                renderSection(cc, i, null, { revealEnabled: false })
+              )}
+            </div>
+          )}
+          {/* Content stays mounted but hidden until cover opens */}
           <div
             ref={(el) => setContentScrollEl(el ?? null)}
             className="absolute inset-0 z-0 min-h-screen w-full overflow-y-auto bg-background"
+            style={{
+              opacity: coverOpen ? 1 : 0,
+              visibility: coverOpen ? "visible" : "hidden",
+              pointerEvents: coverOpen ? "auto" : "none",
+            }}
+            aria-hidden={!coverOpen}
           >
-            {contentComponents.map((cc, i) => renderSection(cc, i, contentScrollEl))}
+            {contentComponents.map((cc, i) =>
+              renderSection(cc, i, contentScrollEl, {
+                revealEnabled: coverOpen,
+              })
+            )}
           </div>
-          {/* Cover layer: only mount while cover is not yet opened; when opened we unmount so content layer is visible */}
-          {!coverOpen && (
-            <div className="absolute inset-0 z-50 h-screen w-full overflow-hidden">
-              {coverComponents.map((cc, i) => renderSection(cc, i))}
-            </div>
-          )}
         </div>
-        {project.background_music_url && (
-          <>
-            <audio ref={audioRef} loop>
-              <source src={project.background_music_url} type="audio/mpeg" />
-            </audio>
-            <button
-              onClick={toggleAudio}
-              className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-white/90 shadow-lg backdrop-blur-sm transition-all hover:bg-white"
-              aria-label={isPlaying ? "Pause audio" : "Play audio"}
-            >
-              <svg
-                className="w-6 h-6 text-primary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isPlaying ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                ) : (
-                  <>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </>
-                )}
-              </svg>
-            </button>
-          </>
-        )}
+        {musicControl}
       </>
     );
   }
 
-  // Phone mockup preview: size to the frame (100%), not the browser viewport
   if (isPreview) {
     if (coverComponents.length > 0) {
       return (
         <div className="relative h-full w-full bg-background">
+          {!coverOpen && (
+            <div className="absolute inset-0 z-50 h-full w-full overflow-hidden">
+              {coverComponents.map((cc, i) =>
+                renderSection(cc, i, null, { revealEnabled: false })
+              )}
+            </div>
+          )}
           <div
             ref={(el) => setContentScrollEl(el ?? null)}
             className="absolute inset-0 z-0 h-full w-full overflow-y-auto overflow-x-hidden bg-background"
+            style={{
+              opacity: coverOpen ? 1 : 0,
+              visibility: coverOpen ? "visible" : "hidden",
+              pointerEvents: coverOpen ? "auto" : "none",
+            }}
+            aria-hidden={!coverOpen}
           >
-            {contentComponents.map((cc, i) => renderSection(cc, i, contentScrollEl))}
+            {contentComponents.map((cc, i) =>
+              renderSection(cc, i, contentScrollEl, {
+                revealEnabled: coverOpen,
+              })
+            )}
           </div>
-          {!coverOpen && (
-            <div className="absolute inset-0 z-50 h-full w-full overflow-hidden">
-              {coverComponents.map((cc, i) => renderSection(cc, i))}
-            </div>
-          )}
         </div>
       );
     }
@@ -333,36 +345,7 @@ export default function TemplateRenderer({
       <div className="relative min-h-screen w-full bg-background">
         {sortedComponents.map((cc, i) => renderSection(cc, i))}
       </div>
-
-      {project.background_music_url && (
-        <>
-          <audio ref={audioRef} loop>
-            <source src={project.background_music_url} type="audio/mpeg" />
-          </audio>
-          <button
-            onClick={toggleAudio}
-            className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white transition-all z-50 flex items-center justify-center border border-border"
-            aria-label={isPlaying ? "Pause audio" : "Play audio"}
-          >
-            <svg
-              className="w-6 h-6 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {isPlaying ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              ) : (
-                <>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </>
-              )}
-            </svg>
-          </button>
-        </>
-      )}
+      {musicControl}
     </>
   );
 }
-

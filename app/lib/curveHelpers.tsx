@@ -26,7 +26,10 @@ export const renderTopCurve = (props: CurveDividerProps): React.ReactElement | n
   
   // -1px nudge covers sub-pixel seams between stacked sections on mobile
   return (
-    <div className="pointer-events-none absolute -top-px right-0 left-0 z-10">
+    <div
+      data-invite-shell="curve"
+      className="pointer-events-none absolute -top-px right-0 left-0 z-10"
+    >
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="h-16 w-full" style={{ fill: props.topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
         <path d={curvePaths[props.topCurveStyle || 'gentle']} />
       </svg>
@@ -39,7 +42,10 @@ export const renderBottomCurve = (props: CurveDividerProps): React.ReactElement 
   
   // -1px nudge covers sub-pixel seams between stacked sections on mobile
   return (
-    <div className="pointer-events-none absolute right-0 -bottom-px left-0 z-10">
+    <div
+      data-invite-shell="curve"
+      className="pointer-events-none absolute right-0 -bottom-px left-0 z-10"
+    >
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className="h-16 w-full" style={{ fill: props.bottomCurveColor || '#ffffff' }}>
         <path d={curvePaths[props.bottomCurveStyle || 'gentle']} />
       </svg>

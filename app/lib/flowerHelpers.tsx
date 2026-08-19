@@ -22,6 +22,7 @@ export const renderDecorativeFlowers = (props: DecorativeFlowersProps): React.Re
     <>
       {/* Top-left decorative flowers */}
       <div 
+        data-invite-shell="flower"
         className="absolute left-0 w-36 h-36 opacity-60 pointer-events-none z-[5]"
         style={{ top: 0, marginTop: topMargin }}
       >
@@ -34,6 +35,7 @@ export const renderDecorativeFlowers = (props: DecorativeFlowersProps): React.Re
       
       {/* Bottom-right decorative flowers */}
       <div 
+        data-invite-shell="flower"
         className="absolute right-0 w-36 h-36 opacity-50 pointer-events-none z-[5]"
         style={{ bottom: 0, marginBottom: bottomMargin }}
       >
