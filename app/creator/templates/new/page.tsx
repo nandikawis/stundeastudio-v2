@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import { api } from "../../../lib/api";
 import { mockTemplates, styleLabels, templateCategoryLabels } from "../../../lib/templates";
+import { useRequireAuth } from "../../../lib/useRequireAuth";
 
 type SourceTemplateOption = {
   slug: string;
@@ -14,8 +15,6 @@ type SourceTemplateOption = {
   page_structure: Array<{ id: string; type: string; order: number; config: Record<string, unknown> }>;
   component_data: Record<string, unknown>;
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 function toSourceTemplateOptions(): SourceTemplateOption[] {
   return mockTemplates
@@ -39,8 +38,8 @@ function toSourceTemplateOptions(): SourceTemplateOption[] {
 
 export default function CreatorNewTemplatePage() {
   const router = useRouter();
+  const { ready: authReady } = useRequireAuth({ requireCreator: true });
   const sources = useMemo(() => toSourceTemplateOptions(), []);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,44 +49,7 @@ export default function CreatorNewTemplatePage() {
   const [style, setStyle] = useState("elegant");
   const [sourceSlug, setSourceSlug] = useState(sources[0]?.slug || "");
 
-  useEffect(() => {
-    let mounted = true;
-
-    const guard = async () => {
-      try {
-        const sessionRes = await fetch(`${API_URL}/api/auth/check-session`, {
-          credentials: "include",
-        });
-        const sessionJson = await sessionRes.json().catch(() => null);
-        if (!sessionJson?.success) {
-          router.replace("/login");
-          return;
-        }
-
-        let role = String(sessionJson?.data?.user?.role || "").toLowerCase();
-        if (!role) {
-          const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
-            credentials: "include",
-          });
-          const profileJson = await profileRes.json().catch(() => null);
-          role = String(profileJson?.data?.role || "").toLowerCase();
-        }
-
-        if (role !== "creator") {
-          router.replace("/");
-          return;
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    void guard();
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
-
+  const loading = !authReady;
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {

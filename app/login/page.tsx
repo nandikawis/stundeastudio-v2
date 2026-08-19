@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { setAccessToken } from "../lib/api";
+import { setCachedAuth } from "../lib/auth";
 
 type LoginFormData = {
   email: string;
@@ -110,15 +110,52 @@ export default function Login() {
       }
 
       if (loginData.success) {
-        const token = loginData.data?.session?.access_token;
-        setAccessToken(token ?? null);
+        const token = loginData.data?.session?.access_token as string | undefined;
+        const authUser = loginData.data?.user;
+        const profileId =
+          (authUser?.id as string | undefined) ||
+          (loginData.data?.session?.user?.id as string | undefined);
+
+        if (token && profileId) {
+          setCachedAuth(
+            {
+              id: profileId,
+              email: (authUser?.email as string | undefined) || loginData.data?.session?.user?.email,
+              full_name: authUser?.user_metadata?.full_name as string | undefined,
+              role: undefined,
+            },
+            token
+          );
+        }
+
+        // Refresh profile (role, full_name) into cache when available
+        try {
+          const profileRes = await fetch(
+            `${API_URL}/api/auth/profile`,
+            {
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+            }
+          );
+          const profileJson = await profileRes.json().catch(() => null);
+          if (profileJson?.success && profileJson?.data?.id) {
+            setCachedAuth(profileJson.data, token);
+          }
+        } catch {
+          // ignore — token cache is enough to stay logged in
+        }
+
         setShowSuccessModal(true);
         setTimeout(() => {
           const params = new URLSearchParams(window.location.search);
           const r = params.get("redirect");
-          const next = r && r.startsWith("/") && !r.startsWith("//") ? r : "/";
+          const next =
+            r && r.startsWith("/") && !r.startsWith("//") ? r : "/";
           router.push(next);
-        }, 3000);
+        }, 1200);
       }
     } catch (error) {
       if (process.env.NODE_ENV === "development") {

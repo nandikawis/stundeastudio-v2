@@ -8,8 +8,7 @@ import SectionPropertiesPanel from "../../../../components/editor/SectionPropert
 import TemplateRenderer from "../../../../components/invitation/TemplateRenderer";
 import { api } from "../../../../lib/api";
 import type { ProjectData } from "../../../../lib/mockData";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { useRequireAuth } from "../../../../lib/useRequireAuth";
 
 type TemplateApiData = {
   id: string;
@@ -79,6 +78,7 @@ export default function CreatorTemplateEditPage({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const { ready: authReady } = useRequireAuth({ requireCreator: true });
 
   const [project, setProject] = useState<ProjectData | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -91,28 +91,11 @@ export default function CreatorTemplateEditPage({
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!authReady) return;
     let mounted = true;
 
     const load = async () => {
       try {
-        // Creator guard
-        const sessionRes = await fetch(`${API_URL}/api/auth/check-session`, { credentials: "include" });
-        const sessionJson = await sessionRes.json().catch(() => null);
-        if (!sessionJson?.success) {
-          router.replace("/login");
-          return;
-        }
-        let role = String(sessionJson?.data?.user?.role || "").toLowerCase();
-        if (!role) {
-          const profileRes = await fetch(`${API_URL}/api/auth/profile`, { credentials: "include" });
-          const profileJson = await profileRes.json().catch(() => null);
-          role = String(profileJson?.data?.role || "").toLowerCase();
-        }
-        if (role !== "creator") {
-          router.replace("/");
-          return;
-        }
-
         const res = await api.get<TemplateApiData>(`/api/templates/${resolvedParams.templateId}`);
         if (!mounted) return;
         if (!res.success || !res.data) {
@@ -120,8 +103,10 @@ export default function CreatorTemplateEditPage({
           return;
         }
         setProject(toEditorProject(res.data));
-      } catch (e: any) {
-        if (mounted) setError(e?.message || "Gagal memuat template");
+      } catch (e: unknown) {
+        if (mounted) {
+          setError(e instanceof Error ? e.message : "Gagal memuat template");
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -132,7 +117,7 @@ export default function CreatorTemplateEditPage({
       mounted = false;
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [resolvedParams.templateId, router]);
+  }, [authReady, resolvedParams.templateId]);
 
   const handleProjectUpdate = (updatedProject: ProjectData) => {
     setProject(updatedProject);

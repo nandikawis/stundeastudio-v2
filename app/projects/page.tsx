@@ -6,6 +6,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { ProjectData } from "../lib/mockData";
 import { api, setAccessToken } from "../lib/api";
+import { useRequireAuth } from "../lib/useRequireAuth";
+import { clearCachedAuth } from "../lib/auth";
 
 function statusLabel(status: string | undefined) {
   if (status === "published") return "Published";
@@ -14,9 +16,9 @@ function statusLabel(status: string | undefined) {
 }
 
 export default function ProjectsPage() {
+  const { ready: authReady } = useRequireAuth();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -32,24 +34,21 @@ export default function ProjectsPage() {
   const [reactivateId, setReactivateId] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedUserId =
-      typeof window !== "undefined" ? localStorage.getItem("user_uuid") : null;
-    setUserId(storedUserId);
-
-    if (!storedUserId) {
-      setProjects([]);
-      setLoading(false);
-      return;
-    }
+    if (!authReady) return;
 
     let cancelled = false;
+    setLoading(true);
     (async () => {
       const res = await api.get<ProjectData[]>("/api/projects");
       if (cancelled) return;
       if (res.success && Array.isArray(res.data)) {
         setProjects(res.data);
       } else {
-        if (res.success === false && res.error?.toLowerCase().includes("auth")) {
+        if (
+          res.success === false &&
+          res.error?.toLowerCase().includes("auth")
+        ) {
+          clearCachedAuth();
           setAccessToken(null);
         }
         setProjects([]);
@@ -59,7 +58,7 @@ export default function ProjectsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authReady]);
 
   const DeleteModal = () => {
     if (!deleteTarget) return null;
@@ -338,6 +337,11 @@ export default function ProjectsPage() {
       <PublishModal />
       <ArchiveModal />
 
+      {!authReady ? (
+        <div className="flex flex-1 items-center justify-center px-5 py-32">
+          <p className="text-sm text-primary/45">Memeriksa sesi…</p>
+        </div>
+      ) : (
       <div className="flex flex-1 flex-col">
         <section className="px-5 pb-8 pt-36 sm:px-8 lg:px-14 lg:pt-40">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
@@ -367,33 +371,13 @@ export default function ProjectsPage() {
 
         <section className="flex-1 px-5 pb-20 sm:px-8 lg:px-14 lg:pb-28">
           <div className="mx-auto max-w-[1200px]">
-            {!userId && (
-              <div className="border-t border-primary/8 py-16">
-                <h2
-                  className="text-2xl font-medium tracking-[-0.02em] text-primary"
-                  style={{ fontFamily: "var(--font-playfair)" }}
-                >
-                  Masuk terlebih dahulu
-                </h2>
-                <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-primary/50">
-                  Login untuk melihat dan menyimpan proyek undangan Anda.
-                </p>
-                <Link
-                  href="/login"
-                  className="landing-btn landing-btn-primary mt-8 inline-flex"
-                >
-                  Masuk ke akun
-                </Link>
-              </div>
-            )}
-
-            {userId && loading && (
+            {loading && (
               <p className="border-t border-primary/8 py-12 text-sm text-primary/45">
                 Memuat proyek…
               </p>
             )}
 
-            {userId && !loading && projects.length === 0 && (
+            {!loading && projects.length === 0 && (
               <div className="border-t border-primary/8 py-16">
                 <h2
                   className="text-2xl font-medium tracking-[-0.02em] text-primary"
@@ -413,7 +397,7 @@ export default function ProjectsPage() {
               </div>
             )}
 
-            {userId && !loading && projects.length > 0 && (
+            {!loading && projects.length > 0 && (
               <ul className="divide-y divide-primary/8 border-t border-primary/8">
                 {projects.map((project) => (
                   <li
@@ -588,6 +572,7 @@ export default function ProjectsPage() {
           </div>
         </section>
       </div>
+      )}
 
       <Footer />
     </main>

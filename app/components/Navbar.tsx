@@ -5,9 +5,17 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { setAccessToken, getAccessToken } from "../lib/api";
+import {
+  clearCachedAuth,
+  getCachedAuth,
+  isCreatorRole,
+  verifySession,
+  type AuthUser,
+} from "../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+type AuthUiState = "loading" | "authenticated" | "anonymous";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,12 +25,20 @@ export default function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const ticking = useRef(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userData, setUserData] = useState<any | null>(null);
+  const [authUi, setAuthUi] = useState<AuthUiState>("loading");
+  const [userData, setUserData] = useState<AuthUser | null>(null);
   const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
-    checkLoginStatus();
+    const cached = getCachedAuth();
+    if (cached) {
+      setAuthUi("authenticated");
+      setUserData(cached.user);
+      setIsCreator(isCreatorRole(cached.user));
+    } else {
+      setAuthUi("anonymous");
+    }
+    void checkLoginStatus();
   }, []);
 
   useEffect(() => {
@@ -72,87 +88,47 @@ export default function Navbar() {
 
   const logout = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/signout`, {
+      await fetch(`${API_URL}/api/auth/signout`, {
         method: "POST",
         credentials: "include",
       });
-      if (response.ok) {
-        setAccessToken(null);
-        localStorage.removeItem("user_uuid");
-        localStorage.removeItem("user_data");
-        setIsLoggedIn(false);
-        setUserData(null);
-        setIsCreator(false);
-      }
     } catch (error) {
       console.error("Error logging out:", error);
-      setAccessToken(null);
-      localStorage.removeItem("user_uuid");
-      localStorage.removeItem("user_data");
-      setIsLoggedIn(false);
+    } finally {
+      clearCachedAuth();
+      setAuthUi("anonymous");
       setUserData(null);
       setIsCreator(false);
+      setProfileOpen(false);
     }
   };
 
   const checkLoginStatus = async () => {
-    try {
-      const token = getAccessToken();
-      const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-      const response = await fetch(`${API_URL}/api/auth/check-session`, {
-        credentials: "include",
-        headers,
-      });
-      const data = await response.json();
+    const result = await verifySession();
 
-      if (data.success) {
-        setIsLoggedIn(true);
-        setUserData(data.data.user);
-        setIsCreator(String(data?.data?.user?.role || "").toLowerCase() === "creator");
-        localStorage.setItem("user_uuid", data.data.user.id);
-        localStorage.setItem("user_data", JSON.stringify(data.data.user));
-        if (data.data.session?.access_token) {
-          setAccessToken(data.data.session.access_token);
-        }
-        // If role is not included in check-session response, fetch profile as fallback.
-        if (!data?.data?.user?.role) {
-          const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
-            credentials: "include",
-            headers,
-          });
-          const profileJson = await profileRes.json().catch(() => null);
-          const role = String(profileJson?.data?.role || "").toLowerCase();
-          if (role === "creator") {
-            setIsCreator(true);
-            const mergedUser = { ...data.data.user, role: profileJson.data.role };
-            setUserData(mergedUser);
-            localStorage.setItem("user_data", JSON.stringify(mergedUser));
-          }
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUserData(null);
-        setIsCreator(false);
-        setAccessToken(null);
-        localStorage.removeItem("user_uuid");
-        localStorage.removeItem("user_data");
-      }
-    } catch (error) {
-      console.error("Error checking session:", error);
-      setIsLoggedIn(false);
-      setUserData(null);
-      setIsCreator(false);
-      setAccessToken(null);
-      localStorage.removeItem("user_uuid");
-      localStorage.removeItem("user_data");
+    if (result.ok) {
+      setAuthUi("authenticated");
+      setUserData(result.user);
+      setIsCreator(isCreatorRole(result.user));
+      return;
     }
-  };
-  // Rounded corners: pill before scroll, square after
-  const borderRadius = scrolled ? "0px" : "999px";
-  const borderRadiusMd = scrolled ? "0px" : "999px";
 
-  // Width animation: narrow pill to full width
+    // Keep cached UI on transient network errors; clear only on real auth failure
+    if (result.reason === "network") {
+      if (!getCachedAuth()) setAuthUi("anonymous");
+      return;
+    }
+
+    clearCachedAuth();
+    setAuthUi("anonymous");
+    setUserData(null);
+    setIsCreator(false);
+  };
+
+  const isLoggedIn = authUi === "authenticated";
+  const showAuthCta = authUi !== "loading";
+
+  const borderRadius = scrolled ? "0px" : "999px";
   const targetWidth = scrolled ? "100%" : "clamp(22rem, 70vw, 56rem)";
 
   return (
@@ -241,7 +217,8 @@ export default function Navbar() {
                   </Link>
 
                   {/* CTA / Projects + Profile when logged in */}
-                  {isLoggedIn ? (
+                  {showAuthCta &&
+                    (isLoggedIn ? (
                     <div className="flex items-center gap-3">
                       {isCreator && (
                         <Link
@@ -269,13 +246,15 @@ export default function Navbar() {
                           aria-label="Profile menu"
                           aria-expanded={profileOpen}
                         >
-                          {userData?.name ? (
+                          {userData?.full_name || userData?.name ? (
                             <span className="text-sm font-semibold">
-                              {userData.name.charAt(0).toUpperCase()}
+                              {String(userData.full_name || userData.name)
+                                .charAt(0)
+                                .toUpperCase()}
                             </span>
                           ) : userData?.email ? (
                             <span className="text-sm font-semibold">
-                              {userData.email.charAt(0).toUpperCase()}
+                              {String(userData.email).charAt(0).toUpperCase()}
                             </span>
                           ) : (
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -300,7 +279,7 @@ export default function Navbar() {
                                     type="button"
                                     onClick={() => {
                                       setProfileOpen(false);
-                                      logout();
+                                      void logout();
                                     }}
                                     className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                   >
@@ -320,7 +299,7 @@ export default function Navbar() {
                     >
                       Mulai Sekarang
                     </Link>
-                  )}
+                  ))}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -403,7 +382,8 @@ export default function Navbar() {
                     >
                       Kontak
                     </Link>
-                    {isLoggedIn ? (
+                    {showAuthCta &&
+                      (isLoggedIn ? (
                       <>
                         {isCreator && (
                           <Link
@@ -423,13 +403,15 @@ export default function Navbar() {
                         </Link>
                         <div className="flex items-center gap-3 mt-2 pt-2 border-t border-primary/10">
                           <div className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center flex-shrink-0">
-                            {userData?.name ? (
+                            {userData?.full_name || userData?.name ? (
                               <span className="text-sm font-semibold">
-                                {userData.name.charAt(0).toUpperCase()}
+                                {String(userData.full_name || userData.name)
+                                  .charAt(0)
+                                  .toUpperCase()}
                               </span>
                             ) : userData?.email ? (
                               <span className="text-sm font-semibold">
-                                {userData.email.charAt(0).toUpperCase()}
+                                {String(userData.email).charAt(0).toUpperCase()}
                               </span>
                             ) : (
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -441,7 +423,7 @@ export default function Navbar() {
                             type="button"
                             onClick={() => {
                               setMenuOpen(false);
-                              logout();
+                              void logout();
                             }}
                             className="flex-1 py-2 px-3 rounded-full text-sm font-medium text-primary border border-primary/30 hover:bg-primary/10 transition-colors"
                           >
@@ -457,7 +439,7 @@ export default function Navbar() {
                       >
                         Mulai Sekarang
                       </Link>
-                    )}
+                    ))}
                   </div>
                 </motion.div>
               )}

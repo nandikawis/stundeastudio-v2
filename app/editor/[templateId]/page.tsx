@@ -14,6 +14,8 @@ import TemplateRenderer from "../../components/invitation/TemplateRenderer";
 import SectionEditor from "../../components/editor/SectionEditor";
 import SectionPropertiesPanel from "../../components/editor/SectionPropertiesPanel";
 import { api } from "../../lib/api";
+import { useRequireAuth } from "../../lib/useRequireAuth";
+import { clearCachedAuth } from "../../lib/auth";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isProjectId(param: string): boolean {
@@ -91,6 +93,7 @@ export default function EditorPage({
   const router = useRouter();
   const resolvedParams = use(params);
   const param = resolvedParams.templateId;
+  const { ready: authReady } = useRequireAuth();
   const template = !isProjectId(param) ? mockTemplates.find((t) => t.slug === param) : null;
 
   const [project, setProject] = useState<ProjectData | null>(null);
@@ -141,7 +144,10 @@ export default function EditorPage({
 
   // Load: by project id (API) or by template slug (localStorage / mock / build from template)
   useEffect(() => {
+    if (!authReady) return;
+
     setLoadError(null);
+    setProject(null);
 
     if (isProjectId(param)) {
       (async () => {
@@ -192,7 +198,12 @@ export default function EditorPage({
           }
           setProject(projectData);
         } else {
-          setLoadError(res.success === false ? res.error : "Project not found");
+          const err =
+            res.success === false ? res.error : "Project not found";
+          if (typeof err === "string" && err.toLowerCase().includes("auth")) {
+            clearCachedAuth();
+          }
+          setLoadError(err);
         }
       })();
       return;
@@ -254,7 +265,7 @@ export default function EditorPage({
     return () => {
       cancelled = true;
     };
-  }, [param]);
+  }, [authReady, param]);
 
   const persistProject = async (updatedProject: ProjectData) => {
     if (isProjectId(updatedProject.id)) {
@@ -686,6 +697,14 @@ export default function EditorPage({
       ...(previewData.logoUrl !== undefined ? { logoUrl: previewData.logoUrl } : {}),
     };
   };
+
+  if (!authReady) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f6f3]">
+        <p className="text-sm text-primary/45">Memeriksa sesi…</p>
+      </main>
+    );
+  }
 
   if (loadError) {
     return (

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import PublishTemplateModal from "../../components/creator/PublishTemplateModal";
 import { api } from "../../lib/api";
 import { styleLabels, templateCategoryLabels } from "../../lib/templates";
+import { useRequireAuth } from "../../lib/useRequireAuth";
 
 type CreatorTemplate = {
   id: string;
@@ -22,10 +22,8 @@ type CreatorTemplate = {
   updated_at?: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
 export default function CreatorTemplatesPage() {
-  const router = useRouter();
+  const { ready: authReady } = useRequireAuth({ requireCreator: true });
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<CreatorTemplate[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -40,34 +38,11 @@ export default function CreatorTemplatesPage() {
   };
 
   useEffect(() => {
+    if (!authReady) return;
     let mounted = true;
 
     const load = async () => {
       try {
-        const sessionRes = await fetch(`${API_URL}/api/auth/check-session`, {
-          credentials: "include",
-        });
-        const sessionJson = await sessionRes.json().catch(() => null);
-
-        if (!sessionJson?.success) {
-          router.replace("/login");
-          return;
-        }
-
-        let role = String(sessionJson?.data?.user?.role || "").toLowerCase();
-        if (!role) {
-          const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
-            credentials: "include",
-          });
-          const profileJson = await profileRes.json().catch(() => null);
-          role = String(profileJson?.data?.role || "").toLowerCase();
-        }
-
-        if (role !== "creator") {
-          router.replace("/");
-          return;
-        }
-
         const res = await api.get<CreatorTemplate[]>("/api/templates/mine/list");
         if (!mounted) return;
         if (!res.success) {
@@ -87,7 +62,7 @@ export default function CreatorTemplatesPage() {
     return () => {
       mounted = false;
     };
-  }, [router]);
+  }, [authReady]);
 
   const handleRevoke = async (id: string) => {
     if (
@@ -120,6 +95,11 @@ export default function CreatorTemplatesPage() {
       />
       <Navbar />
 
+      {!authReady ? (
+        <div className="flex flex-1 items-center justify-center px-5 py-32">
+          <p className="text-sm text-primary/45">Memeriksa sesi…</p>
+        </div>
+      ) : (
       <div className="flex flex-1 flex-col">
         <section className="px-5 pb-8 pt-36 sm:px-8 lg:px-14 lg:pt-40">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
@@ -252,6 +232,7 @@ export default function CreatorTemplatesPage() {
           </div>
         </section>
       </div>
+      )}
 
       <Footer />
     </main>
