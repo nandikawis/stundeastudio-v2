@@ -22,6 +22,7 @@ import {
 import { api } from "../../lib/api";
 import { useRequireAuth } from "../../lib/useRequireAuth";
 import { clearCachedAuth } from "../../lib/auth";
+import type { Entitlements, ProfileWithPlan } from "../../lib/plans";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isProjectId(param: string): boolean {
@@ -103,6 +104,7 @@ export default function EditorPage({
   const template = !isProjectId(param) ? mockTemplates.find((t) => t.slug === param) : null;
 
   const [project, setProject] = useState<ProjectData | null>(null);
+  const [planEntitlements, setPlanEntitlements] = useState<Entitlements | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [isSaving, setIsSaving] = useState(false);
@@ -126,6 +128,19 @@ export default function EditorPage({
   );
   const musicInputRef = useRef<HTMLInputElement | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!authReady) return;
+    let cancelled = false;
+    (async () => {
+      const res = await api.get<ProfileWithPlan>("/api/auth/profile");
+      if (cancelled || !res.success || !res.data?.entitlements) return;
+      setPlanEntitlements(res.data.entitlements);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -1169,6 +1184,15 @@ export default function EditorPage({
                 onDelete={() => handleDeleteSection(selectedSectionId)}
                 canDelete={!getDeleteBlockedReason(selectedSectionId)}
                 deleteBlockedReason={getDeleteBlockedReason(selectedSectionId) ?? undefined}
+                planLimits={
+                  planEntitlements
+                    ? {
+                        maxCarousel: planEntitlements.limits.maxCarousel,
+                        maxGallery: planEntitlements.limits.maxGallery,
+                        canEditBranding: planEntitlements.limits.canEditBranding,
+                      }
+                    : undefined
+                }
               />
             </div>
           ) : (
@@ -1220,6 +1244,15 @@ export default function EditorPage({
               onDelete={() => handleDeleteSection(selectedSectionId)}
               canDelete={!getDeleteBlockedReason(selectedSectionId)}
               deleteBlockedReason={getDeleteBlockedReason(selectedSectionId) ?? undefined}
+              planLimits={
+                planEntitlements
+                  ? {
+                      maxCarousel: planEntitlements.limits.maxCarousel,
+                      maxGallery: planEntitlements.limits.maxGallery,
+                      canEditBranding: planEntitlements.limits.canEditBranding,
+                    }
+                  : undefined
+              }
             />
           </div>
         </div>

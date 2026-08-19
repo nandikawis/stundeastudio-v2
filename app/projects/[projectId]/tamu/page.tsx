@@ -8,6 +8,8 @@ import Footer from "../../../components/Footer";
 import { api } from "../../../lib/api";
 import { useRequireAuth } from "../../../lib/useRequireAuth";
 import type { ProjectData } from "../../../lib/mockData";
+import type { Entitlements, ProfileWithPlan } from "../../../lib/plans";
+import { formatLimit } from "../../../lib/plans";
 
 type Guest = {
   id: string;
@@ -48,6 +50,7 @@ export default function ProjectGuestsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [entitlements, setEntitlements] = useState<Entitlements | null>(null);
 
   useEffect(() => {
     if (!authReady || !projectId) return;
@@ -55,11 +58,15 @@ export default function ProjectGuestsPage() {
     (async () => {
       setLoading(true);
       setError(null);
-      const [projRes, guestRes] = await Promise.all([
+      const [projRes, guestRes, profileRes] = await Promise.all([
         api.get<ProjectData>(`/api/projects/${projectId}`),
         api.get<Guest[]>(`/api/projects/${projectId}/guests`),
+        api.get<ProfileWithPlan>("/api/auth/profile"),
       ]);
       if (cancelled) return;
+      if (profileRes.success && profileRes.data?.entitlements) {
+        setEntitlements(profileRes.data.entitlements);
+      }
       if (!projRes.success || !projRes.data) {
         setError(projRes.success === false ? projRes.error : "Proyek tidak ditemukan");
         setLoading(false);
@@ -165,6 +172,13 @@ export default function ProjectGuestsPage() {
     }
   };
 
+  const maxGuests = entitlements?.limits.maxGuests ?? null;
+  const canShareRsvp =
+    entitlements?.limits.canShareRsvpManage === true &&
+    entitlements?.status !== "expired";
+  const guestsAtLimit =
+    maxGuests != null && guests.length >= maxGuests;
+
   return (
     <main className="landing-root flex min-h-screen flex-col bg-[#f7f6f3] text-primary">
       <Navbar />
@@ -189,6 +203,12 @@ export default function ProjectGuestsPage() {
             <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-primary/50">
               Tambah tamu, salin link personal, atau bagikan ke klien agar mereka
               kelola RSVP tanpa login.
+              {maxGuests != null && (
+                <>
+                  {" "}
+                  Batas paket: {guests.length}/{formatLimit(maxGuests)} tamu.
+                </>
+              )}
             </p>
           </div>
           {project && (
@@ -196,14 +216,21 @@ export default function ProjectGuestsPage() {
               <button
                 type="button"
                 onClick={() => void handleShareRsvp()}
-                disabled={sharing}
+                disabled={sharing || !canShareRsvp}
+                title={
+                  canShareRsvp
+                    ? undefined
+                    : "Tidak tersedia di paket Free Trial — upgrade untuk bagikan"
+                }
                 className="landing-btn landing-btn-primary disabled:opacity-50"
               >
                 {sharing
                   ? "Menyiapkan…"
                   : shareCopied
                     ? "Link tersalin"
-                    : "Bagikan RSVP"}
+                    : canShareRsvp
+                      ? "Bagikan RSVP"
+                      : "Bagikan (Pro+)"}
               </button>
               <Link
                 href={`/editor/${project.id}`}
@@ -251,16 +278,30 @@ export default function ProjectGuestsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nama tamu"
-                className="min-w-0 flex-1 rounded-full border border-primary/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary/35"
+                disabled={guestsAtLimit}
+                className="min-w-0 flex-1 rounded-full border border-primary/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary/35 disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={adding || !name.trim()}
+                disabled={adding || !name.trim() || guestsAtLimit}
                 className="landing-btn landing-btn-primary disabled:opacity-50"
               >
-                {adding ? "Menambah…" : "Tambah tamu"}
+                {guestsAtLimit
+                  ? "Batas tamu tercapai"
+                  : adding
+                    ? "Menambah…"
+                    : "Tambah tamu"}
               </button>
             </form>
+            {guestsAtLimit && (
+              <p className="mt-3 text-sm text-primary/50">
+                Batas tamu paket tercapai.{" "}
+                <Link href="/pricing" className="underline underline-offset-2">
+                  Lihat harga
+                </Link>{" "}
+                untuk upgrade.
+              </p>
+            )}
 
             <ul className="mt-8 space-y-3">
               {guests.length === 0 ? (

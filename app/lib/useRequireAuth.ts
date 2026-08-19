@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  AUTH_CHANGED_EVENT,
   clearCachedAuth,
   getCachedAuth,
   isCreatorRole,
@@ -19,6 +20,7 @@ type GuardOptions = {
 /**
  * Blocks the page until a valid session exists (and optionally creator role).
  * Uses local cache first, then revalidates with the API.
+ * Also reacts immediately when logout clears the local auth cache.
  */
 export function useRequireAuth(options: GuardOptions = {}) {
   const router = useRouter();
@@ -30,10 +32,16 @@ export function useRequireAuth(options: GuardOptions = {}) {
   useEffect(() => {
     let cancelled = false;
 
+    const redirectToLogin = () => {
+      setReady(false);
+      setUser(null);
+      router.replace(loginRedirectUrl(pathname || "/"));
+    };
+
     (async () => {
       const cached = getCachedAuth();
       if (!cached) {
-        router.replace(loginRedirectUrl(pathname || "/"));
+        redirectToLogin();
         return;
       }
 
@@ -46,9 +54,10 @@ export function useRequireAuth(options: GuardOptions = {}) {
 
       if (!result.ok) {
         if (result.reason !== "network") {
-          clearCachedAuth();
+          // Silent so we don't also fire the logout → home path
+          clearCachedAuth({ silent: true });
         }
-        router.replace(loginRedirectUrl(pathname || "/"));
+        redirectToLogin();
         return;
       }
 
@@ -61,8 +70,23 @@ export function useRequireAuth(options: GuardOptions = {}) {
       setReady(true);
     })();
 
+    const onAuthChanged = () => {
+      if (cancelled) return;
+      if (!getCachedAuth()) {
+        // Logout (or cleared session) while still on a guarded page → leave immediately
+        setReady(false);
+        setUser(null);
+        router.replace("/");
+      }
+    };
+
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    window.addEventListener("storage", onAuthChanged);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+      window.removeEventListener("storage", onAuthChanged);
     };
   }, [router, pathname, requireCreator]);
 

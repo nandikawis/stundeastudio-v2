@@ -17,6 +17,11 @@ interface SectionPropertiesPanelProps {
   onDelete?: () => void;
   canDelete?: boolean;
   deleteBlockedReason?: string;
+  planLimits?: {
+    maxCarousel?: number | null;
+    maxGallery?: number | null;
+    canEditBranding?: boolean;
+  };
 }
 
 // Image file item interface for the capsule UI
@@ -32,6 +37,7 @@ interface ImageFilePickerProps {
   onImagesChange: (images: ImageFileItem[]) => void;
   multiple?: boolean;
   label?: string;
+  maxImages?: number | null;
 }
 
 function ImageFilePicker({
@@ -39,8 +45,11 @@ function ImageFilePicker({
   onImagesChange,
   multiple = true,
   label = "Pilih gambar",
+  maxImages = null,
 }: ImageFilePickerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const atLimit =
+    maxImages != null && multiple && images.length >= maxImages;
 
   const readFileAsDataUrl = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -66,7 +75,10 @@ function ImageFilePicker({
     }
 
     if (multiple) {
-      onImagesChange([...images, ...newItems]);
+      const merged = [...images, ...newItems];
+      onImagesChange(
+        maxImages != null ? merged.slice(0, maxImages) : merged
+      );
     } else {
       onImagesChange(newItems.slice(0, 1));
     }
@@ -85,10 +97,16 @@ function ImageFilePicker({
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        className="w-full rounded-full border border-primary/15 bg-white px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-[#f7f6f3]"
+        disabled={atLimit}
+        className="w-full rounded-full border border-primary/15 bg-white px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-[#f7f6f3] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {label}
+        {atLimit ? `Batas ${maxImages} foto tercapai` : label}
       </button>
+      {maxImages != null && multiple && (
+        <p className="text-[11px] text-primary/40">
+          {images.length}/{maxImages} foto (batas paket)
+        </p>
+      )}
       <input
         ref={fileInputRef}
         type="file"
@@ -96,6 +114,7 @@ function ImageFilePicker({
         multiple={multiple}
         onChange={handleFileSelect}
         className="hidden"
+        disabled={atLimit}
       />
 
       {images.length > 0 && (
@@ -235,7 +254,12 @@ export default function SectionPropertiesPanel({
   onDelete,
   canDelete = true,
   deleteBlockedReason,
+  planLimits,
 }: SectionPropertiesPanelProps) {
+  const canEditBranding = planLimits?.canEditBranding !== false;
+  const maxCarousel = planLimits?.maxCarousel ?? null;
+  const maxGallery = planLimits?.maxGallery ?? null;
+
   const handleFieldUpdate = (field: string, value: any) => {
     onUpdate(section.id, field, value);
   };
@@ -2019,6 +2043,7 @@ export default function SectionPropertiesPanel({
                     })));
                   }}
                   multiple={true}
+                  maxImages={maxCarousel}
                   label="Pilih gambar"
                 />
                 <p className="text-xs text-muted mt-2">
@@ -2336,6 +2361,7 @@ export default function SectionPropertiesPanel({
                     })));
                   }}
                   multiple={true}
+                  maxImages={maxGallery}
                   label="Pilih gambar"
                 />
                 <p className="text-xs text-muted mt-2">
@@ -2454,9 +2480,15 @@ export default function SectionPropertiesPanel({
                     type="text"
                     value={componentData.designerCredit || ''}
                     onChange={(e) => handleFieldUpdate('designerCredit', e.target.value)}
-                    className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
-                    placeholder="Invitation by Putri Grafika"
+                    disabled={!canEditBranding}
+                    className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    placeholder="Invitation by Stundea Studio"
                   />
+                  {!canEditBranding && (
+                    <p className="text-[11px] text-primary/45">
+                      Branding Stundea terkunci di paket Anda. Upgrade ke Pro untuk mengubah.
+                    </p>
+                  )}
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-muted whitespace-nowrap">Color:</span>
                     <div className="flex-1">
@@ -2486,25 +2518,31 @@ export default function SectionPropertiesPanel({
 
               <FieldGroup>
                 <FieldLabel>Logo Image</FieldLabel>
-                <ImageFilePicker
-                  images={componentData.logoUrl && componentData.logoUrl.trim()
-                    ? [{
-                        url: componentData.logoUrl,
-                        name: componentData.logoUrl.startsWith('data:')
-                          ? 'Logo'
-                          : componentData.logoUrl.split('/').pop() || 'Logo',
-                      }]
-                    : []}
-                  onImagesChange={(items) => {
-                    if (items.length > 0) {
-                      handleFieldUpdate('logoUrl', items[0].url);
-                    } else {
-                      handleFieldUpdate('logoUrl', '');
-                    }
-                  }}
-                  multiple={false}
-                  label="Unggah logo"
-                />
+                {canEditBranding ? (
+                  <ImageFilePicker
+                    images={componentData.logoUrl && componentData.logoUrl.trim()
+                      ? [{
+                          url: componentData.logoUrl,
+                          name: componentData.logoUrl.startsWith('data:')
+                            ? 'Logo'
+                            : componentData.logoUrl.split('/').pop() || 'Logo',
+                        }]
+                      : []}
+                    onImagesChange={(items) => {
+                      if (items.length > 0) {
+                        handleFieldUpdate('logoUrl', items[0].url);
+                      } else {
+                        handleFieldUpdate('logoUrl', '');
+                      }
+                    }}
+                    multiple={false}
+                    label="Unggah logo"
+                  />
+                ) : (
+                  <p className="text-[11px] text-primary/45">
+                    Logo branding terkunci di paket Anda. Upgrade ke Pro untuk mengubah.
+                  </p>
+                )}
               </FieldGroup>
             </SectionGroup>
 

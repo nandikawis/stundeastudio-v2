@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +19,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 type AuthUiState = "loading" | "authenticated" | "anonymous";
 
 export default function Navbar() {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -100,6 +102,8 @@ export default function Navbar() {
       setUserData(null);
       setIsCreator(false);
       setProfileOpen(false);
+      setMenuOpen(false);
+      router.replace("/");
     }
   };
 
@@ -119,7 +123,7 @@ export default function Navbar() {
       return;
     }
 
-    clearCachedAuth();
+    clearCachedAuth({ silent: true });
     setAuthUi("anonymous");
     setUserData(null);
     setIsCreator(false);
@@ -275,6 +279,13 @@ export default function Navbar() {
                                   className="fixed py-1 w-40 rounded-xl border border-white/20 bg-white/95 backdrop-blur-xl shadow-lg z-[9999]"
                                   style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
                                 >
+                                  <Link
+                                    href="/settings"
+                                    onClick={() => setProfileOpen(false)}
+                                    className="block w-full px-4 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                  >
+                                    Pengaturan
+                                  </Link>
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -400,6 +411,13 @@ export default function Navbar() {
                           className="block py-2 px-3 mt-2 text-center bg-primary text-white rounded-full font-medium hover:bg-primary-light transition-colors"
                         >
                           Projects
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setMenuOpen(false)}
+                          className="block py-2 px-3 mt-2 text-center rounded-full font-medium text-primary border border-primary/20 hover:bg-primary/5 transition-colors"
+                        >
+                          Pengaturan
                         </Link>
                         <div className="flex items-center gap-3 mt-2 pt-2 border-t border-primary/10">
                           <div className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center flex-shrink-0">

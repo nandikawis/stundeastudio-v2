@@ -11,6 +11,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 export const USER_ID_KEY = "user_uuid";
 export const USER_DATA_KEY = "user_data";
 
+/** Fired on the window when login/logout updates local auth cache. */
+export const AUTH_CHANGED_EVENT = "stundea-auth-changed";
+
+function notifyAuthChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+}
+
 export type AuthUser = {
   id: string;
   email?: string | null;
@@ -50,13 +58,15 @@ export function setCachedAuth(user: AuthUser, token?: string | null): void {
   if (token) setAccessToken(token);
   localStorage.setItem(USER_ID_KEY, user.id);
   localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
+  notifyAuthChanged();
 }
 
-export function clearCachedAuth(): void {
+export function clearCachedAuth(options?: { silent?: boolean }): void {
   if (typeof window === "undefined") return;
   setAccessToken(null);
   localStorage.removeItem(USER_ID_KEY);
   localStorage.removeItem(USER_DATA_KEY);
+  if (!options?.silent) notifyAuthChanged();
 }
 
 export function isCreatorRole(user: AuthUser | null | undefined): boolean {

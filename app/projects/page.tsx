@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -8,6 +8,11 @@ import { ProjectData } from "../lib/mockData";
 import { api, setAccessToken } from "../lib/api";
 import { useRequireAuth } from "../lib/useRequireAuth";
 import { clearCachedAuth } from "../lib/auth";
+import {
+  formatLimit,
+  type Entitlements,
+  type ProfileWithPlan,
+} from "../lib/plans";
 
 function statusLabel(status: string | undefined) {
   if (status === "published") return "Published";
@@ -18,6 +23,7 @@ function statusLabel(status: string | undefined) {
 export default function ProjectsPage() {
   const { ready: authReady } = useRequireAuth();
   const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [entitlements, setEntitlements] = useState<Entitlements | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>("");
@@ -39,8 +45,14 @@ export default function ProjectsPage() {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const res = await api.get<ProjectData[]>("/api/projects");
+      const [res, profileRes] = await Promise.all([
+        api.get<ProjectData[]>("/api/projects"),
+        api.get<ProfileWithPlan>("/api/auth/profile"),
+      ]);
       if (cancelled) return;
+      if (profileRes.success && profileRes.data?.entitlements) {
+        setEntitlements(profileRes.data.entitlements);
+      }
       if (res.success && Array.isArray(res.data)) {
         setProjects(res.data);
       } else {
@@ -59,6 +71,21 @@ export default function ProjectsPage() {
       cancelled = true;
     };
   }, [authReady]);
+
+  const publishedCount = useMemo(
+    () => projects.filter((p) => p.status === "published").length,
+    [projects]
+  );
+  const maxPublished = entitlements?.limits.maxPublished ?? null;
+  const slotLabel =
+    maxPublished == null
+      ? `${publishedCount} undangan aktif`
+      : `${publishedCount}/${formatLimit(maxPublished)} undangan aktif`;
+  const slotsFull =
+    maxPublished != null &&
+    publishedCount >= maxPublished &&
+    entitlements?.status !== "expired";
+  const planExpired = entitlements?.status === "expired";
 
   const DeleteModal = () => {
     if (!deleteTarget) return null;
@@ -170,11 +197,19 @@ export default function ProjectsPage() {
             <p className="mt-3 text-sm text-red-600/90">{publishError}</p>
           )}
 
+          {!isAlreadyPublished && (planExpired || slotsFull) && (
+            <p className="mt-3 text-sm text-amber-800/80">
+              {planExpired
+                ? "Paket Anda sudah berakhir. Perpanjang untuk mempublikasikan."
+                : `Slot undangan aktif penuh (${slotLabel}). Arsipkan undangan lain terlebih dahulu.`}
+            </p>
+          )}
+
           {!isAlreadyPublished && (
             <button
               type="button"
               className="landing-btn landing-btn-primary mt-6 w-full disabled:opacity-60"
-              disabled={publishLoading}
+              disabled={publishLoading || planExpired || slotsFull}
               onClick={async () => {
                 setPublishLoading(true);
                 setPublishError(null);
@@ -359,6 +394,16 @@ export default function ProjectsPage() {
                 Lanjutkan edit, publikasikan, atau arsipkan undangan yang sudah
                 dibuat.
               </p>
+              {!loading && entitlements && (
+                <p className="mt-4 text-sm text-primary/60">
+                  <span className="font-medium text-primary">{slotLabel}</span>
+                  {planExpired
+                    ? " · Paket berakhir — publikasi dinonaktifkan"
+                    : slotsFull
+                      ? " · Slot penuh — arsipkan undangan lain untuk menerbitkan baru"
+                      : null}
+                </p>
+              )}
             </div>
             <Link
               href="/templates"
@@ -471,6 +516,9 @@ export default function ProjectsPage() {
                         {statusLabel(project.status)}
                         <span className="mx-2 text-primary/20">·</span>
                         {project.template_type ?? project.template_slug ?? "—"}
+                        <span className="mx-2 text-primary/20">·</span>
+                        {Number(project.view_count || 0).toLocaleString("id-ID")}{" "}
+                        views
                       </p>
 
                       <p className="mt-4 text-sm text-primary/45">

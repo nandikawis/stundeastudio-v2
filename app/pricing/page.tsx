@@ -12,15 +12,16 @@ const plans = [
   {
     name: "Individual",
     price: "50.000",
+    period: "/ 6 bulan",
     blurb: "Untuk pasangan yang membuat undangan sendiri.",
     highlights: [
       "1 undangan aktif",
-      "Template premium",
-      "RSVP & tamu (max 200)",
-      "Musik, peta, countdown",
-      "Galeri foto (max 10)",
+      "Carousel max 5 foto",
+      "Galeri max 10 foto",
+      "RSVP max 500 tamu",
+      "Bagikan kelola RSVP",
     ],
-    missing: ["Hapus branding", "Priority support"],
+    missing: ["Hapus branding"],
     cta: "Pilih Individual",
     href: "/login",
     featured: false,
@@ -28,16 +29,17 @@ const plans = [
   {
     name: "Pro",
     price: "150.000",
+    period: "/ tahun",
     blurb: "Untuk fotografer atau studio kecil dengan beberapa klien.",
     highlights: [
       "5 undangan aktif",
-      "Template premium",
-      "RSVP & tamu (max 500/undangan)",
-      "Musik, peta, countdown",
-      "Galeri foto (max 30)",
+      "Carousel max 15 foto",
+      "Galeri max 30 foto",
+      "RSVP max 1000 tamu / undangan",
+      "Bagikan kelola RSVP",
       "Hapus branding",
     ],
-    missing: ["Priority support"],
+    missing: [],
     cta: "Pilih Pro",
     href: "/login",
     featured: true,
@@ -45,14 +47,15 @@ const plans = [
   {
     name: "Enterprise",
     price: "500.000",
+    period: "/ tahun",
     blurb: "Untuk studio dan WO yang butuh kapasitas lebih besar.",
     highlights: [
       "20 undangan aktif",
-      "Template premium",
+      "Carousel & galeri unlimited",
       "Tamu unlimited",
-      "Galeri unlimited",
+      "Bagikan kelola RSVP",
       "Hapus branding",
-      "Priority support 24/7",
+      "Priority support",
     ],
     missing: [],
     cta: "Pilih Enterprise",
@@ -62,11 +65,13 @@ const plans = [
 ];
 
 const comparison = [
+  { label: "Durasi", values: ["6 bulan", "1 tahun", "1 tahun"] },
   { label: "Undangan aktif", values: ["1", "5", "20"] },
-  { label: "Maksimal tamu", values: ["200", "500 / undangan", "Unlimited"] },
+  { label: "Carousel", values: ["5", "15", "Unlimited"] },
   { label: "Galeri foto", values: ["10", "30", "Unlimited"] },
+  { label: "Maksimal tamu", values: ["500", "1000 / undangan", "Unlimited"] },
+  { label: "Bagikan kelola RSVP", values: [true, true, true] },
   { label: "Hapus branding", values: [false, true, true] },
-  { label: "Priority support", values: [false, false, true] },
 ];
 
 const audiences = [
@@ -102,20 +107,8 @@ const faqs = [
     a: "Undangan yang masih bisa diakses tamu. Setelah acara selesai atau dihapus, slotnya bisa dipakai lagi.",
   },
   {
-    q: "Bisa upgrade di tengah periode?",
-    a: "Ya. Biaya yang sudah dibayar diperhitungkan secara prorata ke paket baru.",
-  },
-  {
-    q: "Bagaimana cara pembayaran?",
-    a: "Transfer bank, e-wallet (GoPay, OVO, DANA), dan kartu kredit/debit.",
-  },
-  {
-    q: "Ada garansi uang kembali?",
-    a: "Ya—garansi 7 hari jika Anda tidak puas dengan layanannya.",
-  },
-  {
     q: "Berapa lama undangan aktif?",
-    a: "Selama masa berlangganan (1 tahun). Perpanjang sebelum masa aktif habis.",
+    a: "Sesuai paket: Individual 6 bulan, Pro dan Enterprise 1 tahun. Akun baru mendapat uji coba gratis 14 hari dengan 1 undangan aktif.",
   },
   {
     q: "Bisa request template custom?",
@@ -220,7 +213,7 @@ export default function PricingPage() {
                       plan.featured ? "text-white/45" : "text-primary/40"
                     }`}
                   >
-                    /tahun
+                    {plan.period}
                   </span>
                 </div>
 
@@ -268,10 +261,6 @@ export default function PricingPage() {
               </article>
             ))}
           </div>
-
-          <p className="mx-auto mt-8 max-w-[1200px] text-center text-sm text-primary/45">
-            Garansi 7 hari uang kembali pada semua paket.
-          </p>
         </section>
 
         {/* Comparison */}

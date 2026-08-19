@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const testimonials = [
   {
@@ -28,6 +29,7 @@ export default function NavigationLogin({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [currentTestimonialIndex, setCurrentTestimonialIndex] =
     useState<number>(0);
 
@@ -39,11 +41,28 @@ export default function NavigationLogin({
     return () => clearInterval(interval);
   }, []);
 
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  };
+
   return (
     <>
       <div className="landing-root flex h-screen overflow-hidden bg-[#f7f6f3] text-primary">
         {/* Form — left */}
-        <main className="h-full w-full overflow-y-auto bg-[#f7f6f3] md:w-[60%]">
+        <main className="relative h-full w-full overflow-y-auto bg-[#f7f6f3] md:w-[60%]">
+          <div className="sticky top-0 z-10 flex px-5 pt-5 sm:px-8 sm:pt-6">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="landing-btn landing-btn-ghost !px-3 !py-2 text-sm"
+            >
+              ← Kembali
+            </button>
+          </div>
           {children}
         </main>
 
