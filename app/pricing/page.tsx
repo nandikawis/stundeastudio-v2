@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PlanCheckoutButton from "../components/PlanCheckoutButton";
 
 export const metadata = {
   title: "Harga & Paket | Stundea Studio",
@@ -10,6 +11,7 @@ export const metadata = {
 
 const plans = [
   {
+    id: "individual" as const,
     name: "Individual",
     price: "50.000",
     period: "/ 6 bulan",
@@ -23,10 +25,10 @@ const plans = [
     ],
     missing: ["Hapus branding"],
     cta: "Pilih Individual",
-    href: "/login",
     featured: false,
   },
   {
+    id: "pro" as const,
     name: "Pro",
     price: "150.000",
     period: "/ tahun",
@@ -41,10 +43,10 @@ const plans = [
     ],
     missing: [],
     cta: "Pilih Pro",
-    href: "/login",
     featured: true,
   },
   {
+    id: "enterprise" as const,
     name: "Enterprise",
     price: "500.000",
     period: "/ tahun",
@@ -59,7 +61,6 @@ const plans = [
     ],
     missing: [],
     cta: "Pilih Enterprise",
-    href: "/login",
     featured: false,
   },
 ];
@@ -161,7 +162,7 @@ export default function PricingPage() {
           <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
             {plans.map((plan) => (
               <article
-                key={plan.name}
+                key={plan.id}
                 className={`flex flex-col rounded-2xl border px-6 py-8 sm:px-7 ${
                   plan.featured
                     ? "border-primary bg-primary text-white"
@@ -248,16 +249,15 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <Link
-                  href={plan.href}
-                  className={`landing-btn mt-10 w-full ${
+                <PlanCheckoutButton
+                  planId={plan.id}
+                  label={plan.cta}
+                  className={`landing-btn mt-10 w-full disabled:opacity-60 ${
                     plan.featured
                       ? "bg-white text-primary hover:bg-accent-light"
                       : "landing-btn-primary"
                   }`}
-                >
-                  {plan.cta}
-                </Link>
+                />
               </article>
             ))}
           </div>

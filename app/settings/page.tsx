@@ -13,6 +13,28 @@ import {
   statusLabelId,
   type ProfileWithPlan,
 } from "../lib/plans";
+import PlanCheckoutButton from "../components/PlanCheckoutButton";
+
+const paidPlans = [
+  {
+    id: "individual" as const,
+    name: "Individual",
+    price: "50.000",
+    period: "6 bulan",
+  },
+  {
+    id: "pro" as const,
+    name: "Pro",
+    price: "150.000",
+    period: "1 tahun",
+  },
+  {
+    id: "enterprise" as const,
+    name: "Enterprise",
+    price: "500.000",
+    period: "1 tahun",
+  },
+];
 
 const fieldClass =
   "w-full rounded-xl border border-primary/10 bg-white px-4 py-3 text-[15px] text-primary outline-none transition-[border-color] duration-200 placeholder:text-primary/35 focus:border-primary/35";
@@ -209,8 +231,8 @@ export default function SettingsPage() {
                     {ent?.blurb || "Paket langganan aktif Anda."}
                   </p>
                 </div>
-                <Link href="/pricing" className="landing-btn landing-btn-primary shrink-0">
-                  Lihat harga
+                <Link href="/pricing" className="landing-btn landing-btn-ghost shrink-0">
+                  Detail harga
                 </Link>
               </div>
 
@@ -247,6 +269,42 @@ export default function SettingsPage() {
                   Anda memperpanjang atau upgrade.
                 </p>
               )}
+
+              <div className="mt-8 border-t border-primary/8 pt-6">
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary/35">
+                  Upgrade / perpanjang
+                </p>
+                <p className="mt-2 text-sm text-primary/50">
+                  Pembayaran diproses DOKU. Paket aktif setelah pembayaran
+                  dikonfirmasi.
+                </p>
+                <ul className="mt-5 space-y-3">
+                  {paidPlans.map((p) => {
+                    const current =
+                      ent?.planId === p.id && ent?.status === "active";
+                    return (
+                      <li
+                        key={p.id}
+                        className="flex flex-col gap-3 rounded-xl border border-primary/8 bg-[#f7f6f3]/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <p className="font-medium">{p.name}</p>
+                          <p className="mt-0.5 text-sm text-primary/45">
+                            Rp {p.price} / {p.period}
+                            {current ? " · paket aktif" : ""}
+                          </p>
+                        </div>
+                        <PlanCheckoutButton
+                          planId={p.id}
+                          label={current ? "Perpanjang" : `Pilih ${p.name}`}
+                          redirectTo="/settings"
+                          className="landing-btn landing-btn-primary !px-4 !py-2 text-sm"
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
 
               {limits && (
                 <ul className="mt-8 space-y-3 border-t border-primary/8 pt-6">
