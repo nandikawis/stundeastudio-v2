@@ -803,9 +803,9 @@ function DesignThumb({ preview }: { preview: string }) {
       return (
         <div className={`${frame} bg-[#f7f6f3] p-2`}>
           <div className="flex h-full items-center">
-            <div className="h-12 w-4 bg-neutral-300 opacity-50" />
-            <div className="mx-1 h-20 flex-1 border border-[#c4a574]/40 bg-neutral-500 shadow-sm" />
-            <div className="h-12 w-4 bg-neutral-300 opacity-50" />
+            <div className="h-16 w-3.5 bg-neutral-300 opacity-50" />
+            <div className="mx-1 h-[88%] flex-1 border border-[#c4a574]/40 bg-neutral-500 shadow-sm" />
+            <div className="h-16 w-3.5 bg-neutral-300 opacity-50" />
           </div>
         </div>
       );

@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { componentRegistry } from "./index";
 import { ProjectData } from "@/app/lib/mockData";
+import { bindInviteViewportHeight } from "@/app/lib/inviteViewport";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -293,6 +294,22 @@ export default function TemplateRenderer({
   );
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  useEffect(() => {
+    if (!isStandaloneInvitation) return;
+    if (coverOpen) {
+      const large = Math.max(
+        window.innerHeight,
+        window.visualViewport?.height ?? 0
+      );
+      document.documentElement.style.setProperty(
+        "--invite-vh",
+        `${Math.round(large)}px`
+      );
+      return;
+    }
+    return bindInviteViewportHeight();
+  }, [isStandaloneInvitation, coverOpen]);
+
   // After cover opens, layout/overflow change — recalc ScrollTrigger positions
   useGSAP(
     () => {
@@ -449,8 +466,13 @@ export default function TemplateRenderer({
       <div
         className={
           fullScreen
-            ? "absolute inset-0 z-50 h-screen w-full overflow-hidden"
+            ? "absolute left-0 top-0 z-50 w-full overflow-hidden"
             : "absolute inset-0 z-50 h-full w-full overflow-hidden"
+        }
+        style={
+          fullScreen
+            ? { height: "var(--invite-vh, 100dvh)" }
+            : undefined
         }
       >
         {coverComponents.map((cc, i) =>
@@ -465,7 +487,7 @@ export default function TemplateRenderer({
       ref={(el) => setContentScrollEl(el ?? null)}
       className={
         fullScreen
-          ? "absolute inset-0 z-0 min-h-screen w-full bg-background"
+          ? "absolute inset-0 z-0 w-full bg-background"
           : "absolute inset-0 z-0 h-full w-full overflow-x-hidden bg-background"
       }
       style={{
@@ -484,7 +506,13 @@ export default function TemplateRenderer({
   if (isStandaloneInvitation && coverComponents.length > 0) {
     return (
       <>
-        <div className="relative min-h-screen w-full bg-background">
+        <div
+          className="relative w-full bg-background"
+          style={{
+            minHeight: "var(--invite-vh, 100dvh)",
+            height: "var(--invite-vh, 100dvh)",
+          }}
+        >
           {coverLayer(true)}
           {contentLayer(true)}
         </div>

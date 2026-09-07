@@ -5,7 +5,7 @@ import Image from "next/image";
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 import CountdownDisplay, { CountdownDesign } from "./CountdownDisplay";
-import PeekCarousel from "./PeekCarousel";
+import PeekCarousel, { PEEK_VIEWPORT_FALLBACK } from "./PeekCarousel";
 import { textStyle, type TextStyleFields } from "../../lib/textStyle";
 
 interface CarouselImage {
@@ -391,7 +391,7 @@ export default function ImageCarousel({
                 autoplayInterval={5000}
               />
             ) : (
-              <div className="relative h-[300px] overflow-hidden rounded-sm">{slides}</div>
+              <div className="relative overflow-hidden rounded-sm" style={{ height: PEEK_VIEWPORT_FALLBACK }}>{slides}</div>
             )}
             {goldDots("below")}
           </div>

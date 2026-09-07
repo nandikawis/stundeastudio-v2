@@ -11,6 +11,11 @@ type PeekImage = {
 const SLIDE_MS = 280;
 const SLIDE_EASE = "cubic-bezier(0.77, 0, 0.175, 1)";
 const AUTOPLAY_MS = 5000;
+const SLIDE_WIDTH_RATIO = 0.64;
+/** Portrait 3:4 — phone width made the old 300px / 86% frame nearly square. */
+const SLIDE_ASPECT = 4 / 3;
+const VIEWPORT_PAD = 32;
+export const PEEK_VIEWPORT_FALLBACK = "min(96vw, 500px)";
 
 function wrap(index: number, length: number) {
   if (length <= 0) return 0;
@@ -79,10 +84,12 @@ export default function PeekCarousel({
     return () => observer.disconnect();
   }, []);
 
-  const slideW = width * 0.68;
+  const slideW = width * SLIDE_WIDTH_RATIO;
   const gap = width * 0.028;
   const peekPad = Math.max(0, (width - slideW) / 2);
   const step = slideW + gap;
+  const slideH = slideW * SLIDE_ASPECT;
+  const viewportH = width > 0 ? Math.round(slideH + VIEWPORT_PAD) : 0;
 
   const commitTrack = useCallback(
     (nextTrack: number) => {
@@ -211,8 +218,8 @@ export default function PeekCarousel({
   return (
     <div
       ref={viewportRef}
-      className="relative h-[300px] w-full cursor-grab overflow-hidden select-none active:cursor-grabbing"
-      style={{ touchAction: "pan-y" }}
+      className="relative w-full cursor-grab overflow-hidden select-none active:cursor-grabbing"
+      style={{ height: viewportH || PEEK_VIEWPORT_FALLBACK, touchAction: "pan-y" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -241,9 +248,11 @@ export default function PeekCarousel({
           return (
             <div
               key={`${image.url}-${i}`}
-              className="relative h-[86%] shrink-0 overflow-hidden rounded-sm"
+              className="relative shrink-0 overflow-hidden rounded-sm"
               style={{
-                width: slideW || "68%",
+                width: slideW || "64%",
+                height: slideH || undefined,
+                aspectRatio: "3 / 4",
                 transform: `scale(${scale})`,
                 opacity,
                 border: isActive ? "1px solid rgba(196,165,116,0.45)" : "1px solid transparent",

@@ -52,7 +52,7 @@ export default async function InvitationPage({
   const project = dbRowToProjectData(res.data);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background" style={{ minHeight: "var(--invite-vh, 100dvh)" }}>
       <TemplateRenderer project={project} isStandaloneInvitation />
     </div>
   );
