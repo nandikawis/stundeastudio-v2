@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
+import { textStyle, type TextStyleFields } from "../../lib/textStyle";
+
+export type HeroSectionDesign = "classic" | "centered" | "split" | "inset" | "lockup" | "immersive";
 
 /** Accepts string URLs or `{ url }` objects (legacy / migrated editor data). */
 export function normalizeHeroBackgroundImages(
@@ -23,7 +26,10 @@ export function normalizeHeroBackgroundImages(
     .filter(Boolean);
 }
 
-interface HeroSectionProps extends DecorativeFlowersProps {
+interface HeroSectionProps extends DecorativeFlowersProps,
+  TextStyleFields<"subtitle">,
+  TextStyleFields<"coupleNames">,
+  TextStyleFields<"quote"> {
   subtitle?: string;
   coupleNames?: string;
   quote?: string;
@@ -43,6 +49,7 @@ interface HeroSectionProps extends DecorativeFlowersProps {
   showBottomCurve?: boolean;
   topCurveStyle?: 'gentle' | 'wave' | 'smooth';
   bottomCurveStyle?: 'gentle' | 'wave' | 'smooth';
+  design?: HeroSectionDesign;
   className?: string;
   /** Compact layout for template cards / thumbnails: fixed height, no slideshow, lighter visuals */
   previewMode?: boolean;
@@ -66,10 +73,20 @@ export default function HeroSection({
   showBottomCurve = true,
   topCurveStyle = 'gentle',
   bottomCurveStyle = 'gentle',
+  design = "classic",
   decorativeFlowers = false,
   flowerStyle = 'beage',
   className = "",
-  previewMode = false
+  previewMode = false,
+  subtitleFont,
+  subtitleSize,
+  subtitleEmphasis,
+  coupleNamesFont,
+  coupleNamesSize,
+  coupleNamesEmphasis,
+  quoteFont,
+  quoteSize,
+  quoteEmphasis,
 }: HeroSectionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -86,6 +103,11 @@ export default function HeroSection({
   }, [previewMode, normalizedUrls]);
 
   const effectiveFlowers = previewMode ? false : decorativeFlowers;
+  const isCentered = design === "centered";
+  const isSplit = design === "split";
+  const isInset = design === "inset";
+  const isLockup = design === "lockup";
+  const isImmersive = design === "immersive";
 
   // Curve SVG paths for different styles
   const curvePaths = {
@@ -116,7 +138,9 @@ export default function HeroSection({
 
   // No images: gradient or solid color. With images: optional color underlay behind slides
   const sectionStyle: React.CSSProperties = {};
-  if (!slideshowUrls.length) {
+  if (isInset || isSplit) {
+    sectionStyle.backgroundColor = backgroundColor || "#f7f6f3";
+  } else if (!slideshowUrls.length) {
     if (backgroundColor) {
       sectionStyle.backgroundColor = backgroundColor;
     } else {
@@ -130,19 +154,25 @@ export default function HeroSection({
   const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
     switch (align) {
       case "left":
-        return "text-left";
+        return "w-full self-stretch text-left";
       case "right":
-        return "text-right";
+        return "w-full self-stretch text-right";
       case "justify":
-        return "text-justify";
+        return "w-full self-stretch text-justify";
       default:
-        return "text-center";
+        return "w-full self-stretch text-center";
     }
   };
 
   const subtitleAlignClass = mapAlignToClass(subtitleAlign);
   const coupleNamesAlignClass = mapAlignToClass(coupleNamesAlign);
   const quoteAlignClass = mapAlignToClass(quoteAlign);
+  const subtitleTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: subtitleFont, size: subtitleSize, emphasis: subtitleEmphasis, fallbackFont, color });
+  const namesTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: coupleNamesFont, size: coupleNamesSize, emphasis: coupleNamesEmphasis, fallbackFont, color });
+  const quoteTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: quoteFont, size: quoteSize, emphasis: quoteEmphasis, fallbackFont, color });
 
   const sectionHeightClass = previewMode
     ? "min-h-full w-full"
@@ -150,42 +180,69 @@ export default function HeroSection({
 
   const curveSvgClass = previewMode ? "h-8 sm:h-10" : "h-16";
 
+  const overlayClass = isCentered
+    ? "bg-black/40"
+    : isLockup
+      ? "bg-gradient-to-r from-black/70 via-black/35 to-black/10"
+      : isSplit
+        ? "bg-gradient-to-t from-black/25 to-transparent"
+        : isInset
+          ? "bg-gradient-to-t from-black/55 via-black/15 to-transparent"
+          : isImmersive
+            ? "bg-gradient-to-t from-black/70 via-black/10 to-black/20"
+            : "bg-gradient-to-t from-black/60 via-black/30 to-transparent";
+
+  const renderSlideshow = () => {
+    if (slideshowUrls.length === 0) {
+      return (
+        <div className={`absolute inset-0 ${isInset || isSplit ? "bg-neutral-300" : ""}`} />
+      );
+    }
+    return (
+      <div className="absolute inset-0 z-0">
+        {slideshowUrls.map((imageUrl, index) => (
+          <div
+            key={`${index}-${imageUrl.slice(0, 48)}`}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentImageIndex ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div
+              className={`absolute inset-0 bg-cover bg-center ${previewMode ? "" : "animate-ken-burns"}`}
+              style={{
+                backgroundImage: `url(${imageUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat"
+              }}
+            />
+            <div className={`absolute inset-0 ${overlayClass}`} />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const sectionAlignClass = isCentered || isInset
+    ? "items-center justify-center"
+    : isLockup
+      ? "items-center justify-start"
+      : isSplit
+        ? "items-stretch justify-end"
+        : "items-end justify-center";
+
   return (
     <section 
-      className={`relative ${sectionHeightClass} w-full flex items-end justify-center overflow-hidden ${className}`}
+      className={`relative ${sectionHeightClass} w-full flex overflow-hidden ${sectionAlignClass} ${className}`}
       style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
     >
-      {/* Background Slideshow with Ken Burns Effect */}
-      {slideshowUrls.length > 0 && (
-        <div className="absolute inset-0 z-0">
-          {slideshowUrls.map((imageUrl, index) => (
-            <div
-              key={`${index}-${imageUrl.slice(0, 48)}`}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentImageIndex ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              <div
-                className={`absolute inset-0 bg-cover bg-center ${previewMode ? "" : "animate-ken-burns"}`}
-                style={{
-                  backgroundImage: `url(${imageUrl})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat"
-                  
-                }}
-              />
-              {/* Overlay for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Full-bleed slideshow for classic / centered / lockup / immersive */}
+      {!isSplit && !isInset && renderSlideshow()}
 
       {/* SVG Curve Divider at Top */}
       {showTopCurve && (
         <div className="pointer-events-none absolute -top-px right-0 left-0 z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: topCurveColor || '#ffffff', transform: 'rotate(180deg)' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: topCurveColor || (isInset || isSplit ? '#f7f6f3' : '#ffffff'), transform: 'rotate(180deg)' }}>
             <path d={curvePaths[topCurveStyle]} />
           </svg>
         </div>
@@ -194,43 +251,228 @@ export default function HeroSection({
       {/* Decorative Flowers */}
       {renderDecorativeFlowers({ decorativeFlowers: effectiveFlowers, flowerStyle, showTopCurve, showBottomCurve })}
 
-      {/* Content */}
-      <div 
-        className={`relative z-10 w-full text-center text-white ${
-          previewMode ? "px-4 pt-8 pb-16 sm:pb-20" : "px-6 pt-16 pb-32"
-        }`}
-        style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
-      >
-        <p
-          className={`${previewMode ? "text-xs sm:text-sm mb-2" : "text-lg mb-4"} ${subtitleAlignClass}`}
-          style={{ fontFamily: "var(--font-dm-sans)", color: subtitleColor || "rgba(255, 255, 255, 0.9)" }}
+      {isSplit ? (
+        <div className="absolute inset-0 z-10 flex flex-col">
+          <div className="relative min-h-0 flex-1 overflow-hidden">
+            {renderSlideshow()}
+          </div>
+          <div
+            className={`relative z-[11] flex shrink-0 flex-col items-center justify-center bg-[#f7f6f3] px-6 ${
+              previewMode ? "py-4" : "px-8 py-10"
+            }`}
+            style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
+          >
+            <p
+              className={`${previewMode ? "text-[10px] mb-1" : "text-[11px] mb-3"} font-medium uppercase tracking-[0.32em] ${subtitleAlignClass}`}
+              style={subtitleTx("var(--font-dm-sans)", subtitleColor || "#8a8178")}
+            >
+              {subtitle}
+            </p>
+            <h2
+              className={`${
+                previewMode ? "text-xl mb-1.5" : "text-[2.4rem] mb-3"
+              } font-medium italic leading-[1.08] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+              style={namesTx("var(--font-playfair)", coupleNamesColor || "#c4a574")}
+            >
+              {coupleNames}
+            </h2>
+            <div className="mb-3 h-px w-10 bg-[#c4a574]/70" />
+            <p
+              className={`${
+                previewMode
+                  ? "text-[10px] leading-snug line-clamp-2"
+                  : "text-[14px] leading-relaxed"
+              } max-w-md ${quoteAlignClass}`}
+              style={quoteTx("var(--font-dm-sans)", quoteColor || "#6b6258")}
+            >
+              {quote}
+            </p>
+          </div>
+        </div>
+      ) : isInset ? (
+        <div
+          className={`relative z-10 mx-auto flex w-full max-w-md flex-col items-center ${
+            previewMode ? "px-4 py-6" : "px-6 py-16"
+          }`}
+          style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
         >
-          {subtitle}
-        </p>
-        <h2
-          className={`${
-            previewMode ? "text-xl sm:text-2xl md:text-3xl mb-2 sm:mb-3" : "text-4xl md:text-5xl mb-6"
-          } font-bold ${coupleNamesAlignClass}`}
-          style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}
+          <p
+            className={`${previewMode ? "text-[10px] mb-3" : "text-[11px] mb-5"} font-medium uppercase tracking-[0.32em] ${subtitleAlignClass}`}
+            style={subtitleTx("var(--font-dm-sans)", subtitleColor || "#8a8178")}
+          >
+            {subtitle}
+          </p>
+          <div
+            className={`relative w-full overflow-hidden rounded-[22px] shadow-[0_22px_44px_rgba(40,32,24,0.16)] ${
+              previewMode ? "aspect-[4/5]" : "aspect-[3/4]"
+            }`}
+          >
+            {renderSlideshow()}
+            <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-6 text-center">
+              <h2
+                className={`${
+                  previewMode ? "text-xl" : "text-[2.15rem]"
+                } font-medium italic leading-[1.08] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+                style={namesTx("var(--font-playfair)", coupleNamesColor || "#ffffff")}
+              >
+                {coupleNames}
+              </h2>
+            </div>
+          </div>
+          <p
+            className={`${
+              previewMode
+                ? "mt-3 text-[10px] leading-snug line-clamp-2"
+                : "mt-6 text-[14px] leading-relaxed"
+            } max-w-sm ${quoteAlignClass}`}
+            style={quoteTx("var(--font-dm-sans)", quoteColor || "#6b6258")}
+          >
+            {quote}
+          </p>
+        </div>
+      ) : isCentered ? (
+        <div
+          className={`relative z-10 w-full text-center text-white ${
+            previewMode ? "px-4 py-8" : "px-6 py-16"
+          }`}
+          style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
         >
-          {coupleNames}
-        </h2>
-        <p
-          className={`${
-            previewMode
-              ? "text-[10px] sm:text-xs italic max-w-full mx-auto leading-snug line-clamp-3"
-              : "text-base md:text-lg italic max-w-2xl mx-auto leading-relaxed"
-          } ${quoteAlignClass}`}
-          style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.9)" }}
+          <p
+            className={`${previewMode ? "text-[10px] mb-2" : "text-[11px] mb-4"} font-medium uppercase tracking-[0.34em] ${subtitleAlignClass}`}
+            style={subtitleTx("var(--font-dm-sans)", subtitleColor || "rgba(255,255,255,0.82)")}
+          >
+            {subtitle}
+          </p>
+          <h2
+            className={`${
+              previewMode ? "text-2xl mb-2" : "text-[2.75rem] md:text-5xl mb-5"
+            } font-medium italic leading-[1.05] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+            style={namesTx("var(--font-playfair)", coupleNamesColor || "#c4a574")}
+          >
+            {coupleNames}
+          </h2>
+          <div className="mx-auto mb-5 h-px w-12 bg-white/50" />
+          <p
+            className={`${
+              previewMode
+                ? "text-[10px] italic max-w-full leading-snug line-clamp-3"
+                : "text-base italic max-w-lg mx-auto leading-relaxed"
+            } ${quoteAlignClass}`}
+            style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255,255,255,0.88)")}
+          >
+            {quote}
+          </p>
+        </div>
+      ) : isLockup ? (
+        <div
+          className={`relative z-10 w-full max-w-md text-white ${
+            previewMode ? "px-4 py-8" : "px-8 py-16"
+          }`}
+          style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
         >
-          "{quote}"
-        </p>
-      </div>
+          <p
+            className={`${previewMode ? "text-[10px] mb-2" : "text-[11px] mb-4"} font-medium uppercase tracking-[0.3em] ${subtitleAlignClass}`}
+            style={subtitleTx("var(--font-dm-sans)", subtitleColor || "rgba(255,255,255,0.78)")}
+          >
+            {subtitle}
+          </p>
+          <h2
+            className={`${
+              previewMode ? "text-2xl mb-3" : "text-[2.6rem] mb-5"
+            } font-medium italic leading-[1.08] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+            style={namesTx("var(--font-playfair)", coupleNamesColor || "#ffffff")}
+          >
+            {coupleNames}
+          </h2>
+          <div className={`mb-5 h-px w-10 bg-[#c4a574] ${coupleNamesAlign === "left" ? "" : coupleNamesAlign === "right" ? "ml-auto" : "mx-auto"}`} />
+          <p
+            className={`${
+              previewMode
+                ? "text-[10px] italic max-w-[28ch] leading-snug line-clamp-3"
+                : "text-[15px] italic max-w-[22ch] leading-relaxed"
+            } ${quoteAlignClass}`}
+            style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255,255,255,0.86)")}
+          >
+            {quote}
+          </p>
+        </div>
+      ) : isImmersive ? (
+        <div
+          className="absolute inset-0 z-10 flex flex-col justify-end text-white"
+        >
+          <div
+            className={`w-full ${previewMode ? "px-4 pb-6 pt-16" : "px-7 pb-14 pt-40"}`}
+            style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
+          >
+            <p
+              className={`${previewMode ? "mb-2 text-[9px]" : "mb-3 text-[11px]"} font-medium uppercase tracking-[0.36em] ${subtitleAlignClass}`}
+              style={subtitleTx("var(--font-dm-sans)", subtitleColor || "rgba(255,255,255,0.75)")}
+            >
+              {subtitle}
+            </p>
+            <h2
+              className={`${
+                previewMode ? "text-[1.7rem]" : "text-[2.65rem]"
+              } font-medium italic leading-[1.08] tracking-[-0.03em] ${coupleNamesAlignClass}`}
+              style={namesTx("var(--font-playfair)", coupleNamesColor || "#ffffff")}
+            >
+              {coupleNames}
+            </h2>
+            <div
+              className={`mt-4 h-px w-10 bg-white/45 ${
+                coupleNamesAlign === "left" ? "" : coupleNamesAlign === "right" ? "ml-auto" : "mx-auto"
+              }`}
+            />
+            <p
+              className={`${
+                previewMode
+                  ? "mt-3 text-[10px] leading-snug line-clamp-2"
+                  : "mt-4 text-[13px] leading-relaxed line-clamp-3"
+              } max-w-[32ch] ${quoteAlign === "left" ? "mr-auto" : quoteAlign === "right" ? "ml-auto" : "mx-auto"} ${quoteAlignClass}`}
+              style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255,255,255,0.78)")}
+            >
+              {quote}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div 
+          className={`relative z-10 w-full text-center text-white ${
+            previewMode ? "px-4 pt-8 pb-16 sm:pb-20" : "px-6 pt-16 pb-32"
+          }`}
+          style={getFlowerMargin({ decorativeFlowers: effectiveFlowers, showTopCurve, showBottomCurve })}
+        >
+          <p
+            className={`${previewMode ? "text-xs sm:text-sm mb-2" : "text-lg mb-4"} ${subtitleAlignClass}`}
+            style={subtitleTx("var(--font-dm-sans)", subtitleColor || "rgba(255, 255, 255, 0.9)")}
+          >
+            {subtitle}
+          </p>
+          <h2
+            className={`${
+              previewMode ? "text-xl sm:text-2xl md:text-3xl mb-2 sm:mb-3" : "text-4xl md:text-5xl mb-6"
+            } font-bold ${coupleNamesAlignClass}`}
+            style={namesTx("var(--font-playfair)", coupleNamesColor || "#ffffff")}
+          >
+            {coupleNames}
+          </h2>
+          <p
+            className={`${
+              previewMode
+                ? "text-[10px] sm:text-xs italic max-w-full mx-auto leading-snug line-clamp-3"
+                : "text-base md:text-lg italic max-w-2xl mx-auto leading-relaxed"
+            } ${quoteAlignClass}`}
+            style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255, 255, 255, 0.9)")}
+          >
+            "{quote}"
+          </p>
+        </div>
+      )}
 
       {/* SVG Curve Divider at Bottom */}
       {showBottomCurve && (
         <div className="pointer-events-none absolute right-0 -bottom-px left-0 z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: curveColor || '#ffffff' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none" className={`w-full ${curveSvgClass}`} style={{ fill: curveColor || (isInset || isSplit ? '#f7f6f3' : '#ffffff') }}>
             <path d={curvePaths[bottomCurveStyle]} />
           </svg>
         </div>
@@ -252,4 +494,3 @@ export default function HeroSection({
     </section>
   );
 }
-

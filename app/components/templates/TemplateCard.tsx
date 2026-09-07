@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import HeroSection, {
   normalizeHeroBackgroundImages,
+  type HeroSectionDesign,
 } from "../invitation/HeroSection";
 import { Template, getTemplateHeroDefaultData } from "../../lib/templates";
 
@@ -49,6 +50,7 @@ function buildHeroPreviewProps(data: Record<string, unknown>) {
       | "beage"
       | "pink"
       | "white",
+    design: (typeof data.design === "string" ? data.design : "classic") as HeroSectionDesign,
   };
 }
 

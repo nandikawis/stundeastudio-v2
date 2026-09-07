@@ -2,6 +2,8 @@
 
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
+import { textStyle, type TextStyleFields } from "../../lib/textStyle";
+
 
 export type ImageContainerStyle = 
   // Circular styles (3)
@@ -15,9 +17,15 @@ export type ImageContainerStyle =
   // Square styles (3)
   'square-frame' | 'square-elegant' | 'square-glow';
 
-export type CoupleProfileDesign = 'simple' | 'with-container';
+export type CoupleProfileDesign = 'simple' | 'with-container' | 'collage' | 'editorial' | 'caption' | 'folio';
 
-interface CoupleProfileProps extends CurveDividerProps, DecorativeFlowersProps {
+interface CoupleProfileProps extends CurveDividerProps, DecorativeFlowersProps,
+  TextStyleFields<"name">,
+  TextStyleFields<"fullName">,
+  TextStyleFields<"relation">,
+  TextStyleFields<"fatherName">,
+  TextStyleFields<"motherName">,
+  TextStyleFields<"address"> {
   name?: string;
   fullName?: string;
   relation?: string;
@@ -27,6 +35,8 @@ interface CoupleProfileProps extends CurveDividerProps, DecorativeFlowersProps {
   };
   address?: string;
   imageUrl?: string;
+  secondaryImageUrl?: string;
+  instagram?: string;
   design?: CoupleProfileDesign;
   imageStyle?: ImageContainerStyle;
   glowColor?: string;
@@ -61,6 +71,8 @@ export default function CoupleProfile({
   },
   address = "Address here",
   imageUrl,
+  secondaryImageUrl,
+  instagram,
   design = "with-container",
   imageStyle = "circular",
   glowColor = "#b49549",
@@ -82,6 +94,24 @@ export default function CoupleProfile({
   backgroundImages,
   decorativeFlowers = false,
   flowerStyle = 'beage',
+  nameFont,
+  nameSize,
+  nameEmphasis,
+  fullNameFont,
+  fullNameSize,
+  fullNameEmphasis,
+  relationFont,
+  relationSize,
+  relationEmphasis,
+  fatherNameFont,
+  fatherNameSize,
+  fatherNameEmphasis,
+  motherNameFont,
+  motherNameSize,
+  motherNameEmphasis,
+  addressFont,
+  addressSize,
+  addressEmphasis,
   showTopCurve,
   showBottomCurve,
   topCurveColor,
@@ -91,20 +121,43 @@ export default function CoupleProfile({
   className = ""
 }: CoupleProfileProps) {
   const isGroom = type === "groom";
+  const isCollage = design === "collage";
+  const isEditorial = design === "editorial";
+  const isCaption = design === "caption";
+  const isFolio = design === "folio";
+  const isComposedProfile = isCollage || isEditorial || isCaption || isFolio;
+  const collageSecondary = secondaryImageUrl || imageUrl;
+  const ringLabel = isGroom ? "MEMPELAI PRIA" : "MEMPELAI WANITA";
+  const parentsLine = [relation, parents.father, parents.father && parents.mother ? 'dan' : null, parents.mother]
+    .filter(Boolean)
+    .join(' ');
+  const igHandle = instagram ? instagram.replace(/^@/, '') : '';
 
   const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
     switch (align) {
       case "left":
-        return "text-left";
+        return "w-full self-stretch text-left";
       case "right":
-        return "text-right";
+        return "w-full self-stretch text-right";
       case "justify":
-        return "text-justify";
+        return "w-full self-stretch text-justify";
       case "center":
       default:
-        return "text-center";
+        return "w-full self-stretch text-center";
     }
   };
+  const nameTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: nameFont, size: nameSize, emphasis: nameEmphasis, fallbackFont, color, extra });
+  const fullNameTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: fullNameFont, size: fullNameSize, emphasis: fullNameEmphasis, fallbackFont, color, extra });
+  const relationTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: relationFont, size: relationSize, emphasis: relationEmphasis, fallbackFont, color, extra });
+  const fatherTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: fatherNameFont, size: fatherNameSize, emphasis: fatherNameEmphasis, fallbackFont, color });
+  const motherTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: motherNameFont, size: motherNameSize, emphasis: motherNameEmphasis, fallbackFont, color });
+  const addressTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: addressFont, size: addressSize, emphasis: addressEmphasis, fallbackFont, color });
   const firstBg = Array.isArray(backgroundImages) && backgroundImages.length > 0
   ? backgroundImages[0]
   : undefined;
@@ -125,6 +178,8 @@ const bgUrl =
     sectionStyle.backgroundRepeat = 'no-repeat';
   } else if (backgroundColor) {
     sectionStyle.backgroundColor = backgroundColor;
+  } else if (isComposedProfile) {
+    sectionStyle.backgroundColor = '#f7f6f3';
   } else {
     sectionStyle.background = 'linear-gradient(to bottom, #ffffff, #f9fafb, #ffffff)';
   }
@@ -148,9 +203,282 @@ const bgUrl =
       {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
       
       <div 
-        className="max-w-md mx-auto text-center relative z-10"
+        className={`relative z-10 mx-auto max-w-md ${isCollage || isEditorial || isFolio ? '' : 'text-center'}`}
         style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
       >
+        {isCollage ? (
+          <div className={`flex flex-col ${isGroom ? 'items-start' : 'items-end'}`}>
+            <div className="relative mb-10 w-full" data-invite-reveal>
+              <div
+                className={`relative z-10 w-[72%] overflow-hidden rounded-sm shadow-[0_18px_40px_rgba(0,0,0,0.16)] ${
+                  isGroom ? '' : 'ml-auto'
+                }`}
+              >
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={name}
+                    className="aspect-[3/4] w-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="flex aspect-[3/4] w-full items-center justify-center bg-neutral-200">
+                    <svg className="h-16 w-16 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <div
+                className={`absolute bottom-3 z-20 w-[42%] overflow-hidden rounded-sm shadow-[0_14px_30px_rgba(0,0,0,0.2)] ${
+                  isGroom ? 'right-0' : 'left-0'
+                }`}
+              >
+                {collageSecondary ? (
+                  <img
+                    src={collageSecondary}
+                    alt=""
+                    className="aspect-square w-full object-cover grayscale"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="aspect-square w-full bg-neutral-300" />
+                )}
+              </div>
+              <div
+                className={`pointer-events-none absolute z-30 h-[108px] w-[108px] ${
+                  isGroom ? 'right-1 top-1' : 'left-1 top-1'
+                }`}
+                aria-hidden
+              >
+                <svg viewBox="0 0 100 100" className="h-full w-full">
+                  <defs>
+                    <path
+                      id={`couple-ring-${type}`}
+                      d="M 50,50 m -36,0 a 36,36 0 1,1 72,0 a 36,36 0 1,1 -72,0"
+                    />
+                  </defs>
+                  <text
+                    fill={nameColor || '#1f2937'}
+                    fontSize="8.2"
+                    letterSpacing="2.4"
+                    style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 500 }}
+                  >
+                    <textPath href={`#couple-ring-${type}`} startOffset="0%">
+                      {`${ringLabel}  ·  ${ringLabel}  ·  `}
+                    </textPath>
+                  </text>
+                </svg>
+              </div>
+            </div>
+
+            <h4
+              className={`max-w-[16ch] text-[1.85rem] font-medium leading-[1.15] tracking-[-0.02em] ${mapAlignToClass(nameAlign)} ${
+                nameAlign === "right" ? "ml-auto" : nameAlign === "left" ? "mr-auto" : isGroom ? "mr-auto" : "ml-auto"
+              }`}
+              style={nameTx("var(--font-playfair)", nameColor || "#1f2937")}
+            >
+              {fullName || name}
+            </h4>
+            <p
+              className={`mt-3 max-w-[280px] text-[13px] leading-relaxed ${mapAlignToClass(relationAlign)} ${
+                relationAlign === "right" ? "ml-auto" : relationAlign === "left" ? "mr-auto" : isGroom ? "mr-auto" : "ml-auto"
+              }`}
+              style={relationTx("var(--font-dm-sans)", relationColor || "#4b5563")}
+            >
+              {parentsLine}
+            </p>
+            {igHandle && (
+              <a
+                href={`https://instagram.com/${igHandle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-[12px] text-white transition-transform duration-100 ease-out hover:bg-neutral-700 active:scale-[0.97]"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4zm5 4.5A4.5 4.5 0 1016.5 12 4.5 4.5 0 0012 7.5zm0 2A2.5 2.5 0 1114.5 12 2.5 2.5 0 0112 9.5zM17.75 6.5a.75.75 0 10.75.75.75.75 0 00-.75-.75z" />
+                </svg>
+                {igHandle}
+              </a>
+            )}
+          </div>
+        ) : isEditorial ? (
+          <div className={`flex flex-col ${isGroom ? 'items-start' : 'items-end'}`}>
+            <div className="relative w-full" data-invite-reveal>
+              <div
+                className={`relative w-[70%] overflow-hidden rounded-sm shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
+                  isGroom ? '' : 'ml-auto'
+                }`}
+              >
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={name}
+                    className="aspect-[3/4] w-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="flex aspect-[3/4] w-full items-center justify-center bg-neutral-200">
+                    <svg className="h-16 w-16 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <div
+                className={`relative z-10 -mt-14 w-[78%] rounded-sm bg-[#f7f6f3]/90 px-1 py-3 backdrop-blur-[2px] ${
+                  nameAlign === "left" ? "" : nameAlign === "right" ? "ml-auto" : isGroom ? "ml-auto" : ""
+                } ${mapAlignToClass(nameAlign)}`}
+              >
+                <p
+                  className="text-[10px] font-medium uppercase tracking-[0.28em]"
+                  style={relationTx("var(--font-dm-sans)", relationColor || "#8a8178")}
+                >
+                  {ringLabel}
+                </p>
+                <h4
+                  className={`mt-2 max-w-[14ch] text-[1.9rem] font-medium leading-[1.12] tracking-[-0.02em] ${mapAlignToClass(nameAlign)}`}
+                  style={nameTx("var(--font-playfair)", nameColor || "#1f2937", { marginLeft: isGroom ? 'auto' : undefined })}
+                >
+                  {fullName || name}
+                </h4>
+                <div
+                  className={`mt-3 h-px w-10 bg-[#c4a574] ${isGroom ? 'ml-auto' : ''}`}
+                />
+                <p
+                  className="mt-3 max-w-[260px] text-[13px] leading-relaxed"
+                  style={relationTx("var(--font-dm-sans)", relationColor || "#4b5563", { marginLeft: isGroom ? 'auto' : undefined })}
+                >
+                  {parentsLine}
+                </p>
+                {igHandle && (
+                  <a
+                    href={`https://instagram.com/${igHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-5 inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-[12px] text-white transition-transform duration-100 ease-out hover:bg-neutral-700 active:scale-[0.97]"
+                  >
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4zm5 4.5A4.5 4.5 0 1016.5 12 4.5 4.5 0 0012 7.5zm0 2A2.5 2.5 0 1114.5 12 2.5 2.5 0 0112 9.5zM17.75 6.5a.75.75 0 10.75.75.75.75 0 00-.75-.75z" />
+                    </svg>
+                    {igHandle}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : isCaption ? (
+          <div className="mx-auto w-full max-w-sm">
+            <div className="relative mb-16" data-invite-reveal>
+              <div className="overflow-hidden rounded-[22px] shadow-[0_18px_40px_rgba(0,0,0,0.14)]">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={name}
+                    className="aspect-[4/5] w-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="flex aspect-[4/5] w-full items-center justify-center bg-neutral-200">
+                    <svg className="h-16 w-16 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <div className={`absolute inset-x-5 bottom-0 translate-y-1/2 rounded-2xl bg-[#f7f6f3] px-5 py-4 shadow-[0_10px_28px_rgba(0,0,0,0.1)] ${mapAlignToClass(nameAlign)}`}>
+                <p
+                  className="text-[10px] font-medium uppercase tracking-[0.26em]"
+                  style={relationTx("var(--font-dm-sans)", relationColor || "#8a8178")}
+                >
+                  {ringLabel}
+                </p>
+                <h4
+                  className={`mt-1.5 text-[1.55rem] font-medium leading-[1.15] tracking-[-0.02em] ${mapAlignToClass(nameAlign)}`}
+                  style={nameTx("var(--font-playfair)", nameColor || "#1f2937")}
+                >
+                  {fullName || name}
+                </h4>
+              </div>
+            </div>
+            <p
+              className={`mx-auto max-w-[280px] text-[13px] leading-relaxed ${mapAlignToClass(relationAlign)}`}
+              style={relationTx("var(--font-dm-sans)", relationColor || "#4b5563")}
+            >
+              {parentsLine}
+            </p>
+            {igHandle && (
+              <a
+                href={`https://instagram.com/${igHandle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-[12px] text-white transition-transform duration-100 ease-out hover:bg-neutral-700 active:scale-[0.97]"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4zm5 4.5A4.5 4.5 0 1016.5 12 4.5 4.5 0 0012 7.5zm0 2A2.5 2.5 0 1114.5 12 2.5 2.5 0 0112 9.5zM17.75 6.5a.75.75 0 10.75.75.75.75 0 00-.75-.75z" />
+                </svg>
+                {igHandle}
+              </a>
+            )}
+          </div>
+        ) : isFolio ? (
+          <div className={`flex items-center gap-4 ${isGroom ? '' : 'flex-row-reverse'}`}>
+            <div
+              className="w-[48%] shrink-0 overflow-hidden rounded-sm shadow-[0_16px_36px_rgba(0,0,0,0.14)]"
+              data-invite-reveal
+            >
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={name}
+                  className="aspect-[3/4] w-full object-cover"
+                  draggable={false}
+                />
+              ) : (
+                <div className="flex aspect-[3/4] w-full items-center justify-center bg-neutral-200">
+                  <svg className="h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div className={`min-w-0 flex-1 ${mapAlignToClass(nameAlign)}`}>
+              <p
+                className="text-[10px] font-medium uppercase tracking-[0.26em]"
+                style={relationTx("var(--font-dm-sans)", relationColor || "#8a8178")}
+              >
+                {ringLabel}
+              </p>
+              <h4
+                className="mt-2 text-[1.5rem] font-medium leading-[1.12] tracking-[-0.02em]"
+                style={nameTx("var(--font-playfair)", nameColor || "#1f2937")}
+              >
+                {fullName || name}
+              </h4>
+              <div className={`mt-3 h-px w-8 bg-[#c4a574] ${isGroom ? '' : 'ml-auto'}`} />
+              <p
+                className="mt-3 text-[12px] leading-relaxed"
+                style={relationTx("var(--font-dm-sans)", relationColor || "#4b5563")}
+              >
+                {parentsLine}
+              </p>
+              {igHandle && (
+                <a
+                  href={`https://instagram.com/${igHandle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-neutral-800 px-3.5 py-1.5 text-[11px] text-white transition-transform duration-100 ease-out hover:bg-neutral-700 active:scale-[0.97]"
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4zm5 4.5A4.5 4.5 0 1016.5 12 4.5 4.5 0 0012 7.5zm0 2A2.5 2.5 0 1114.5 12 2.5 2.5 0 0112 9.5zM17.75 6.5a.75.75 0 10.75.75.75.75 0 00-.75-.75z" />
+                  </svg>
+                  {igHandle}
+                </a>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Image Container - only show when design is 'with-container' */}
         {design === 'simple' && (
           <div className="mb-62"></div>
@@ -341,7 +669,7 @@ const bgUrl =
         {/* Name */}
         <h4 
           className={`text-2xl font-semibold mb-2 ${mapAlignToClass(nameAlign)}`} 
-          style={{ fontFamily: "var(--font-playfair)", color: nameColor || "#1f2937" }}
+          style={nameTx("var(--font-playfair)", nameColor || "#1f2937")}
         >
           {name}
         </h4>
@@ -349,7 +677,7 @@ const bgUrl =
         {/* Full Name */}
         <h5 
           className={`text-lg mb-4 ${mapAlignToClass(fullNameAlign)}`} 
-          style={{ fontFamily: "var(--font-dm-sans)", color: fullNameColor || "#374151" }}
+          style={fullNameTx("var(--font-dm-sans)", fullNameColor || "#374151")}
         >
           {fullName}
         </h5>
@@ -357,7 +685,7 @@ const bgUrl =
         {/* Relation */}
         <p 
           className={`text-sm mb-2 ${mapAlignToClass(relationAlign)}`} 
-          style={{ fontFamily: "var(--font-dm-sans)", color: relationColor || "#4b5563" }}
+          style={relationTx("var(--font-dm-sans)", relationColor || "#4b5563")}
         >
           {relation}
         </p>
@@ -367,7 +695,7 @@ const bgUrl =
           <>
             <p 
               className={`text-sm mb-1 ${mapAlignToClass(fatherNameAlign)}`} 
-              style={{ fontFamily: "var(--font-dm-sans)", color: fatherNameColor || "#374151" }}
+              style={fatherTx("var(--font-dm-sans)", fatherNameColor || "#374151")}
             >
               {parents.father}
             </p>
@@ -376,7 +704,7 @@ const bgUrl =
             </p>
             <p 
               className={`text-sm mb-4 ${mapAlignToClass(motherNameAlign)}`} 
-              style={{ fontFamily: "var(--font-dm-sans)", color: motherNameColor || "#374151" }}
+              style={motherTx("var(--font-dm-sans)", motherNameColor || "#374151")}
             >
               {parents.mother}
             </p>
@@ -387,10 +715,12 @@ const bgUrl =
         {address && (
           <p 
             className={`text-xs mt-4 ${mapAlignToClass(addressAlign)}`} 
-            style={{ fontFamily: "var(--font-dm-sans)", color: addressColor || "#4b5563" }}
+            style={addressTx("var(--font-dm-sans)", addressColor || "#4b5563")}
           >
             {address}
           </p>
+        )}
+          </>
         )}
       </div>
       {/* Bottom Curve Divider */}

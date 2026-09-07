@@ -118,8 +118,10 @@ export default function EditorPage({
     backgroundImageUrl?: string;
     backgroundImages?: Array<{ url: string; alt?: string; order?: number }>;
     imageUrl?: string;
+    secondaryImageUrl?: string;
     images?: { url: string; alt?: string; order?: number }[];
     logoUrl?: string;
+    qrisImageUrl?: string;
   };
   const [previewImages, setPreviewImages] = useState<Record<string, SectionPreview>>({});
   /** When editor opens a DB-published template (not in mockTemplates) */
@@ -327,8 +329,10 @@ export default function EditorPage({
           (preview.backgroundImageUrl?.startsWith("data:") ?? false) ||
           (Array.isArray(preview.backgroundImages) && preview.backgroundImages.some((img) => img.url?.startsWith("data:"))) ||
           (preview.imageUrl?.startsWith("data:") ?? false) ||
+          (preview.secondaryImageUrl?.startsWith("data:") ?? false) ||
           (Array.isArray(preview.images) && preview.images.some((img) => img.url?.startsWith("data:"))) ||
-          (preview.logoUrl?.startsWith("data:") ?? false)
+          (preview.logoUrl?.startsWith("data:") ?? false) ||
+          (preview.qrisImageUrl?.startsWith("data:") ?? false)
         );
       });
       
@@ -479,11 +483,17 @@ export default function EditorPage({
         if (field !== "imageUrl" && sectionPreview.imageUrl !== undefined) {
           rest.imageUrl = sectionPreview.imageUrl;
         }
+        if (field !== "secondaryImageUrl" && sectionPreview.secondaryImageUrl !== undefined) {
+          rest.secondaryImageUrl = sectionPreview.secondaryImageUrl;
+        }
         if (field !== "images" && sectionPreview.images !== undefined) {
           rest.images = sectionPreview.images;
         }
         if (field !== "logoUrl" && sectionPreview.logoUrl !== undefined) {
           rest.logoUrl = sectionPreview.logoUrl;
+        }
+        if (field !== "qrisImageUrl" && sectionPreview.qrisImageUrl !== undefined) {
+          rest.qrisImageUrl = sectionPreview.qrisImageUrl;
         }
         
         if (Object.keys(rest).length === 0) {
@@ -524,7 +534,7 @@ export default function EditorPage({
       handleProjectUpdate(updatedProject);
 
       // For destructive clears on single-image fields, persist immediately
-      if (isProjectId(updatedProject.id) && (field === "backgroundImages" || field === "imageUrl" || field === "logoUrl")) {
+      if (isProjectId(updatedProject.id) && (field === "backgroundImages" || field === "imageUrl" || field === "secondaryImageUrl" || field === "logoUrl" || field === "qrisImageUrl")) {
         // Fire and forget – no need to await here
         void persistProject(updatedProject);
       }
@@ -602,6 +612,14 @@ export default function EditorPage({
           field: "imageUrl",
         });
       }
+      if (preview.secondaryImageUrl?.startsWith("data:")) {
+        dataUrls.push({
+          dataUrl: preview.secondaryImageUrl,
+          fileName: `img2-${sectionId}.jpg`,
+          sectionId,
+          field: "secondaryImageUrl",
+        });
+      }
       if (Array.isArray(preview.images)) {
         preview.images.forEach((img, idx) => {
           if (img.url?.startsWith("data:")) {
@@ -622,6 +640,14 @@ export default function EditorPage({
           fileName: `logo-${sectionId}.jpg`,
           sectionId,
           field: "logoUrl",
+        });
+      }
+      if (preview.qrisImageUrl?.startsWith("data:")) {
+        dataUrls.push({
+          dataUrl: preview.qrisImageUrl,
+          fileName: `qris-${sectionId}.jpg`,
+          sectionId,
+          field: "qrisImageUrl",
         });
       }
     });
@@ -752,6 +778,9 @@ export default function EditorPage({
           if (preview.imageUrl) {
             sectionData.imageUrl = urlMap.get(preview.imageUrl) || preview.imageUrl;
           }
+          if (preview.secondaryImageUrl) {
+            sectionData.secondaryImageUrl = urlMap.get(preview.secondaryImageUrl) || preview.secondaryImageUrl;
+          }
           if (preview.images) {
             sectionData.images = preview.images.map((img) => ({
               ...img,
@@ -760,6 +789,9 @@ export default function EditorPage({
           }
           if (preview.logoUrl) {
             sectionData.logoUrl = urlMap.get(preview.logoUrl) || preview.logoUrl;
+          }
+          if (preview.qrisImageUrl) {
+            sectionData.qrisImageUrl = urlMap.get(preview.qrisImageUrl) || preview.qrisImageUrl;
           }
         });
         
@@ -830,8 +862,10 @@ export default function EditorPage({
       ...baseData,
       ...(previewData.backgroundImages !== undefined ? { backgroundImages: previewData.backgroundImages } : {}),
       ...(previewData.imageUrl !== undefined ? { imageUrl: previewData.imageUrl } : {}),
+      ...(previewData.secondaryImageUrl !== undefined ? { secondaryImageUrl: previewData.secondaryImageUrl } : {}),
       ...(previewData.images !== undefined ? { images: previewData.images } : {}),
       ...(previewData.logoUrl !== undefined ? { logoUrl: previewData.logoUrl } : {}),
+      ...(previewData.qrisImageUrl !== undefined ? { qrisImageUrl: previewData.qrisImageUrl } : {}),
     };
   };
 

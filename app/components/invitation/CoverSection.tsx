@@ -5,10 +5,15 @@ import Image from "next/image";
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
 import { ImageContainerStyle } from "./CoupleProfile";
+import { textStyle, type TextStyleFields } from "../../lib/textStyle";
 
-export type CoverSectionDesign = 'simple' | 'with-container';
+export type CoverSectionDesign = 'simple' | 'with-container' | 'framed-card' | 'fullbleed' | 'arch' | 'docked';
 
-interface CoverSectionProps extends CurveDividerProps, DecorativeFlowersProps {
+interface CoverSectionProps extends CurveDividerProps, DecorativeFlowersProps,
+  TextStyleFields<"date">,
+  TextStyleFields<"coupleNames">,
+  TextStyleFields<"quote">,
+  TextStyleFields<"guestLocation"> {
   date?: string;
   coupleNames?: string;
   /** Greeting / salam text shown below the couple names */
@@ -85,7 +90,19 @@ export default function CoverSection({
   isStandaloneInvitation = false,
   onOpened,
   onEditContent,
-  onChangeDesign
+  onChangeDesign,
+  dateFont,
+  dateSize,
+  dateEmphasis,
+  coupleNamesFont,
+  coupleNamesSize,
+  coupleNamesEmphasis,
+  quoteFont,
+  quoteSize,
+  quoteEmphasis,
+  guestLocationFont,
+  guestLocationSize,
+  guestLocationEmphasis,
 }: CoverSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -101,10 +118,27 @@ export default function CoverSection({
         ? firstBg.url
         : backgroundImageUrl || undefined;
 
+  const coverPhoto = imageUrl || bgUrl;
+  const framedPhoto = coverPhoto;
+  const isFramed = design === 'framed-card';
+  const isFullbleed = design === 'fullbleed';
+  const isArch = design === 'arch';
+  const isDocked = design === 'docked';
+  const isComposedCover = isFramed || isFullbleed || isArch || isDocked;
+
   // Build background style for section
   const sectionStyle: React.CSSProperties = {};
-  
-  if (bgUrl) {
+
+  if (isArch) {
+    sectionStyle.backgroundColor = backgroundColor || '#f7f6f3';
+  } else if (isFramed) {
+    sectionStyle.backgroundColor = backgroundColor || '#0b0b0b';
+  } else if (isDocked && coverPhoto) {
+    sectionStyle.backgroundImage = `url(${coverPhoto})`;
+    sectionStyle.backgroundSize = 'cover';
+    sectionStyle.backgroundPosition = 'center';
+    sectionStyle.backgroundRepeat = 'no-repeat';
+  } else if (bgUrl) {
     sectionStyle.backgroundImage = `url(${bgUrl})`;
     sectionStyle.backgroundSize = 'cover';
     sectionStyle.backgroundPosition = 'center';
@@ -112,20 +146,19 @@ export default function CoverSection({
   } else if (backgroundColor) {
     sectionStyle.backgroundColor = backgroundColor;
   } else {
-    // Default gradient
     sectionStyle.background = 'linear-gradient(to bottom, #111827, #1f2937, #111827)';
   }
 
   const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
     switch (align) {
       case "left":
-        return "text-left";
+        return "w-full self-stretch text-left";
       case "right":
-        return "text-right";
+        return "w-full self-stretch text-right";
       case "justify":
-        return "text-justify";
+        return "w-full self-stretch text-justify";
       default:
-        return "text-center";
+        return "w-full self-stretch text-center";
     }
   };
 
@@ -133,6 +166,14 @@ export default function CoverSection({
   const coupleNamesAlignClass = mapAlignToClass(coupleNamesAlign);
   const quoteAlignClass = mapAlignToClass(quoteAlign);
   const guestBlockAlignClass = mapAlignToClass(guestBlockAlign);
+  const dateTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: dateFont, size: dateSize, emphasis: dateEmphasis, fallbackFont, color });
+  const namesTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: coupleNamesFont, size: coupleNamesSize, emphasis: coupleNamesEmphasis, fallbackFont, color });
+  const quoteTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: quoteFont, size: quoteSize, emphasis: quoteEmphasis, fallbackFont, color });
+  const locationTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: guestLocationFont, size: guestLocationSize, emphasis: guestLocationEmphasis, fallbackFont, color });
 
   const handleOpenInvitation = () => {
     // In editor mode, don't animate or hide
@@ -153,7 +194,7 @@ export default function CoverSection({
 
   // Determine positioning classes based on editor mode
   const positionClasses = isEditor
-    ? "relative min-h-screen w-full max-w-[375px] mx-auto z-0" // Normal flow, mobile width in editor
+    ? `relative ${isDocked ? "h-[100svh] min-h-[100svh]" : "min-h-screen"} w-full max-w-[375px] mx-auto z-0`
     : isStandaloneInvitation
       ? "sticky top-0 w-full z-50"
       : "absolute inset-0 w-full z-50"; // Phone mockup: fill the frame screen
@@ -161,7 +202,9 @@ export default function CoverSection({
   return (
     <>
       <section 
-        className={`${positionClasses} flex flex-col items-center justify-center text-white overflow-hidden ${className} ${
+        className={`${positionClasses} flex flex-col items-center ${
+          isDocked ? "justify-end" : "justify-center"
+        } text-white overflow-hidden ${className} ${
           !isEditor && isAnimating ? 'animate-fade-up-out' : ''
         } ${isEditor ? 'border-2 border-dashed border-accent/50 rounded-lg mb-4' : ''}`}
         style={{
@@ -170,8 +213,8 @@ export default function CoverSection({
             ? {
                 ...(isStandaloneInvitation
                   ? {
-                      height: '100vh',
-                      maxHeight: '100vh',
+                      height: '100svh',
+                      maxHeight: '100svh',
                     }
                   : {
                       // Phone mockup / editor preview frame — fill parent, not browser viewport
@@ -218,26 +261,252 @@ export default function CoverSection({
         )}
         
         {/* Color overlay if both image and color are set */}
-        {bgUrl && backgroundColor && (
+        {coverPhoto && backgroundColor && !isFramed && !isArch && (
           <div 
             className="absolute inset-0"
-            style={{ backgroundColor, opacity: 0.5 }}
+            style={{ backgroundColor, opacity: isFullbleed || isDocked ? 0.4 : 0.5 }}
           />
+        )}
+        {isFullbleed && coverPhoto && !backgroundColor && (
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/70" />
+        )}
+        {isDocked && coverPhoto && !backgroundColor && (
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/55" />
         )}
         {/* Top Curve Divider */}
         {renderTopCurve({ showTopCurve, topCurveColor, topCurveStyle })}
         {/* Decorative Flowers */}
         {renderDecorativeFlowers({ decorativeFlowers, flowerStyle, showTopCurve, showBottomCurve })}
         {/* Background decorative elements */}
-        <div className="absolute inset-0 opacity-10 z-0">
-          <div className="absolute top-20 left-10 w-32 h-32 border border-white/20 rounded-full"></div>
-          <div className="absolute bottom-20 right-10 w-24 h-24 border border-white/20 rounded-full"></div>
-        </div>
+        {!isComposedCover && (
+          <div className="absolute inset-0 opacity-10 z-0">
+            <div className="absolute top-20 left-10 w-32 h-32 border border-white/20 rounded-full"></div>
+            <div className="absolute bottom-20 right-10 w-24 h-24 border border-white/20 rounded-full"></div>
+          </div>
+        )}
 
         <div 
-          className="relative z-10 text-center px-6 py-12 max-w-md mx-auto w-full"
-          style={getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
+          className={
+            isDocked
+              ? 'absolute inset-0 z-10 flex w-full flex-col pt-14 text-center'
+              : `relative z-10 mx-auto w-full max-w-md text-center ${
+                  isComposedCover
+                    ? 'flex h-full flex-col justify-between px-6 py-12'
+                    : 'px-6 py-12'
+                }`
+          }
+          style={isDocked ? undefined : getFlowerMargin({ decorativeFlowers, showTopCurve, showBottomCurve })}
         >
+          {isFramed ? (
+            <div className="flex h-full flex-col items-center justify-center">
+              {framedPhoto ? (
+                <div className="mb-7 w-[82%] max-w-[280px] overflow-hidden rounded-[24px] shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
+                  <img
+                    src={framedPhoto}
+                    alt={coupleNames}
+                    className="aspect-[4/5] w-full object-cover"
+                    draggable={false}
+                  />
+                </div>
+              ) : (
+                <div className="mb-7 flex aspect-[4/5] w-[82%] max-w-[280px] items-center justify-center rounded-[24px] bg-white/5">
+                  <svg className="h-16 w-16 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+              <h1
+                className={`mb-5 text-[2.15rem] font-medium italic leading-[1.1] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+                style={namesTx("var(--font-playfair)", coupleNamesColor || "#c4a574")}
+              >
+                {coupleNames}
+              </h1>
+              <p
+                className={`mb-1.5 line-clamp-3 text-[13px] tracking-wide ${quoteAlignClass}`}
+                style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255,255,255,0.72)")}
+              >
+                {quote}
+              </p>
+              <div className={`mb-5 ${guestBlockAlignClass}`}>
+                <h2
+                  className="text-[1.65rem] italic leading-tight"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  {guestName || guestNamePlaceholder}
+                </h2>
+              </div>
+              <button
+                onClick={handleOpenInvitation}
+                className="mx-auto flex w-full max-w-[240px] items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-medium text-white transition-[opacity,transform] duration-100 ease-out hover:opacity-90 active:scale-[0.97]"
+                style={{ backgroundColor: coupleNamesColor || "#c4a574" }}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Buka Undangan
+              </button>
+              <p
+                className={`mt-4 text-[10px] leading-relaxed ${guestBlockAlignClass}`}
+                style={locationTx("var(--font-dm-sans)", guestLocationColor || "rgba(255,255,255,0.45)")}
+              >
+                {guestLocationText}
+              </p>
+            </div>
+          ) : isFullbleed ? (
+            <div className="flex h-full flex-col items-center justify-center">
+              <p
+                className={`mb-3 text-[11px] font-medium uppercase tracking-[0.32em] ${dateAlignClass}`}
+                style={dateTx("var(--font-dm-sans)", dateColor || "rgba(255,255,255,0.85)")}
+              >
+                {date}
+              </p>
+              <h1
+                className={`mb-4 text-[2.55rem] font-medium italic leading-[1.05] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+                style={namesTx("var(--font-playfair)", coupleNamesColor || "#ffffff")}
+              >
+                {coupleNames}
+              </h1>
+              <p
+                className={`mb-5 text-[13px] leading-relaxed ${quoteAlignClass}`}
+                style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255,255,255,0.8)")}
+              >
+                {quote}
+              </p>
+              <div className={`mb-7 ${guestBlockAlignClass}`}>
+                <h2 className="text-[1.7rem] font-medium tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
+                  {guestName || guestNamePlaceholder}
+                </h2>
+                <p
+                  className="mt-2 text-[11px] italic"
+                  style={locationTx("var(--font-dm-sans)", guestLocationColor || "rgba(255,255,255,0.65)")}
+                >
+                  {guestLocationText}
+                </p>
+              </div>
+              <button
+                onClick={handleOpenInvitation}
+                className="mx-auto flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm text-neutral-900 shadow-lg transition-[transform,background-color] duration-100 ease-out hover:bg-white/92 active:scale-[0.97]"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Buka Undangan
+              </button>
+            </div>
+          ) : isArch ? (
+            <div className="flex h-full flex-col items-center justify-center">
+              <p
+                className={`mb-5 text-[10px] font-medium uppercase tracking-[0.34em] ${dateAlignClass}`}
+                style={dateTx("var(--font-dm-sans)", dateColor || "#8a8178")}
+              >
+                {date}
+              </p>
+              <div
+                className="mb-6 w-[68%] max-w-[240px] overflow-hidden shadow-[0_22px_44px_rgba(40,32,24,0.18)]"
+                style={{ borderRadius: '999px 999px 18px 18px' }}
+              >
+                {coverPhoto ? (
+                  <img
+                    src={coverPhoto}
+                    alt={coupleNames}
+                    className="aspect-[3/4] w-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="flex aspect-[3/4] w-full items-center justify-center bg-neutral-200">
+                    <svg className="h-14 w-14 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <h1
+                className={`mb-3 text-[2.2rem] font-medium italic leading-[1.08] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+                style={namesTx("var(--font-playfair)", coupleNamesColor || "#c4a574")}
+              >
+                {coupleNames}
+              </h1>
+              <div className="mb-5 h-px w-10 bg-[#c4a574]/70" />
+              <div className={`mb-6 ${guestBlockAlignClass}`}>
+                <p
+                  className={`mb-1 line-clamp-2 text-[12px] ${quoteAlignClass}`}
+                  style={quoteTx("var(--font-dm-sans)", quoteColor || "#6b6258")}
+                >
+                  {quote}
+                </p>
+                <h2
+                  className="mt-2 text-[1.45rem] italic leading-tight"
+                  style={{ fontFamily: "var(--font-playfair)", color: "#2c2a27" }}
+                >
+                  {guestName || guestNamePlaceholder}
+                </h2>
+              </div>
+              <button
+                onClick={handleOpenInvitation}
+                className="mx-auto flex items-center gap-2 rounded-full bg-neutral-900 px-7 py-3 text-[13px] text-white transition-[transform,opacity] duration-100 ease-out hover:opacity-90 active:scale-[0.97]"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Buka Undangan
+              </button>
+              <p
+                className={`mt-4 text-[10px] leading-relaxed ${guestBlockAlignClass}`}
+                style={locationTx("var(--font-dm-sans)", guestLocationColor || "#9a9188")}
+              >
+                {guestLocationText}
+              </p>
+            </div>
+          ) : isDocked ? (
+            <>
+              <div className="px-6">
+                <p
+                  className={`mb-3 text-[11px] font-medium uppercase tracking-[0.32em] ${dateAlignClass}`}
+                  style={dateTx("var(--font-dm-sans)", dateColor || "rgba(255,255,255,0.8)")}
+                >
+                  {date}
+                </p>
+                <h1
+                  className={`text-[2.5rem] font-medium italic leading-[1.05] tracking-[-0.02em] ${coupleNamesAlignClass}`}
+                  style={namesTx("var(--font-playfair)", coupleNamesColor || "#c4a574")}
+                >
+                  {coupleNames}
+                </h1>
+              </div>
+              <div className="mt-auto w-full rounded-t-[28px] bg-[#f7f6f3] px-6 pb-7 pt-6 text-neutral-900 shadow-[0_-16px_40px_rgba(0,0,0,0.2)]">
+                <p
+                  className={`mb-2 line-clamp-2 text-[13px] leading-relaxed ${quoteAlignClass}`}
+                  style={quoteTx("var(--font-dm-sans)", quoteColor || "#6b6258")}
+                >
+                  {quote}
+                </p>
+                <div className={`mb-5 ${guestBlockAlignClass}`}>
+                  <h2
+                    className="text-[1.55rem] font-medium italic leading-tight"
+                    style={{ fontFamily: "var(--font-playfair)", color: "#1f1d1a" }}
+                  >
+                    {guestName || guestNamePlaceholder}
+                  </h2>
+                  <p
+                    className="mt-1.5 text-[11px]"
+                    style={locationTx("var(--font-dm-sans)", guestLocationColor || "#8a8178")}
+                  >
+                    {guestLocationText}
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenInvitation}
+                  className="mx-auto flex w-full max-w-[240px] items-center justify-center gap-2 rounded-full bg-neutral-900 px-8 py-3.5 text-sm text-white transition-[transform,opacity] duration-100 ease-out hover:opacity-90 active:scale-[0.97]"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Buka Undangan
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
           {/* Image Container - only show when design is 'with-container' */}
           {design === 'with-container' && (
             (() => {
@@ -423,7 +692,7 @@ export default function CoverSection({
           {/* Date */}
           <p
             className={`text-lg md:text-xl mb-6 tracking-wider ${dateAlignClass}`}
-            style={{ fontFamily: "var(--font-playfair)", color: dateColor || "rgba(255, 255, 255, 0.9)" }}
+            style={dateTx("var(--font-playfair)", dateColor || "rgba(255, 255, 255, 0.9)")}
           >
             {date}
           </p>
@@ -431,7 +700,7 @@ export default function CoverSection({
           {/* Couple Names */}
           <h1
             className={`text-4xl md:text-5xl font-bold mb-8 ${coupleNamesAlignClass}`}
-            style={{ fontFamily: "var(--font-playfair)", color: coupleNamesColor || "#ffffff" }}
+            style={namesTx("var(--font-playfair)", coupleNamesColor || "#ffffff")}
           >
             {coupleNames}
           </h1>
@@ -439,7 +708,7 @@ export default function CoverSection({
           {/* Greeting / Salam */}
           <p
             className={`text-sm md:text-base mb-2 leading-relaxed px-4 ${quoteAlignClass}`}
-            style={{ fontFamily: "var(--font-dm-sans)", color: quoteColor || "rgba(255, 255, 255, 0.8)" }}
+            style={quoteTx("var(--font-dm-sans)", quoteColor || "rgba(255, 255, 255, 0.8)")}
           >
             {quote}
           </p>
@@ -451,10 +720,7 @@ export default function CoverSection({
             </h2>
             <p
               className="text-sm text-white/70 mt-2"
-              style={{
-                fontFamily: "var(--font-dm-sans)",
-                color: guestLocationColor || "rgba(255, 255, 255, 0.7)",
-              }}
+              style={locationTx("var(--font-dm-sans)", guestLocationColor || "rgba(255, 255, 255, 0.7)")}
             >
               {guestLocationText}
             </p>
@@ -470,6 +736,8 @@ export default function CoverSection({
             </svg>
             <span>Buka Undangan</span>
           </button>
+            </>
+          )}
         </div>
 
         {/* Bottom Curve Divider */}

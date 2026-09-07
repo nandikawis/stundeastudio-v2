@@ -18,7 +18,7 @@ interface SectionEditorProps {
   };
   // Preview-only image data, keyed by section ID. Allows showing local
   // data URLs without persisting them in ProjectData/localStorage.
-  previewImages?: Record<string, { backgroundImageUrl?: string; backgroundImages?: Array<{ url: string; alt?: string; order?: number }>; imageUrl?: string; images?: any[]; logoUrl?: string }>;
+  previewImages?: Record<string, { backgroundImageUrl?: string; backgroundImages?: Array<{ url: string; alt?: string; order?: number }>; imageUrl?: string; secondaryImageUrl?: string; images?: any[]; logoUrl?: string; qrisImageUrl?: string }>;
 }
 
 export default function SectionEditor({
@@ -181,8 +181,41 @@ export default function SectionEditor({
                   const cd = data.carouselDesign;
                   if (typeof cd === "string" && cd) return `carousel-${cd}`;
                 }
+                if (sectionType === "PhotoGalleryGrid") {
+                  const galleryId = data.designId;
+                  if (typeof galleryId === "string" && galleryId) return galleryId;
+                  const gDesign = data.design;
+                  if (gDesign === "mosaic") return "gallery-mosaic";
+                  if (gDesign === "framed") return "gallery-framed";
+                  if (gDesign === "three" || data.columns === 3) return "gallery-2";
+                  return "gallery-1";
+                }
+                if (sectionType === "ClosingSection") {
+                  const cDesign = typeof data.design === "string" ? data.design : undefined;
+                  if (cDesign) return `closing-${cDesign}`;
+                  const closingId = data.designId;
+                  if (typeof closingId === "string" && closingId) return closingId;
+                  return "closing-classic";
+                }
+                if (sectionType === "KadoDigitalSection") {
+                  const kDesign = typeof data.design === "string" ? data.design : undefined;
+                  if (kDesign) return `kado-${kDesign}`;
+                  const kadoId = data.designId;
+                  if (typeof kadoId === "string" && kadoId) return kadoId;
+                  return "kado-classic";
+                }
                 const did = data.designId;
-                return typeof did === "string" ? did : undefined;
+                if (typeof did === "string" && did) return did;
+                const design = typeof data.design === "string" ? data.design : undefined;
+                if (sectionType === "HeroSection") return `hero-${design || "classic"}`;
+                if (sectionType === "QuoteSection") return `quote-${design || "classic"}`;
+                if (sectionType === "ReligiousGreeting") return `greeting-${design || "classic"}`;
+                if (!design || !sectionType) return undefined;
+                if (sectionType === "CoverSection") return `cover-${design}`;
+                if (sectionType === "CoupleProfile") {
+                  return design === "with-container" ? "couple-container" : `couple-${design}`;
+                }
+                return undefined;
               })()}
               onSelectDesign={handleDesignSelect}
               onClose={() => {

@@ -2,15 +2,17 @@
 
 import { EditorElement } from "../../lib/editorState";
 import Image from "next/image";
-import ImageCarousel from "../../components/invitation/ImageCarousel";
-import CoverSection from "../../components/invitation/CoverSection";
-import HeroSection from "../../components/invitation/HeroSection";
-import QuoteSection from "../../components/invitation/QuoteSection";
-import ReligiousGreeting from "../../components/invitation/ReligiousGreeting";
+import ImageCarousel, { CarouselDesign } from "../../components/invitation/ImageCarousel";
+import { CountdownDesign } from "../../components/invitation/CountdownDisplay";
+import CoverSection, { CoverSectionDesign } from "../../components/invitation/CoverSection";
+import HeroSection, { HeroSectionDesign } from "../../components/invitation/HeroSection";
+import QuoteSection, { QuoteSectionDesign } from "../../components/invitation/QuoteSection";
+import ReligiousGreeting, { ReligiousGreetingDesign } from "../../components/invitation/ReligiousGreeting";
 import CoupleProfile, { CoupleProfileDesign } from "../../components/invitation/CoupleProfile";
 import EventDetails, { EventDetailsDesign } from "../../components/invitation/EventDetails";
-import PhotoGalleryGrid from "../../components/invitation/PhotoGalleryGrid";
-import ClosingSection from "../../components/invitation/ClosingSection";
+import PhotoGalleryGrid, { GalleryDesign } from "../../components/invitation/PhotoGalleryGrid";
+import ClosingSection, { ClosingDesign } from "../../components/invitation/ClosingSection";
+import KadoDigitalSection, { KadoDigitalDesign, KadoCardDesign } from "../../components/invitation/KadoDigitalSection";
 
 interface ElementRendererProps {
   element: EditorElement;
@@ -114,16 +116,17 @@ export default function ElementRenderer({
             }}
           >
             <ImageCarousel
+              {...(element.content || {})}
               images={element.content?.images || []}
               autoplay={element.content?.autoplay !== false}
               autoplayInterval={element.content?.autoplayInterval || 5000}
               className="w-full h-full"
               isEditable={false}
-              carouselDesign={element.content?.carouselDesign || "classic"}
+              carouselDesign={element.content?.carouselDesign as CarouselDesign | undefined}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
               countdownTargetDate={element.content?.countdownTargetDate || eventData?.eventDate}
-              countdownDesign={element.content?.countdownDesign || "elegant-card"}
+              countdownDesign={element.content?.countdownDesign as CountdownDesign | undefined}
               countdownShowDays={element.content?.countdownShowDays !== false}
               countdownShowHours={element.content?.countdownShowHours !== false}
               countdownShowMinutes={element.content?.countdownShowMinutes !== false}
@@ -146,14 +149,28 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <CoverSection
+              {...(element.content || {})}
               date={element.content?.date}
               coupleNames={element.content?.coupleNames}
               quote={element.content?.quote}
               guestName={element.content?.guestName}
+              guestNamePlaceholder={element.content?.guestNamePlaceholder}
+              guestLocationText={element.content?.guestLocationText}
+              guestLocationColor={element.content?.guestLocationColor}
+              dateColor={element.content?.dateColor}
+              coupleNamesColor={element.content?.coupleNamesColor}
+              quoteColor={element.content?.quoteColor}
               dateAlign={element.content?.dateAlign}
               coupleNamesAlign={element.content?.coupleNamesAlign}
               quoteAlign={element.content?.quoteAlign}
               guestBlockAlign={element.content?.guestBlockAlign}
+              backgroundColor={element.content?.backgroundColor}
+              backgroundImageUrl={element.content?.backgroundImageUrl}
+              backgroundImages={element.content?.backgroundImages}
+              design={element.content?.design as CoverSectionDesign | undefined}
+              imageUrl={element.content?.imageUrl}
+              imageStyle={element.content?.imageStyle}
+              glowColor={element.content?.glowColor}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -164,6 +181,7 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <HeroSection
+              {...(element.content || {})}
               subtitle={element.content?.subtitle}
               coupleNames={element.content?.coupleNames}
               quote={element.content?.quote}
@@ -172,6 +190,7 @@ export default function ElementRenderer({
               quoteAlign={element.content?.quoteAlign}
               backgroundImages={element.content?.backgroundImages || []}
               backgroundColor={element.content?.backgroundColor}
+              design={element.content?.design as HeroSectionDesign | undefined}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -182,6 +201,7 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <QuoteSection
+              {...(element.content || {})}
               quote={element.content?.quote}
               primaryQuote={element.content?.primaryQuote}
               secondaryQuote={element.content?.secondaryQuote}
@@ -190,6 +210,7 @@ export default function ElementRenderer({
               secondaryQuoteAlign={element.content?.secondaryQuoteAlign}
               secondaryQuoteColor={element.content?.secondaryQuoteColor}
               authorAlign={element.content?.authorAlign}
+              design={element.content?.design as QuoteSectionDesign | undefined}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -200,10 +221,12 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <ReligiousGreeting
+              {...(element.content || {})}
               greeting={element.content?.greeting}
               message={element.content?.message}
               greetingAlign={element.content?.greetingAlign}
               messageAlign={element.content?.messageAlign}
+              design={element.content?.design as ReligiousGreetingDesign | undefined}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -214,12 +237,16 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <CoupleProfile
+              {...(element.content || {})}
               name={element.content?.name}
               fullName={element.content?.fullName}
               relation={element.content?.relation}
               parents={element.content?.parents}
               address={element.content?.address}
               imageUrl={element.content?.imageUrl}
+              secondaryImageUrl={element.content?.secondaryImageUrl}
+              instagram={element.content?.instagram}
+              backgroundColor={element.content?.backgroundColor}
               design={element.content?.design as CoupleProfileDesign | undefined}
               imageStyle={element.content?.imageStyle}
               glowColor={element.content?.glowColor}
@@ -240,6 +267,7 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <EventDetails
+              {...(element.content || {})}
               eventDate={element.content?.eventDate || eventData?.eventDate}
               eventTime={element.content?.eventTime || eventData?.eventTime}
               venueName={element.content?.venueName || eventData?.venueName}
@@ -269,11 +297,39 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <PhotoGalleryGrid
+              {...(element.content || {})}
               images={element.content?.images || []}
               columns={element.content?.columns || 2}
+              design={element.content?.design as GalleryDesign | undefined}
               title={element.content?.title}
               titleColor={element.content?.titleColor}
               titleAlign={element.content?.titleAlign}
+              decorativeFlowers={element.content?.decorativeFlowers}
+              flowerStyle={element.content?.flowerStyle}
+            />
+          </div>
+        );
+
+      case "kado-digital":
+        return (
+          <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
+            <KadoDigitalSection
+              {...(element.content || {})}
+              title={element.content?.title}
+              message={element.content?.message}
+              accounts={element.content?.accounts}
+              qrisImageUrl={element.content?.qrisImageUrl}
+              qrisLabel={element.content?.qrisLabel}
+              titleAlign={element.content?.titleAlign}
+              messageAlign={element.content?.messageAlign}
+              titleColor={element.content?.titleColor}
+              messageColor={element.content?.messageColor}
+              backgroundColor={element.content?.backgroundColor}
+              backgroundImageUrl={element.content?.backgroundImageUrl}
+              backgroundImages={element.content?.backgroundImages}
+              design={element.content?.design as KadoDigitalDesign | undefined}
+              cardDesign={element.content?.cardDesign as KadoCardDesign | undefined}
+              cardColor={element.content?.cardColor}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />
@@ -284,6 +340,7 @@ export default function ElementRenderer({
         return (
           <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
             <ClosingSection
+              {...(element.content || {})}
               coupleNames={element.content?.coupleNames}
               message={element.content?.message}
               designerCredit={element.content?.designerCredit}
@@ -293,6 +350,13 @@ export default function ElementRenderer({
               coupleNamesAlign={element.content?.coupleNamesAlign}
               messageAlign={element.content?.messageAlign}
               designerCreditAlign={element.content?.designerCreditAlign}
+              coupleNamesColor={element.content?.coupleNamesColor}
+              messageColor={element.content?.messageColor}
+              designerCreditColor={element.content?.designerCreditColor}
+              backgroundColor={element.content?.backgroundColor}
+              backgroundImageUrl={element.content?.backgroundImageUrl}
+              backgroundImages={element.content?.backgroundImages}
+              design={element.content?.design as ClosingDesign | undefined}
               decorativeFlowers={element.content?.decorativeFlowers}
               flowerStyle={element.content?.flowerStyle}
             />

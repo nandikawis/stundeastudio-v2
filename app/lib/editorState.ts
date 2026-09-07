@@ -17,6 +17,7 @@ export interface EditorElement {
     | 'couple-profile'
     | 'event-details'
     | 'photo-gallery'
+    | 'kado-digital'
     | 'closing'
     | 'countdown';
   x: number;        // Absolute position in canvas coordinates
@@ -42,7 +43,7 @@ export interface EditorElement {
     
     // CountdownTimer
     targetDate?: string;
-    design?: "simple" | "elegant-card" | "minimal";
+    design?: "simple" | "elegant-card" | "minimal" | "rule" | "banner" | "editorial";
     
     // ImageCarousel
     images?: Array<{ url: string; alt?: string; order?: number }>;

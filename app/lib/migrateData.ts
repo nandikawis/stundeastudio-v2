@@ -66,9 +66,13 @@ export function migrateProjectData(project: ProjectData): MigratedProjectData {
         width = 340;
         height = 400;
         break;
+      case 'KadoDigitalSection':
+        width = 340;
+        height = 420;
+        break;
       case 'ClosingSection':
         width = 340;
-        height = 150;
+        height = 420;
         break;
       default:
         width = componentData.width || DEFAULT_ELEMENT_WIDTH;
@@ -124,6 +128,7 @@ function mapComponentTypeToElementType(type: string): EditorElement['type'] {
     'ReligiousGreeting': 'religious-greeting',
     'CoupleProfile': 'couple-profile',
     'EventDetails': 'event-details',
+    'KadoDigitalSection': 'kado-digital',
     'ClosingSection': 'closing',
   };
 
@@ -150,64 +155,82 @@ function extractStyles(type: string, componentData: any): EditorElement['styles'
 }
 
 /**
- * Extracts content from component data
+ * Extracts content from component data.
+ * Always keep the full section payload (font/size/emphasis/align included)
+ * so editor and published invitations stay in sync.
  */
 function extractContent(type: string, componentData: any): any {
+  const data = componentData && typeof componentData === "object" ? componentData : {};
   switch (type) {
     case 'ImageCarousel':
     case 'PhotoGalleryGrid':
       return {
-        images: componentData.images || [],
+        ...data,
+        images: data.images || [],
       };
     case 'QuoteSection':
       return {
-        quote: componentData.quote || '',
-        author: componentData.author || '',
-        imageUrl: componentData.imageUrl || '',
+        ...data,
+        quote: data.quote || '',
+        author: data.author || '',
+        imageUrl: data.imageUrl || '',
       };
     case 'ReligiousGreeting':
       return {
-        greeting: componentData.greeting || '',
-        message: componentData.message || '',
-        imageUrl: componentData.imageUrl || '',
+        ...data,
+        greeting: data.greeting || '',
+        message: data.message || '',
+        imageUrl: data.imageUrl || '',
       };
     case 'EventDetails':
       return {
-        eventDate: componentData.eventDate || '',
-        eventTime: componentData.eventTime || '',
-        venueName: componentData.venueName || '',
+        ...data,
+        eventDate: data.eventDate || '',
+        eventTime: data.eventTime || '',
+        venueName: data.venueName || '',
+      };
+    case 'KadoDigitalSection':
+      return {
+        ...data,
+        title: data.title || '',
+        message: data.message || '',
+        accounts: data.accounts || [],
       };
     case 'ClosingSection':
       return {
-        coupleNames: componentData.coupleNames || '',
-        message: componentData.message || '',
+        ...data,
+        coupleNames: data.coupleNames || '',
+        message: data.message || '',
+        designerCredit: data.designerCredit || '',
       };
     case 'CoverSection':
       return {
-        date: componentData.date || '',
-        coupleNames: componentData.coupleNames || '',
-        quote: componentData.quote || '',
+        ...data,
+        date: data.date || '',
+        coupleNames: data.coupleNames || '',
+        quote: data.quote || '',
       };
     case 'HeroSection':
       return {
-        backgroundImages: componentData.backgroundImages || [],
-        subtitle: componentData.subtitle || '',
-        coupleNames: componentData.coupleNames || '',
-        quote: componentData.quote || '',
+        ...data,
+        backgroundImages: data.backgroundImages || [],
+        subtitle: data.subtitle || '',
+        coupleNames: data.coupleNames || '',
+        quote: data.quote || '',
       };
     case 'CoupleProfile':
       return {
-        name: componentData.name || '',
-        fullName: componentData.fullName || '',
-        relation: componentData.relation || '',
-        parents: componentData.parents || {},
-        address: componentData.address || '',
-        imageUrl: componentData.imageUrl || componentData.image || '',
-        imagePosition: componentData.imagePosition || {},
-        type: componentData.type || 'groom',
+        ...data,
+        name: data.name || '',
+        fullName: data.fullName || '',
+        relation: data.relation || '',
+        parents: data.parents || {},
+        address: data.address || '',
+        imageUrl: data.imageUrl || data.image || '',
+        type: data.type || 'groom',
       };
     default:
-      return componentData.content || componentData;
+      return data.content || data;
   }
 }
 
@@ -219,6 +242,7 @@ function getDefaultTextForType(type: string): string {
     'QuoteSection': 'Love is composed of a single soul inhabiting two bodies.',
     'ReligiousGreeting': 'Bismillahirrahmanirrahim',
     'EventDetails': 'Event Details',
+    'KadoDigitalSection': 'Kado Digital',
     'ClosingSection': 'Thank you for your presence',
   };
 

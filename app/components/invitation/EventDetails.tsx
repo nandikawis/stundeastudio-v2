@@ -3,10 +3,21 @@
 import { useState, useEffect } from "react";
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
 import { renderDecorativeFlowers, getFlowerMargin, DecorativeFlowersProps } from "../../lib/flowerHelpers";
+import { textStyle, type TextStyleFields } from "../../lib/textStyle";
+
 
 export type EventDetailsDesign = 'card' | 'elegant-split' | 'modern-minimal' | 'timeline-vertical' | 'badge-accent' | 'framed-classic';
 
-interface EventDetailsProps extends CurveDividerProps, DecorativeFlowersProps {
+interface EventDetailsProps extends CurveDividerProps, DecorativeFlowersProps,
+  TextStyleFields<"invitationMessage">,
+  TextStyleFields<"closingMessage">,
+  TextStyleFields<"closingText">,
+  TextStyleFields<"dateMonthYear">,
+  TextStyleFields<"dateDay">,
+  TextStyleFields<"title">,
+  TextStyleFields<"eventTime">,
+  TextStyleFields<"venueName">,
+  TextStyleFields<"venueAddress"> {
   eventDate?: string;
   eventTime?: string;
   venueName?: string;
@@ -83,7 +94,34 @@ export default function EventDetails({
   bottomCurveStyle,
   decorativeFlowers = false,
   flowerStyle = 'beage',
-  className = ""
+  className = "",
+  invitationMessageFont,
+  invitationMessageSize,
+  invitationMessageEmphasis,
+  closingMessageFont,
+  closingMessageSize,
+  closingMessageEmphasis,
+  closingTextFont,
+  closingTextSize,
+  closingTextEmphasis,
+  dateMonthYearFont,
+  dateMonthYearSize,
+  dateMonthYearEmphasis,
+  dateDayFont,
+  dateDaySize,
+  dateDayEmphasis,
+  titleFont,
+  titleSize,
+  titleEmphasis,
+  eventTimeFont,
+  eventTimeSize,
+  eventTimeEmphasis,
+  venueNameFont,
+  venueNameSize,
+  venueNameEmphasis,
+  venueAddressFont,
+  venueAddressSize,
+  venueAddressEmphasis,
 }: EventDetailsProps) {
   const [dateCounter, setDateCounter] = useState({ month: "", year: "", day: 0 });
 
@@ -144,16 +182,34 @@ export default function EventDetails({
   const mapAlignToClass = (align?: "left" | "center" | "right" | "justify") => {
     switch (align) {
       case "left":
-        return "text-left";
+        return "w-full self-stretch text-left";
       case "right":
-        return "text-right";
+        return "w-full self-stretch text-right";
       case "justify":
-        return "text-justify";
+        return "w-full self-stretch text-justify";
       case "center":
       default:
-        return "text-center";
+        return "w-full self-stretch text-center";
     }
   };
+  const invitationTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: invitationMessageFont, size: invitationMessageSize, emphasis: invitationMessageEmphasis, fallbackFont, color, extra });
+  const closingMessageTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: closingMessageFont, size: closingMessageSize, emphasis: closingMessageEmphasis, fallbackFont, color, extra });
+  const closingTextTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: closingTextFont, size: closingTextSize, emphasis: closingTextEmphasis, fallbackFont, color });
+  const dateMonthYearTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: dateMonthYearFont, size: dateMonthYearSize, emphasis: dateMonthYearEmphasis, fallbackFont, color, extra });
+  const dateDayTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: dateDayFont, size: dateDaySize, emphasis: dateDayEmphasis, fallbackFont, color, extra });
+  const titleTx = (fallbackFont: string, color?: string) =>
+    textStyle({ font: titleFont, size: titleSize, emphasis: titleEmphasis, fallbackFont, color });
+  const eventTimeTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: eventTimeFont, size: eventTimeSize, emphasis: eventTimeEmphasis, fallbackFont, color, extra });
+  const venueNameTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: venueNameFont, size: venueNameSize, emphasis: venueNameEmphasis, fallbackFont, color, extra });
+  const venueAddressTx = (fallbackFont: string, color?: string, extra?: React.CSSProperties) =>
+    textStyle({ font: venueAddressFont, size: venueAddressSize, emphasis: venueAddressEmphasis, fallbackFont, color, extra });
 
   // Helper function to convert hex to rgba with opacity
   const hexToRgba = (hex: string | undefined, opacity: number): string => {
@@ -215,7 +271,7 @@ export default function EventDetails({
               <div className={`mb-6 ${mapAlignToClass(invitationMessageAlign)}`}>
                 <p
                   className="text-base leading-relaxed break-words"
-                  style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}
+                  style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}
                 >
                   {invitationMessage}
                 </p>
@@ -229,25 +285,25 @@ export default function EventDetails({
                 <div className="p-4 flex flex-col justify-center" style={{ 
                   backgroundColor: cardHeaderColor ? hexToRgba(cardHeaderColor, 1) : '#1f2937'
                 }}>
-                  <div className="text-3xl font-bold text-white mb-1" style={{ fontFamily: "var(--font-dm-sans)", lineHeight: "1" }}>
+                  <div className="text-3xl font-bold text-white mb-1" style={dateDayTx("var(--font-dm-sans)", dateDayColor, { lineHeight: "1" })}>
                     {dateCounter.day || "19"}
                   </div>
-                  <div className="text-xs text-gray-300 mb-1 uppercase tracking-wide" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                  <div className="text-xs text-gray-300 mb-1 uppercase tracking-wide" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor)}>
                     {dateCounter.month}
                   </div>
-                  <div className="text-xs text-gray-300 uppercase tracking-wide" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                  <div className="text-xs text-gray-300 uppercase tracking-wide" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor)}>
                     {dateCounter.year}
                   </div>
                 </div>
 
                 {/* Right Column - Event Details (3/4 width, white background) */}
                 <div className="p-4 col-span-3" style={cardBodyColor ? { backgroundColor: hexToRgba(cardBodyColor, cardOpacity) } : getCardBackgroundStyle('#ffffff')}>
-                  <h2 className="text-xl font-bold mb-3" style={{ fontFamily: "var(--font-dm-sans)", color: titleColor || "#374151" }}>
+                  <h2 className="text-xl font-bold mb-3" style={titleTx("var(--font-dm-sans)", titleColor || "#374151")}>
                     Resepsi
                   </h2>
 
                   {displayEventTime && (
-                    <p className="text-xs mb-3 flex items-start gap-2" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151", lineHeight: "1.5" }}>
+                    <p className="text-xs mb-3 flex items-start gap-2" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151", { lineHeight: "1.5" })}>
                       <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -256,7 +312,7 @@ export default function EventDetails({
                   )}
 
                   {displayVenueName && (
-                    <p className="text-xs mb-2 flex items-start gap-2" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151", lineHeight: "1.5" }}>
+                    <p className="text-xs mb-2 flex items-start gap-2" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151", { lineHeight: "1.5" })}>
                       <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -266,7 +322,7 @@ export default function EventDetails({
                   )}
 
                   {displayVenueAddress && (
-                    <p className="text-xs mb-4 leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                    <p className="text-xs mb-4 leading-relaxed break-words" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                       {displayVenueAddress}
                     </p>
                   )}
@@ -281,21 +337,21 @@ export default function EventDetails({
             <div className={`px-2 ${mapAlignToClass(closingMessageAlign)}`}>
               {closingMessage.includes('terimakasih') ? (
                 <>
-                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                     {closingMessage.split('terimakasih')[0]?.trim()}
                   </p>
-                  <p className="text-sm mb-3 text-white drop-shadow-md" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                  <p className="text-sm mb-3 text-white drop-shadow-md" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                     terimakasih.
                   </p>
                 </>
               ) : (
-                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                   {closingMessage}
                 </p>
               )}
               <h5
                 className={`text-base font-semibold text-white drop-shadow-md ${mapAlignToClass(closingTextAlign)}`}
-                style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || "#ffffff" }}
+                style={closingTextTx("var(--font-playfair)", closingTextColor || "#ffffff")}
               >
                 {closingText}
               </h5>
@@ -309,7 +365,7 @@ export default function EventDetails({
             {/* Invitation Message - Above card */}
             {invitationMessage && (
               <div className={`mb-6 ${mapAlignToClass(invitationMessageAlign)}`}>
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                <p className="text-base leading-relaxed break-words" style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                   {invitationMessage}
                 </p>
               </div>
@@ -321,10 +377,10 @@ export default function EventDetails({
                 {/* Left Side - Date with elegant background */}
                 <div className="p-4 flex flex-col items-center justify-center border-r border-gray-200" style={{ backgroundColor: cardHeaderColor ? hexToRgba(cardHeaderColor, 0.9) : 'rgba(249, 250, 251, 0.9)' }}>
                   <div className="text-center">
-                    <div className="text-xs uppercase tracking-wider mb-1" style={{ fontFamily: "var(--font-dm-sans)", color: dateMonthYearColor || "#6b7280" }}>
+                    <div className="text-xs uppercase tracking-wider mb-1" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor || "#6b7280")}>
                       {dateCounter.month} {dateCounter.year}
                     </div>
-                    <div className="text-4xl font-bold mb-2" style={{ fontFamily: "var(--font-playfair)", color: dateDayColor || "#1f2937", lineHeight: "1" }}>
+                    <div className="text-4xl font-bold mb-2" style={dateDayTx("var(--font-playfair)", dateDayColor || "#1f2937", { lineHeight: "1" })}>
                       {dateCounter.day || "19"}
                     </div>
                     <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-gray-400 to-transparent mx-auto"></div>
@@ -333,7 +389,7 @@ export default function EventDetails({
 
                 {/* Right Side - Event Details */}
                 <div className="p-4" style={{ backgroundColor: cardBodyColor ? hexToRgba(cardBodyColor, cardOpacity) : undefined }}>
-                  <h2 className="text-lg font-bold mb-3" style={{ fontFamily: "var(--font-dm-sans)", color: titleColor || "#1f2937" }}>
+                  <h2 className="text-lg font-bold mb-3" style={titleTx("var(--font-dm-sans)", titleColor || "#1f2937")}>
                     Resepsi
                   </h2>
 
@@ -343,7 +399,7 @@ export default function EventDetails({
                         <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: eventTimeColor || "#6b7280" }}>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151" }}>
+                        <p className="text-xs leading-relaxed" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151")}>
                           {displayEventTime}
                         </p>
                       </div>
@@ -356,11 +412,11 @@ export default function EventDetails({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <div>
-                          <p className="text-xs font-medium mb-0.5 leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151" }}>
+                          <p className="text-xs font-medium mb-0.5 leading-relaxed" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151")}>
                             {displayVenueName}
                           </p>
                           {displayVenueAddress && (
-                            <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#6b7280" }}>
+                            <p className="text-xs leading-relaxed" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#6b7280")}>
                               {displayVenueAddress}
                             </p>
                           )}
@@ -378,12 +434,12 @@ export default function EventDetails({
 
             {/* Closing Message */}
             <div className={`px-2 ${mapAlignToClass(closingMessageAlign)}`}>
-              <p className="text-sm mb-2 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || undefined }}>
+              <p className="text-sm mb-2 text-white drop-shadow-md leading-relaxed" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || undefined)}>
                 {closingMessage}
               </p>
               <h5
                 className={`text-base font-semibold text-white drop-shadow-md ${mapAlignToClass(closingTextAlign)}`}
-                style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}
+                style={closingTextTx("var(--font-playfair)", closingTextColor || undefined)}
               >
                 {closingText}
               </h5>
@@ -397,7 +453,7 @@ export default function EventDetails({
             {/* Invitation Message - Above card */}
             {invitationMessage && (
               <div className={`mb-6 ${mapAlignToClass(invitationMessageAlign)}`}>
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                <p className="text-base leading-relaxed break-words" style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                   {invitationMessage}
                 </p>
               </div>
@@ -406,17 +462,17 @@ export default function EventDetails({
             {/* Modern Minimal Design - Mobile optimized */}
             <div className="text-center mb-6">
               <div className="inline-block">
-                <div className="text-5xl font-bold leading-none mb-1" style={{ fontFamily: "var(--font-playfair)", color: dateDayColor || "#1f2937" }}>
+                <div className="text-5xl font-bold leading-none mb-1" style={dateDayTx("var(--font-playfair)", dateDayColor || "#1f2937")}>
                   {dateCounter.day || "19"}
                 </div>
-                <div className="text-xs uppercase tracking-wider" style={{ fontFamily: "var(--font-dm-sans)", color: dateMonthYearColor || "#6b7280" }}>
+                <div className="text-xs uppercase tracking-wider" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor || "#6b7280")}>
                   {dateCounter.month} {dateCounter.year}
                 </div>
               </div>
             </div>
 
             <div className="backdrop-blur-sm rounded-xl p-5 shadow-lg mb-6" style={getCardBackgroundStyle('#ffffff')}>
-              <h2 className="text-xl font-bold mb-4 text-center" style={{ fontFamily: "var(--font-dm-sans)", color: titleColor || "#1f2937" }}>
+              <h2 className="text-xl font-bold mb-4 text-center" style={titleTx("var(--font-dm-sans)", titleColor || "#1f2937")}>
                 Resepsi
               </h2>
 
@@ -426,7 +482,7 @@ export default function EventDetails({
                     <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: eventTimeColor || "#6b7280" }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-xs" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151" }}>
+                    <p className="text-xs" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151")}>
                       {displayEventTime}
                     </p>
                   </div>
@@ -438,14 +494,14 @@ export default function EventDetails({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <p className="text-xs font-medium" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151" }}>
+                    <p className="text-xs font-medium" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151")}>
                       {displayVenueName}
                     </p>
                   </div>
                 )}
 
                 {displayVenueAddress && (
-                  <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#6b7280" }}>
+                  <p className="text-xs leading-relaxed" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#6b7280")}>
                     {displayVenueAddress}
                   </p>
                 )}
@@ -458,12 +514,12 @@ export default function EventDetails({
 
             {/* Closing Message */}
             <div className={`px-2 ${mapAlignToClass(closingMessageAlign)}`}>
-              <p className="text-sm mb-2 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || undefined }}>
+              <p className="text-sm mb-2 text-white drop-shadow-md leading-relaxed" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || undefined)}>
                 {closingMessage}
               </p>
               <h5
                 className={`text-base font-semibold text-white drop-shadow-md ${mapAlignToClass(closingTextAlign)}`}
-                style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}
+                style={closingTextTx("var(--font-playfair)", closingTextColor || undefined)}
               >
                 {closingText}
               </h5>
@@ -477,7 +533,7 @@ export default function EventDetails({
             {/* Invitation Message - Above card */}
             {invitationMessage && (
               <div className="mb-6 text-center">
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                <p className="text-base leading-relaxed break-words" style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                   {invitationMessage}
                 </p>
               </div>
@@ -488,10 +544,10 @@ export default function EventDetails({
               {/* Date Badge at Top */}
               <div className="text-center mb-5 pb-4 border-b border-gray-200">
                 <div className="inline-block">
-                  <div className="text-5xl font-bold mb-1" style={{ fontFamily: "var(--font-playfair)", color: dateDayColor || "#1f2937", lineHeight: "1" }}>
+                  <div className="text-5xl font-bold mb-1" style={dateDayTx("var(--font-playfair)", dateDayColor || "#1f2937", { lineHeight: "1" })}>
                     {dateCounter.day || "19"}
                   </div>
-                  <div className="text-xs uppercase tracking-wider" style={{ fontFamily: "var(--font-dm-sans)", color: dateMonthYearColor || "#6b7280" }}>
+                  <div className="text-xs uppercase tracking-wider" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor || "#6b7280")}>
                     {dateCounter.month} {dateCounter.year}
                   </div>
                 </div>
@@ -499,7 +555,7 @@ export default function EventDetails({
 
               {/* Event Details - Vertical Timeline */}
               <div className="space-y-4">
-                <h2 className="text-xl font-bold text-center mb-4" style={{ fontFamily: "var(--font-dm-sans)", color: titleColor || "#1f2937" }}>
+                <h2 className="text-xl font-bold text-center mb-4" style={titleTx("var(--font-dm-sans)", titleColor || "#1f2937")}>
                   Resepsi
                 </h2>
 
@@ -509,7 +565,7 @@ export default function EventDetails({
                       <div className="w-2 h-2 rounded-full bg-gray-400"></div>
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151" }}>
+                      <p className="text-xs leading-relaxed" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151")}>
                         {displayEventTime}
                       </p>
                     </div>
@@ -522,11 +578,11 @@ export default function EventDetails({
                       <div className="w-2 h-2 rounded-full bg-gray-400"></div>
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium mb-1 leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151" }}>
+                      <p className="text-xs font-medium mb-1 leading-relaxed" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151")}>
                         {displayVenueName}
                       </p>
                       {displayVenueAddress && (
-                        <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#6b7280" }}>
+                        <p className="text-xs leading-relaxed" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#6b7280")}>
                           {displayVenueAddress}
                         </p>
                       )}
@@ -544,19 +600,19 @@ export default function EventDetails({
             <div className="text-center px-2">
               {closingMessage.includes('terimakasih') ? (
                 <>
-                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                     {closingMessage.split('terimakasih')[0]?.trim()}
                   </p>
-                  <p className="text-sm mb-3 text-white drop-shadow-md" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                  <p className="text-sm mb-3 text-white drop-shadow-md" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                     terimakasih.
                   </p>
                 </>
               ) : (
-                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                   {closingMessage}
                 </p>
               )}
-              <h5 className="text-base font-semibold text-white drop-shadow-md" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || "#ffffff" }}>
+              <h5 className="text-base font-semibold text-white drop-shadow-md" style={closingTextTx("var(--font-playfair)", closingTextColor || "#ffffff")}>
                 {closingText}
               </h5>
             </div>
@@ -569,7 +625,7 @@ export default function EventDetails({
             {/* Invitation Message - Above card */}
             {invitationMessage && (
               <div className="mb-6 text-center">
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                <p className="text-base leading-relaxed break-words" style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                   {invitationMessage}
                 </p>
               </div>
@@ -585,15 +641,15 @@ export default function EventDetails({
               }}>
                 <div className="flex items-center justify-between">
                   <div className="text-left">
-                    <div className="text-3xl font-bold text-white mb-0.5" style={{ fontFamily: "var(--font-dm-sans)", lineHeight: "1" }}>
+                    <div className="text-3xl font-bold text-white mb-0.5" style={dateDayTx("var(--font-dm-sans)", dateDayColor, { lineHeight: "1" })}>
                       {dateCounter.day || "19"}
                     </div>
-                    <div className="text-xs text-gray-300 uppercase tracking-wide" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                    <div className="text-xs text-gray-300 uppercase tracking-wide" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor)}>
                       {dateCounter.month} {dateCounter.year}
                     </div>
                   </div>
                   <div className="text-right">
-                    <h2 className="text-lg font-bold text-white" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                    <h2 className="text-lg font-bold text-white" style={titleTx("var(--font-dm-sans)", titleColor || "#ffffff")}>
                       Resepsi
                     </h2>
                   </div>
@@ -608,7 +664,7 @@ export default function EventDetails({
                       <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: eventTimeColor || "#6b7280" }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151" }}>
+                      <p className="text-xs leading-relaxed" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151")}>
                         {displayEventTime}
                       </p>
                     </div>
@@ -621,11 +677,11 @@ export default function EventDetails({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <div className="flex-1">
-                        <p className="text-xs font-medium mb-0.5 leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151" }}>
+                        <p className="text-xs font-medium mb-0.5 leading-relaxed" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151")}>
                           {displayVenueName}
                         </p>
                         {displayVenueAddress && (
-                          <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#6b7280" }}>
+                          <p className="text-xs leading-relaxed" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#6b7280")}>
                             {displayVenueAddress}
                           </p>
                         )}
@@ -644,19 +700,19 @@ export default function EventDetails({
             <div className="text-center px-2">
               {closingMessage.includes('terimakasih') ? (
                 <>
-                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                     {closingMessage.split('terimakasih')[0]?.trim()}
                   </p>
-                  <p className="text-sm mb-3 text-white drop-shadow-md" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                  <p className="text-sm mb-3 text-white drop-shadow-md" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                     terimakasih.
                   </p>
                 </>
               ) : (
-                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                   {closingMessage}
                 </p>
               )}
-              <h5 className="text-base font-semibold text-white drop-shadow-md" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || "#ffffff" }}>
+              <h5 className="text-base font-semibold text-white drop-shadow-md" style={closingTextTx("var(--font-playfair)", closingTextColor || "#ffffff")}>
                 {closingText}
               </h5>
             </div>
@@ -669,7 +725,7 @@ export default function EventDetails({
             {/* Invitation Message - Above card */}
             {invitationMessage && (
               <div className="mb-6 text-center">
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                <p className="text-base leading-relaxed break-words" style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                   {invitationMessage}
                 </p>
               </div>
@@ -685,17 +741,17 @@ export default function EventDetails({
 
               {/* Date Section - Top Center */}
               <div className="text-center mb-5 pb-4 border-b-2 border-gray-200">
-                <div className="text-4xl font-bold mb-1" style={{ fontFamily: "var(--font-playfair)", color: dateDayColor || "#1f2937", lineHeight: "1" }}>
+                <div className="text-4xl font-bold mb-1" style={dateDayTx("var(--font-playfair)", dateDayColor || "#1f2937", { lineHeight: "1" })}>
                   {dateCounter.day || "19"}
                 </div>
-                <div className="text-xs uppercase tracking-widest" style={{ fontFamily: "var(--font-dm-sans)", color: dateMonthYearColor || "#6b7280", letterSpacing: "1px" }}>
+                <div className="text-xs uppercase tracking-widest" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor || "#6b7280", { letterSpacing: "1px" })}>
                   {dateCounter.month} {dateCounter.year}
                 </div>
               </div>
 
               {/* Event Details */}
               <div className="space-y-4">
-                <h2 className="text-xl font-bold text-center mb-4" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
+                <h2 className="text-xl font-bold text-center mb-4" style={titleTx("var(--font-playfair)", titleColor || "#1f2937")}>
                   Resepsi
                 </h2>
 
@@ -706,7 +762,7 @@ export default function EventDetails({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151" }}>
+                    <p className="text-xs leading-relaxed" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151")}>
                       {displayEventTime}
                     </p>
                   </div>
@@ -721,11 +777,11 @@ export default function EventDetails({
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium mb-0.5 leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151" }}>
+                      <p className="text-xs font-medium mb-0.5 leading-relaxed" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151")}>
                         {displayVenueName}
                       </p>
                       {displayVenueAddress && (
-                        <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#6b7280" }}>
+                        <p className="text-xs leading-relaxed" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#6b7280")}>
                           {displayVenueAddress}
                         </p>
                       )}
@@ -743,19 +799,19 @@ export default function EventDetails({
             <div className="text-center px-2">
               {closingMessage.includes('terimakasih') ? (
                 <>
-                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                  <p className="text-sm mb-1 text-white drop-shadow-md leading-relaxed break-words" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                     {closingMessage.split('terimakasih')[0]?.trim()}
                   </p>
-                  <p className="text-sm mb-3 text-white drop-shadow-md" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                  <p className="text-sm mb-3 text-white drop-shadow-md" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                     terimakasih.
                   </p>
                 </>
               ) : (
-                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || "#ffffff" }}>
+                <p className="text-sm mb-3 text-white drop-shadow-md leading-relaxed" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || "#ffffff")}>
                   {closingMessage}
                 </p>
               )}
-              <h5 className="text-base font-semibold text-white drop-shadow-md" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || "#ffffff" }}>
+              <h5 className="text-base font-semibold text-white drop-shadow-md" style={closingTextTx("var(--font-playfair)", closingTextColor || "#ffffff")}>
                 {closingText}
               </h5>
             </div>
@@ -769,7 +825,7 @@ export default function EventDetails({
             {/* Invitation Message - Above card */}
             {invitationMessage && (
               <div className="mb-6 text-center">
-                <p className="text-base leading-relaxed break-words" style={{ fontFamily: "var(--font-dm-sans)", color: invitationMessageColor || "#374151", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
+                <p className="text-base leading-relaxed break-words" style={invitationTx("var(--font-dm-sans)", invitationMessageColor || "#374151", { wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' })}>
                   {invitationMessage}
                 </p>
               </div>
@@ -778,19 +834,19 @@ export default function EventDetails({
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 md:p-10 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div className="text-center md:text-left border-r-0 md:border-r border-gray-200 pr-0 md:pr-8">
-              <div className="text-lg mb-2" style={{ fontFamily: "var(--font-dm-sans)", color: dateMonthYearColor || "#4b5563" }}>
+              <div className="text-lg mb-2" style={dateMonthYearTx("var(--font-dm-sans)", dateMonthYearColor || "#4b5563")}>
                 {dateCounter.month} <br /> {dateCounter.year}
               </div>
-              <div className="text-6xl md:text-7xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: dateDayColor || "#1f2937" }}>
+              <div className="text-6xl md:text-7xl font-bold" style={dateDayTx("var(--font-playfair)", dateDayColor || "#1f2937")}>
                 {dateCounter.day || "9"}
               </div>
             </div>
           <div className="text-center md:text-left">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ fontFamily: "var(--font-playfair)", color: titleColor || "#1f2937" }}>
+            <h2 className="text-2xl md:text-3xl font-bold mb-6" style={titleTx("var(--font-playfair)", titleColor || "#1f2937")}>
               Resepsi
             </h2>
             {displayEventTime && (
-              <p className="text-base mb-4 flex items-center justify-center md:justify-start gap-2" style={{ fontFamily: "var(--font-dm-sans)", color: eventTimeColor || "#374151" }}>
+              <p className="text-base mb-4 flex items-center justify-center md:justify-start gap-2" style={eventTimeTx("var(--font-dm-sans)", eventTimeColor || "#374151")}>
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -798,7 +854,7 @@ export default function EventDetails({
               </p>
             )}
         {displayVenueName && (
-          <p className="text-base mb-2 flex items-center justify-center md:justify-start gap-2" style={{ fontFamily: "var(--font-dm-sans)", color: venueNameColor || "#374151" }}>
+          <p className="text-base mb-2 flex items-center justify-center md:justify-start gap-2" style={venueNameTx("var(--font-dm-sans)", venueNameColor || "#374151")}>
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -807,7 +863,7 @@ export default function EventDetails({
           </p>
         )}
             {displayVenueAddress && (
-              <p className="text-sm mb-6" style={{ fontFamily: "var(--font-dm-sans)", color: venueAddressColor || "#4b5563" }}>
+              <p className="text-sm mb-6" style={venueAddressTx("var(--font-dm-sans)", venueAddressColor || "#4b5563")}>
                 {displayVenueAddress}
               </p>
             )}
@@ -819,10 +875,10 @@ export default function EventDetails({
             {renderMapButton()}
 
             <div className="text-center">
-              <p className="text-base mb-4 text-white drop-shadow-lg" style={{ fontFamily: "var(--font-dm-sans)", color: closingMessageColor || undefined }}>
+              <p className="text-base mb-4 text-white drop-shadow-lg" style={closingMessageTx("var(--font-dm-sans)", closingMessageColor || undefined)}>
             {closingMessage}
           </p>
-              <h5 className="text-lg font-semibold text-white drop-shadow-lg" style={{ fontFamily: "var(--font-playfair)", color: closingTextColor || undefined }}>
+              <h5 className="text-lg font-semibold text-white drop-shadow-lg" style={closingTextTx("var(--font-playfair)", closingTextColor || undefined)}>
             {closingText}
           </h5>
         </div>

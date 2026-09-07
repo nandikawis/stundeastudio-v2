@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ProjectData, ComponentConfig } from "../../lib/mockData";
 import ColorPicker from "./ColorPicker";
 import { getSectionTypeLabel } from "../../lib/sectionDefaults";
+import TextStyleControls from "./TextStyleControls";
 
 interface SectionPropertiesPanelProps {
   section: ComponentConfig;
@@ -602,19 +603,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.dateAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('dateAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="date" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -639,19 +628,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.coupleNamesAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('coupleNamesAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="coupleNames" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -676,19 +653,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.quoteAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('quoteAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="quote" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -713,24 +678,12 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.guestBlockAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('guestBlockAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="guestLocation" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
             </SectionGroup>
 
-            <SectionGroup title="Design" defaultOpen={false}>
+            <SectionGroup title="Design" defaultOpen={componentData.design === 'with-container' || componentData.design === 'framed-card' || componentData.design === 'arch' || componentData.design === 'docked'}>
               <FieldGroup>
                 <FieldLabel>Design Style</FieldLabel>
                 <select
@@ -740,38 +693,43 @@ export default function SectionPropertiesPanel({
                 >
                   <option value="simple">Simple (No Image Container)</option>
                   <option value="with-container">With Image Container</option>
+                  <option value="framed-card">Framed Card</option>
+                  <option value="fullbleed">Full Bleed Overlay</option>
+                  <option value="arch">Arch Portrait</option>
+                  <option value="docked">Docked Sheet</option>
                 </select>
               </FieldGroup>
 
+              {(componentData.design === 'with-container' || componentData.design === 'framed-card' || componentData.design === 'arch' || componentData.design === 'docked') && (
+                <FieldGroup>
+                  <FieldLabel>Cover Image</FieldLabel>
+                  <ImageFilePicker
+                    images={componentData.imageUrl && componentData.imageUrl.trim()
+                      ? [{
+                          url: componentData.imageUrl,
+                          name: componentData.imageUrl.startsWith('data:')
+                            ? (componentData.coverImageName || 'Cover Image')
+                            : componentData.imageUrl.split('/').pop() || 'Cover Image',
+                        }]
+                      : []}
+                    onImagesChange={(items) => {
+                      if (items.length > 0) {
+                        handleFieldUpdate('imageUrl', items[0].url);
+                        if (items[0].url.startsWith('data:') && items[0].name) {
+                          handleFieldUpdate('coverImageName', items[0].name);
+                        }
+                      } else {
+                        handleFieldUpdate('imageUrl', '');
+                      }
+                    }}
+                    multiple={false}
+                    label="Pilih gambar cover"
+                  />
+                </FieldGroup>
+              )}
+
               {componentData.design === 'with-container' && (
                 <>
-                  <FieldGroup>
-                    <FieldLabel>Cover Image</FieldLabel>
-                    <ImageFilePicker
-                      images={componentData.imageUrl && componentData.imageUrl.trim()
-                        ? [{
-                            url: componentData.imageUrl,
-                            name: componentData.imageUrl.startsWith('data:')
-                              ? (componentData.coverImageName || 'Cover Image')
-                              : componentData.imageUrl.split('/').pop() || 'Cover Image',
-                          }]
-                        : []}
-                      onImagesChange={(items) => {
-                        if (items.length > 0) {
-                          handleFieldUpdate('imageUrl', items[0].url);
-                          if (items[0].url.startsWith('data:') && items[0].name) {
-                            handleFieldUpdate('coverImageName', items[0].name);
-                          }
-                        } else {
-                          // Single update: editor clears coverImageName/profileImageName with imageUrl
-                          handleFieldUpdate('imageUrl', '');
-                        }
-                      }}
-                      multiple={false}
-                      label="Pilih gambar cover"
-                    />
-                  </FieldGroup>
-
                   <FieldGroup>
                     <FieldLabel>Image Container Style</FieldLabel>
                     <select
@@ -840,6 +798,24 @@ export default function SectionPropertiesPanel({
       case 'HeroSection':
         return (
           <>
+            <SectionGroup title="Design" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Design Style</FieldLabel>
+                <select
+                  value={componentData.design || 'classic'}
+                  onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="classic">Classic</option>
+                  <option value="centered">Cinematic Center</option>
+                  <option value="split">Split Panel</option>
+                  <option value="inset">Inset Frame</option>
+                  <option value="lockup">Editorial Lockup</option>
+                  <option value="immersive">Immersive</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+
             <SectionGroup title="Content" defaultOpen={true}>
               <FieldGroup>
                 <FieldLabel>Subtitle</FieldLabel>
@@ -862,19 +838,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.subtitleAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('subtitleAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="subtitle" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -899,19 +863,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.coupleNamesAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('coupleNamesAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="coupleNames" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -936,19 +888,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.quoteAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('quoteAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="quote" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
             </SectionGroup>
@@ -1039,6 +979,24 @@ export default function SectionPropertiesPanel({
       case 'QuoteSection':
         return (
           <>
+            <SectionGroup title="Design" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Design Style</FieldLabel>
+                <select
+                  value={componentData.design || 'classic'}
+                  onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="classic">Classic</option>
+                  <option value="editorial">Editorial</option>
+                  <option value="framed">Framed Verse</option>
+                  <option value="pullquote">Pull Quote</option>
+                  <option value="verse">Double Rule</option>
+                  <option value="bar">Accent Bar</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+
             <SectionGroup title="Content" defaultOpen={true}>
               <FieldGroup>
                 <FieldLabel>Primary Quote (Sanskrit)</FieldLabel>
@@ -1066,19 +1024,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.quoteAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('quoteAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="quote" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1108,19 +1054,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.secondaryQuoteAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('secondaryQuoteAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="secondaryQuote" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1145,22 +1079,11 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.authorAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('authorAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="author" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
+              {(!componentData.design || componentData.design === 'classic') && (
               <FieldGroup>
                 <FieldLabel>Decorative Image</FieldLabel>
                 <select
@@ -1177,6 +1100,7 @@ export default function SectionPropertiesPanel({
                   <option value="white">White</option>
                 </select>
               </FieldGroup>
+              )}
             </SectionGroup>
 
             <SectionGroup title="Background" defaultOpen={false}>
@@ -1193,6 +1117,24 @@ export default function SectionPropertiesPanel({
       case 'ReligiousGreeting':
         return (
           <>
+            <SectionGroup title="Design" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Design Style</FieldLabel>
+                <select
+                  value={componentData.design || 'classic'}
+                  onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="classic">Classic</option>
+                  <option value="editorial">Editorial Right</option>
+                  <option value="framed">Soft Card</option>
+                  <option value="rule">Gold Rule</option>
+                  <option value="banner">Dark Banner</option>
+                  <option value="split">Split Stack</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+
             <SectionGroup title="Content" defaultOpen={true}>
               <FieldGroup>
                 <FieldLabel>Greeting</FieldLabel>
@@ -1215,19 +1157,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.greetingAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('greetingAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="greeting" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1252,19 +1182,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.messageAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('messageAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="message" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
             </SectionGroup>
@@ -1293,6 +1211,21 @@ export default function SectionPropertiesPanel({
                 >
                   <option value="simple">Simple (No Container)</option>
                   <option value="with-container">With Image Container</option>
+                  <option value="collage">Overlapping Collage</option>
+                  <option value="editorial">Editorial Overlap</option>
+                  <option value="caption">Caption Card</option>
+                  <option value="folio">Side Folio</option>
+                </select>
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Profile Side</FieldLabel>
+                <select
+                  value={componentData.type || 'groom'}
+                  onChange={(e) => handleFieldUpdate('type', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="groom">Groom — left</option>
+                  <option value="bride">Bride — right</option>
                 </select>
               </FieldGroup>
             </SectionGroup>
@@ -1319,19 +1252,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.nameAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('nameAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="name" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1356,19 +1277,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.fullNameAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('fullNameAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="fullName" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1393,19 +1302,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.relationAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('relationAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="relation" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1430,19 +1327,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.fatherNameAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('fatherNameAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="fatherName" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1467,19 +1352,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.motherNameAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('motherNameAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="motherName" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1504,24 +1377,12 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.addressAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('addressAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="address" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
             </SectionGroup>
 
-            <SectionGroup title="Image" defaultOpen={false}>
+            <SectionGroup title="Image" defaultOpen={componentData.design === 'collage' || componentData.design === 'editorial' || componentData.design === 'caption' || componentData.design === 'folio'}>
               <FieldGroup>
                 <FieldLabel>Profile Image</FieldLabel>
                 <ImageFilePicker
@@ -1545,8 +1406,42 @@ export default function SectionPropertiesPanel({
                     }}
                   multiple={false}
                   label="Pilih gambar"
-                />
-              </FieldGroup>
+                    />
+                  </FieldGroup>
+
+              {(componentData.design === 'collage' || componentData.design === 'editorial' || componentData.design === 'caption' || componentData.design === 'folio') && (
+                <>
+                  {componentData.design === 'collage' && (
+                  <FieldGroup>
+                    <FieldLabel>Second Image (collage)</FieldLabel>
+                    <ImageFilePicker
+                      images={componentData.secondaryImageUrl && String(componentData.secondaryImageUrl).trim()
+                        ? [{
+                            url: componentData.secondaryImageUrl,
+                            name: String(componentData.secondaryImageUrl).split('/').pop() || 'Second Image',
+                          }]
+                        : []}
+                      onImagesChange={(items) => {
+                        handleFieldUpdate('secondaryImageUrl', items[0]?.url || '');
+                      }}
+                      multiple={false}
+                      label="Pilih gambar kedua"
+                    />
+                    <p className="mt-1 text-xs text-muted">Kalau kosong, foto utama dipakai (grayscale).</p>
+                  </FieldGroup>
+                  )}
+                  <FieldGroup>
+                    <FieldLabel>Instagram</FieldLabel>
+                    <input
+                      type="text"
+                      value={componentData.instagram || ''}
+                      onChange={(e) => handleFieldUpdate('instagram', e.target.value)}
+                      className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                      placeholder="username"
+                    />
+                  </FieldGroup>
+                </>
+              )}
 
               {componentData.design === 'with-container' && (
                 <>
@@ -1638,19 +1533,7 @@ export default function SectionPropertiesPanel({
                       defaultValue="#374151"
                     />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.invitationMessageAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('invitationMessageAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="invitationMessage" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1673,19 +1556,7 @@ export default function SectionPropertiesPanel({
                       className="w-8 h-8 border border-border rounded cursor-pointer"
                     />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.closingMessageAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('closingMessageAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="closingMessage" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1708,19 +1579,7 @@ export default function SectionPropertiesPanel({
                       className="w-8 h-8 border border-border rounded cursor-pointer"
                     />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.closingTextAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('closingTextAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="closingText" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
             </SectionGroup>
@@ -1745,6 +1604,9 @@ export default function SectionPropertiesPanel({
                     defaultValue="#4b5563"
                   />
                 </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="dateMonthYear" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
                 <div className="mt-2">
                   <ColorPicker
                     label="Date Day Color"
@@ -1752,6 +1614,9 @@ export default function SectionPropertiesPanel({
                     onChange={(value) => handleFieldUpdate('dateDayColor', value)}
                     defaultValue="#1f2937"
                   />
+                </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="dateDay" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -1773,6 +1638,9 @@ export default function SectionPropertiesPanel({
                     defaultValue="#374151"
                   />
                 </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="eventTime" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
               </FieldGroup>
 
               <FieldGroup>
@@ -1783,6 +1651,9 @@ export default function SectionPropertiesPanel({
                   onChange={(value) => handleFieldUpdate('titleColor', value)}
                   defaultValue="#1f2937"
                 />
+                <div className="mt-3">
+                  <TextStyleControls prefix="title" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
               </FieldGroup>
             </SectionGroup>
 
@@ -1805,6 +1676,9 @@ export default function SectionPropertiesPanel({
                     defaultValue="#374151"
                   />
                 </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="venueName" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
               </FieldGroup>
 
               <FieldGroup>
@@ -1824,6 +1698,9 @@ export default function SectionPropertiesPanel({
                     onChange={(value) => handleFieldUpdate('venueAddressColor', value)}
                     defaultValue="#4b5563"
                   />
+                </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="venueAddress" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -2060,10 +1937,12 @@ export default function SectionPropertiesPanel({
                   onChange={(e) => handleFieldUpdate('carouselDesign', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
                 >
-                  <option value="classic">Classic (Full Width)</option>
-                  <option value="framed">Framed Card</option>
-                  <option value="filmstrip">Filmstrip Thumbnails</option>
-                  <option value="landscape">Landscape</option>
+                  <option value="classic">Classic</option>
+                  <option value="framed">Polaroid Frame</option>
+                  <option value="filmstrip">Filmstrip</option>
+                  <option value="landscape">Cinematic</option>
+                  <option value="inset">Album Inset</option>
+                  <option value="peek">Side Peek</option>
                 </select>
                 <p className="text-xs text-muted mt-1">
                   Choose how the carousel images are styled and displayed.
@@ -2094,74 +1973,6 @@ export default function SectionPropertiesPanel({
               </FieldGroup>
             </SectionGroup>
 
-            <SectionGroup title="Date & Message Section" defaultOpen={false}>
-              <FieldGroup>
-                <FieldLabel>Date</FieldLabel>
-                <input
-                  type="text"
-                  value={componentData.dateMessageDate || ''}
-                  onChange={(e) => handleFieldUpdate('dateMessageDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                  placeholder="Minggu, 19 Mei 2024"
-                />
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs text-muted">Color:</span>
-                  <input
-                    type="color"
-                    value={componentData.dateMessageDateColor || '#8b7355'}
-                    onChange={(e) => handleFieldUpdate('dateMessageDateColor', e.target.value)}
-                    className="w-8 h-8 border border-border rounded cursor-pointer"
-                  />
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                  <select
-                    value={componentData.dateMessageDateAlign || 'center'}
-                    onChange={(e) => handleFieldUpdate('dateMessageDateAlign', e.target.value)}
-                    className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                  >
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
-                    <option value="justify">Justify</option>
-                  </select>
-                </div>
-              </FieldGroup>
-
-              <FieldGroup>
-                <FieldLabel>Message</FieldLabel>
-                <textarea
-                  value={componentData.dateMessageText || ''}
-                  onChange={(e) => handleFieldUpdate('dateMessageText', e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                  rows={3}
-                  placeholder="Merupakan suatu kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir..."
-                />
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs text-muted">Color:</span>
-                  <input
-                    type="color"
-                    value={componentData.dateMessageTextColor || '#4a4a4a'}
-                    onChange={(e) => handleFieldUpdate('dateMessageTextColor', e.target.value)}
-                    className="w-8 h-8 border border-border rounded cursor-pointer"
-                  />
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                  <select
-                    value={componentData.dateMessageTextAlign || 'center'}
-                    onChange={(e) => handleFieldUpdate('dateMessageTextAlign', e.target.value)}
-                    className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                  >
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
-                    <option value="justify">Justify</option>
-                  </select>
-                </div>
-              </FieldGroup>
-            </SectionGroup>
-
             <SectionGroup title="Countdown Timer" defaultOpen={false}>
               <FieldGroup>
                 <FieldLabel>Target Date & Time</FieldLabel>
@@ -2183,8 +1994,11 @@ export default function SectionPropertiesPanel({
                   className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
                 >
                   <option value="simple">Simple</option>
-                  <option value="elegant-card">Elegant Card</option>
+                  <option value="elegant-card">Album Cards</option>
                   <option value="minimal">Minimal</option>
+                  <option value="rule">Gold Rule</option>
+                  <option value="banner">Soft Frame</option>
+                  <option value="editorial">Editorial</option>
                 </select>
               </FieldGroup>
 
@@ -2209,7 +2023,7 @@ export default function SectionPropertiesPanel({
                     onChange={(value) => handleFieldUpdate('countdownLabelColor', value)}
                     defaultValue="#6b7280"
                   />
-                  {componentData.countdownDesign === 'elegant-card' && (
+                  {(componentData.countdownDesign === 'elegant-card' || componentData.countdownDesign === 'banner') && (
                     <ColorPicker
                       label="Card Background Color"
                       value={componentData.countdownCardColor || '#ffffff'}
@@ -2217,6 +2031,20 @@ export default function SectionPropertiesPanel({
                       defaultValue="#ffffff"
                     />
                   )}
+                </div>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-primary/70">Title type</p>
+                    <TextStyleControls prefix="countdownTitle" data={componentData} onUpdate={handleFieldUpdate} />
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-primary/70">Numbers</p>
+                    <TextStyleControls prefix="countdownValue" data={componentData} onUpdate={handleFieldUpdate} />
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-primary/70">Labels</p>
+                    <TextStyleControls prefix="countdownLabel" data={componentData} onUpdate={handleFieldUpdate} />
+                  </div>
                 </div>
               </FieldGroup>
             </SectionGroup>
@@ -2239,6 +2067,46 @@ export default function SectionPropertiesPanel({
                     defaultValue="#8b7355"
                   />
                 </div>
+                <div className="mt-3">
+                  <TextStyleControls
+                    prefix="dateMessageDate"
+                    data={componentData}
+                    onUpdate={handleFieldUpdate}
+                    alignKey={componentData.dateMessageShowLine !== false ? false : undefined}
+                  />
+                </div>
+              </FieldGroup>
+
+              <FieldGroup>
+                <FieldLabel>Date line</FieldLabel>
+                <label className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <input
+                    type="checkbox"
+                    checked={componentData.dateMessageShowLine !== false}
+                    onChange={(e) => handleFieldUpdate('dateMessageShowLine', e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-accent rounded"
+                  />
+                  Show line beside the date
+                </label>
+                {componentData.dateMessageShowLine !== false && (
+                  <div className="mt-3 space-y-3">
+                    <select
+                      value={componentData.dateMessageLinePlacement || 'before'}
+                      onChange={(e) => handleFieldUpdate('dateMessageLinePlacement', e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
+                    >
+                      <option value="before">Line on the left</option>
+                      <option value="both">Lines on both sides</option>
+                      <option value="after">Line on the right</option>
+                    </select>
+                    <ColorPicker
+                      label="Line Color"
+                      value={componentData.dateMessageLineColor || componentData.dateMessageDateColor || '#8b7355'}
+                      onChange={(value) => handleFieldUpdate('dateMessageLineColor', value)}
+                      defaultValue="#8b7355"
+                    />
+                  </div>
+                )}
               </FieldGroup>
 
               <FieldGroup>
@@ -2258,6 +2126,9 @@ export default function SectionPropertiesPanel({
                     defaultValue="#4a4a4a"
                   />
                 </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="dateMessageText" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
               </FieldGroup>
             </SectionGroup>
 
@@ -2275,6 +2146,27 @@ export default function SectionPropertiesPanel({
       case 'PhotoGalleryGrid':
         return (
           <>
+            <SectionGroup title="Design" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Design Style</FieldLabel>
+                <select
+                  value={componentData.design || (componentData.columns === 3 ? 'three' : 'two')}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    handleFieldUpdate('design', next);
+                    if (next === 'three') handleFieldUpdate('columns', 3);
+                    if (next === 'two' || next === 'mosaic' || next === 'framed') handleFieldUpdate('columns', 2);
+                  }}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="two">Two Column</option>
+                  <option value="three">Three Column</option>
+                  <option value="mosaic">Album Mosaic</option>
+                  <option value="framed">Gold Frame</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+
             <SectionGroup title="Content" defaultOpen={true}>
               <FieldGroup>
                 <FieldLabel>Title</FieldLabel>
@@ -2297,48 +2189,7 @@ export default function SectionPropertiesPanel({
                       />
                     </div>
                   </div>
-                </div>
-              </FieldGroup>
-
-              <FieldGroup>
-                <FieldLabel>Secondary Quote (Translation)</FieldLabel>
-                <div className="space-y-3">
-                  <textarea
-                    value={
-                      componentData.secondaryQuote ??
-                      (componentData.quote
-                        ? (componentData.quote as string).split('\n\n')[1] || ''
-                        : '')
-                    }
-                    onChange={(e) => handleFieldUpdate('secondaryQuote', e.target.value)}
-                    className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors resize-none"
-                    rows={4}
-                    placeholder="Wahai pasangan suami-isteri..."
-                  />
-                  <p className="text-[11px] text-muted">
-                    This text appears as the second paragraph under the primary quote.
-                  </p>
-                </div>
-              </FieldGroup>
-
-              <FieldGroup>
-                <FieldLabel>Secondary Quote (Translation)</FieldLabel>
-                <div className="space-y-3">
-                  <textarea
-                    value={
-                      componentData.secondaryQuote ??
-                      (componentData.quote
-                        ? (componentData.quote as string).split('\n\n')[1] || ''
-                        : '')
-                    }
-                    onChange={(e) => handleFieldUpdate('secondaryQuote', e.target.value)}
-                    className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors resize-none"
-                    rows={4}
-                    placeholder="Wahai pasangan suami-isteri..."
-                  />
-                  <p className="text-[11px] text-muted">
-                    This text will appear below the Sanskrit quote and share the same alignment and color.
-                  </p>
+                  <TextStyleControls prefix="title" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
             </SectionGroup>
@@ -2370,20 +2221,6 @@ export default function SectionPropertiesPanel({
               </FieldGroup>
             </SectionGroup>
 
-            <SectionGroup title="Layout" defaultOpen={false}>
-              <FieldGroup>
-                <FieldLabel>Columns</FieldLabel>
-                <select
-                  value={componentData.columns || 2}
-                  onChange={(e) => handleFieldUpdate('columns', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none text-sm"
-                >
-                  <option value="2">2 Columns</option>
-                  <option value="3">3 Columns</option>
-                </select>
-              </FieldGroup>
-            </SectionGroup>
-
             <SectionGroup title="Background" defaultOpen={false}>
               {renderBackgroundSection()}
             </SectionGroup>
@@ -2398,6 +2235,22 @@ export default function SectionPropertiesPanel({
       case 'ClosingSection':
         return (
           <>
+            <SectionGroup title="Design" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Design Style</FieldLabel>
+                <select
+                  value={componentData.design || 'classic'}
+                  onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="classic">Night Close</option>
+                  <option value="cream">Soft Cream</option>
+                  <option value="editorial">Editorial Sign-off</option>
+                  <option value="framed">Gold Card</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+
             <SectionGroup title="Content" defaultOpen={true}>
               <FieldGroup>
                 <FieldLabel>Couple Names</FieldLabel>
@@ -2414,25 +2267,13 @@ export default function SectionPropertiesPanel({
                     <div className="flex-1">
                       <ColorPicker
                         label=""
-                        value={componentData.coupleNamesColor || '#ffffff'}
+                        value={componentData.coupleNamesColor || ((componentData.design || 'classic') === 'classic' ? '#c4a574' : '#1f1d1a')}
                         onChange={(value) => handleFieldUpdate('coupleNamesColor', value)}
-                        defaultValue="#ffffff"
+                        defaultValue={(componentData.design || 'classic') === 'classic' ? '#c4a574' : '#1f1d1a'}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.coupleNamesAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('coupleNamesAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="coupleNames" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -2451,25 +2292,13 @@ export default function SectionPropertiesPanel({
                     <div className="flex-1">
                       <ColorPicker
                         label=""
-                        value={componentData.messageColor || '#e5e7eb'}
+                        value={componentData.messageColor || ((componentData.design || 'classic') === 'classic' ? '#d8d2c8' : '#6b6258')}
                         onChange={(value) => handleFieldUpdate('messageColor', value)}
-                        defaultValue="#e5e7eb"
+                        defaultValue={(componentData.design || 'classic') === 'classic' ? '#d8d2c8' : '#6b6258'}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.messageAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('messageAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="message" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -2494,25 +2323,13 @@ export default function SectionPropertiesPanel({
                     <div className="flex-1">
                       <ColorPicker
                         label=""
-                        value={componentData.designerCreditColor || '#b3b3b3'}
+                        value={componentData.designerCreditColor || ((componentData.design || 'classic') === 'classic' ? '#9a938a' : '#8a8178')}
                         onChange={(value) => handleFieldUpdate('designerCreditColor', value)}
-                        defaultValue="#b3b3b3"
+                        defaultValue={(componentData.design || 'classic') === 'classic' ? '#9a938a' : '#8a8178'}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted whitespace-nowrap">Alignment:</span>
-                    <select
-                      value={componentData.designerCreditAlign || 'center'}
-                      onChange={(e) => handleFieldUpdate('designerCreditAlign', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-border/60 rounded-md bg-background text-xs"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                      <option value="justify">Justify</option>
-                    </select>
-                  </div>
+                  <TextStyleControls prefix="designerCredit" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
 
@@ -2581,6 +2398,224 @@ export default function SectionPropertiesPanel({
           </>
         );
 
+      case 'KadoDigitalSection': {
+        const giftAccounts = Array.isArray(componentData.accounts) ? componentData.accounts : [];
+        const updateGiftAccount = (index: number, field: string, value: string) => {
+          handleFieldUpdate(
+            'accounts',
+            giftAccounts.map((account: { id?: string; bankName?: string; accountNumber?: string; accountName?: string }, i: number) =>
+              i === index ? { ...account, [field]: value } : account
+            )
+          );
+        };
+        return (
+          <>
+            <SectionGroup title="Design" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Design Style</FieldLabel>
+                <select
+                  value={componentData.design || 'classic'}
+                  onChange={(e) => handleFieldUpdate('design', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="classic">Account Cards</option>
+                  <option value="editorial">Editorial Ledger</option>
+                  <option value="framed">Gold Envelope</option>
+                  <option value="night">Night Envelope</option>
+                </select>
+              </FieldGroup>
+            </SectionGroup>
+
+            <SectionGroup title="Content" defaultOpen={true}>
+              <FieldGroup>
+                <FieldLabel>Title</FieldLabel>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={componentData.title || ''}
+                    onChange={(e) => handleFieldUpdate('title', e.target.value)}
+                    className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                    placeholder="Kado Digital"
+                  />
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted whitespace-nowrap">Color:</span>
+                    <div className="flex-1">
+                      <ColorPicker
+                        label=""
+                        value={componentData.titleColor || ((componentData.design || 'classic') === 'night' ? '#c4a574' : '#1f1d1a')}
+                        onChange={(value) => handleFieldUpdate('titleColor', value)}
+                        defaultValue={(componentData.design || 'classic') === 'night' ? '#c4a574' : '#1f1d1a'}
+                      />
+                    </div>
+                  </div>
+                  <TextStyleControls prefix="title" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
+              </FieldGroup>
+
+              <FieldGroup>
+                <FieldLabel>Message</FieldLabel>
+                <div className="space-y-3">
+                  <textarea
+                    value={componentData.message || ''}
+                    onChange={(e) => handleFieldUpdate('message', e.target.value)}
+                    className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors resize-none"
+                    rows={3}
+                    placeholder="Doa restu Anda merupakan karunia..."
+                  />
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted whitespace-nowrap">Color:</span>
+                    <div className="flex-1">
+                      <ColorPicker
+                        label=""
+                        value={componentData.messageColor || ((componentData.design || 'classic') === 'night' ? '#d8d2c8' : '#6b6258')}
+                        onChange={(value) => handleFieldUpdate('messageColor', value)}
+                        defaultValue={(componentData.design || 'classic') === 'night' ? '#d8d2c8' : '#6b6258'}
+                      />
+                    </div>
+                  </div>
+                  <TextStyleControls prefix="message" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
+              </FieldGroup>
+            </SectionGroup>
+
+            <SectionGroup title="Rekening" defaultOpen={true}>
+              <FieldGroup>
+                <FieldLabel>Card Style</FieldLabel>
+                <select
+                  value={componentData.cardDesign || 'graphite'}
+                  onChange={(e) => handleFieldUpdate('cardDesign', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                >
+                  <option value="graphite">Graphite</option>
+                  <option value="gold">Gold Metal</option>
+                  <option value="ivory">Ivory</option>
+                  <option value="stripe">Gold Stripe</option>
+                </select>
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Card Color</FieldLabel>
+                <ColorPicker
+                  label=""
+                  value={
+                    componentData.cardColor ||
+                    (componentData.cardDesign === 'gold'
+                      ? '#c4a574'
+                      : componentData.cardDesign === 'ivory'
+                        ? '#f3efe6'
+                        : componentData.cardDesign === 'stripe'
+                          ? '#1a1916'
+                          : '#1c1c1c')
+                  }
+                  onChange={(value) => handleFieldUpdate('cardColor', value)}
+                  defaultValue={
+                    componentData.cardDesign === 'gold'
+                      ? '#c4a574'
+                      : componentData.cardDesign === 'ivory'
+                        ? '#f3efe6'
+                        : componentData.cardDesign === 'stripe'
+                          ? '#1a1916'
+                          : '#1c1c1c'
+                  }
+                />
+              </FieldGroup>
+              {giftAccounts.map((account: { id?: string; bankName?: string; accountNumber?: string; accountName?: string }, index: number) => (
+                <FieldGroup key={account.id || `acc-${index}`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <FieldLabel>Rekening {index + 1}</FieldLabel>
+                    <button
+                      type="button"
+                      onClick={() => handleFieldUpdate('accounts', giftAccounts.filter((_: unknown, i: number) => i !== index))}
+                      className="text-[11px] text-primary/40 transition-colors hover:text-red-600"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={account.bankName || ''}
+                      onChange={(e) => updateGiftAccount(index, 'bankName', e.target.value)}
+                      className="w-full px-3 py-2 border border-border/60 rounded-md bg-background text-sm outline-none focus:border-accent"
+                      placeholder="Bank / e-wallet (BCA, DANA)"
+                    />
+                    <input
+                      type="text"
+                      value={account.accountNumber || ''}
+                      onChange={(e) => updateGiftAccount(index, 'accountNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-border/60 rounded-md bg-background text-sm outline-none focus:border-accent"
+                      placeholder="Nomor rekening"
+                    />
+                    <input
+                      type="text"
+                      value={account.accountName || ''}
+                      onChange={(e) => updateGiftAccount(index, 'accountName', e.target.value)}
+                      className="w-full px-3 py-2 border border-border/60 rounded-md bg-background text-sm outline-none focus:border-accent"
+                      placeholder="Nama pemilik"
+                    />
+                  </div>
+                </FieldGroup>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  handleFieldUpdate('accounts', [
+                    ...giftAccounts,
+                    { id: `acc-${Date.now()}`, bankName: '', accountNumber: '', accountName: '' },
+                  ])
+                }
+                className="w-full rounded-md border border-dashed border-[#c4a574]/50 px-3 py-2 text-sm text-primary transition-[transform,background-color] duration-100 ease-out hover:bg-[#c4a574]/10 active:scale-[0.98]"
+              >
+                + Tambah rekening
+              </button>
+            </SectionGroup>
+
+            <SectionGroup title="QRIS" defaultOpen={false}>
+              <FieldGroup>
+                <FieldLabel>Label</FieldLabel>
+                <input
+                  type="text"
+                  value={componentData.qrisLabel || ''}
+                  onChange={(e) => handleFieldUpdate('qrisLabel', e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none text-sm transition-colors"
+                  placeholder="QRIS"
+                />
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Gambar QR</FieldLabel>
+                <ImageFilePicker
+                  images={componentData.qrisImageUrl && String(componentData.qrisImageUrl).trim()
+                    ? [{
+                        url: componentData.qrisImageUrl,
+                        name: String(componentData.qrisImageUrl).startsWith('data:')
+                          ? 'QRIS'
+                          : String(componentData.qrisImageUrl).split('/').pop() || 'QRIS',
+                      }]
+                    : []}
+                  onImagesChange={(items) => {
+                    if (items.length > 0) {
+                      handleFieldUpdate('qrisImageUrl', items[0].url);
+                    } else {
+                      handleFieldUpdate('qrisImageUrl', '');
+                    }
+                  }}
+                  multiple={false}
+                  label="Unggah QRIS"
+                />
+              </FieldGroup>
+            </SectionGroup>
+
+            <SectionGroup title="Background" defaultOpen={false}>
+              {renderBackgroundSection()}
+            </SectionGroup>
+
+            <SectionGroup title="Decorations" defaultOpen={false}>
+              {renderDecorativeFlowersSection()}
+              {renderCurveDividers()}
+            </SectionGroup>
+          </>
+        );
+      }
+
       case 'RsvpSection':
         return (
           <>
@@ -2605,6 +2640,9 @@ export default function SectionPropertiesPanel({
                     />
                   </div>
                 </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="title" data={componentData} onUpdate={handleFieldUpdate} />
+                </div>
               </FieldGroup>
               <FieldGroup>
                 <FieldLabel>Subjudul</FieldLabel>
@@ -2624,6 +2662,9 @@ export default function SectionPropertiesPanel({
                       defaultValue="#2d2d2d"
                     />
                   </div>
+                </div>
+                <div className="mt-3">
+                  <TextStyleControls prefix="subtitle" data={componentData} onUpdate={handleFieldUpdate} />
                 </div>
               </FieldGroup>
               <p className="text-[11px] leading-relaxed text-muted">
@@ -2679,10 +2720,25 @@ export default function SectionPropertiesPanel({
                   onChange={(e) => handleFieldUpdate('design', e.target.value)}
                   className="w-full px-3 py-2.5 border border-border/60 rounded-md bg-background text-sm"
                 >
-                  <option value="elegant-card">Elegant card</option>
+                  <option value="elegant-card">Album Cards</option>
                   <option value="simple">Simple</option>
                   <option value="minimal">Minimal</option>
+                  <option value="rule">Gold Rule</option>
+                  <option value="banner">Soft Frame</option>
+                  <option value="editorial">Editorial</option>
                 </select>
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Numbers</FieldLabel>
+                <TextStyleControls prefix="value" data={componentData} onUpdate={handleFieldUpdate} />
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Labels</FieldLabel>
+                <TextStyleControls prefix="label" data={componentData} onUpdate={handleFieldUpdate} />
+              </FieldGroup>
+              <FieldGroup>
+                <FieldLabel>Title (editorial)</FieldLabel>
+                <TextStyleControls prefix="title" data={componentData} onUpdate={handleFieldUpdate} />
               </FieldGroup>
             </SectionGroup>
             <SectionGroup title="Background" defaultOpen={false}>

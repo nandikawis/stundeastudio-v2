@@ -23,8 +23,10 @@ type SectionPreview = {
   backgroundImageUrl?: string;
   backgroundImages?: Array<{ url: string; alt?: string; order?: number }>;
   imageUrl?: string;
+  secondaryImageUrl?: string;
   images?: { url: string; alt?: string; order?: number }[];
   logoUrl?: string;
+  qrisImageUrl?: string;
 };
 
 function toEditorProject(tpl: TemplateApiData): ProjectData {
@@ -134,8 +136,10 @@ export default function CreatorTemplateEditPage({
         if (field !== "backgroundImageUrl" && sectionPreview.backgroundImageUrl !== undefined) rest.backgroundImageUrl = sectionPreview.backgroundImageUrl;
         if (field !== "backgroundImages" && sectionPreview.backgroundImages !== undefined) rest.backgroundImages = sectionPreview.backgroundImages;
         if (field !== "imageUrl" && sectionPreview.imageUrl !== undefined) rest.imageUrl = sectionPreview.imageUrl;
+        if (field !== "secondaryImageUrl" && sectionPreview.secondaryImageUrl !== undefined) rest.secondaryImageUrl = sectionPreview.secondaryImageUrl;
         if (field !== "images" && sectionPreview.images !== undefined) rest.images = sectionPreview.images;
         if (field !== "logoUrl" && sectionPreview.logoUrl !== undefined) rest.logoUrl = sectionPreview.logoUrl;
+        if (field !== "qrisImageUrl" && sectionPreview.qrisImageUrl !== undefined) rest.qrisImageUrl = sectionPreview.qrisImageUrl;
         if (Object.keys(rest).length === 0) {
           const { [sectionId]: _, ...restSections } = prev;
           return restSections;
@@ -188,8 +192,10 @@ export default function CreatorTemplateEditPage({
       ...baseData,
       ...(previewData.backgroundImages !== undefined ? { backgroundImages: previewData.backgroundImages } : {}),
       ...(previewData.imageUrl !== undefined ? { imageUrl: previewData.imageUrl } : {}),
+      ...(previewData.secondaryImageUrl !== undefined ? { secondaryImageUrl: previewData.secondaryImageUrl } : {}),
       ...(previewData.images !== undefined ? { images: previewData.images } : {}),
       ...(previewData.logoUrl !== undefined ? { logoUrl: previewData.logoUrl } : {}),
+      ...(previewData.qrisImageUrl !== undefined ? { qrisImageUrl: previewData.qrisImageUrl } : {}),
     };
   };
 
@@ -203,12 +209,14 @@ export default function CreatorTemplateEditPage({
         });
       }
       if (preview.imageUrl?.startsWith("data:")) dataUrls.push({ dataUrl: preview.imageUrl, fileName: `img-${sectionId}.jpg` });
+      if (preview.secondaryImageUrl?.startsWith("data:")) dataUrls.push({ dataUrl: preview.secondaryImageUrl, fileName: `img2-${sectionId}.jpg` });
       if (Array.isArray(preview.images)) {
         preview.images.forEach((img, idx) => {
           if (img.url?.startsWith("data:")) dataUrls.push({ dataUrl: img.url, fileName: `img-${sectionId}-${idx}.jpg` });
         });
       }
       if (preview.logoUrl?.startsWith("data:")) dataUrls.push({ dataUrl: preview.logoUrl, fileName: `logo-${sectionId}.jpg` });
+      if (preview.qrisImageUrl?.startsWith("data:")) dataUrls.push({ dataUrl: preview.qrisImageUrl, fileName: `qris-${sectionId}.jpg` });
     });
 
     return dataUrls;
@@ -283,10 +291,12 @@ export default function CreatorTemplateEditPage({
           sectionData.backgroundImages = preview.backgroundImages.map((img) => ({ ...img, url: urlMap.get(img.url) || img.url }));
         }
         if (preview.imageUrl) sectionData.imageUrl = urlMap.get(preview.imageUrl) || preview.imageUrl;
+        if (preview.secondaryImageUrl) sectionData.secondaryImageUrl = urlMap.get(preview.secondaryImageUrl) || preview.secondaryImageUrl;
         if (preview.images) {
           sectionData.images = preview.images.map((img) => ({ ...img, url: urlMap.get(img.url) || img.url }));
         }
         if (preview.logoUrl) sectionData.logoUrl = urlMap.get(preview.logoUrl) || preview.logoUrl;
+        if (preview.qrisImageUrl) sectionData.qrisImageUrl = urlMap.get(preview.qrisImageUrl) || preview.qrisImageUrl;
       });
 
       const payload = {

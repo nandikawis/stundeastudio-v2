@@ -162,14 +162,34 @@ const createStandardTemplateStructure = (): TemplateSection[] => [
     }
   },
   {
+    id: 'kado-digital',
+    type: 'gift',
+    componentType: 'KadoDigitalSection',
+    order: 10,
+    defaultData: {
+      title: 'Kado Digital',
+      message: 'Doa restu Anda merupakan karunia yang sangat berarti. Dan jika memberi adalah ungkapan tanda kasih, Anda dapat memberikan kado secara digital.',
+      accounts: [
+        { id: 'acc-1', bankName: 'BCA', accountNumber: '1234567890', accountName: 'John Doe' },
+        { id: 'acc-2', bankName: 'Mandiri', accountNumber: '0987654321', accountName: 'Jane Doe' },
+      ],
+      qrisLabel: 'QRIS',
+      design: 'classic',
+      designId: 'kado-classic',
+      cardDesign: 'graphite',
+    }
+  },
+  {
     id: 'closing-section',
     type: 'closing',
     componentType: 'ClosingSection',
-    order: 10,
+    order: 11,
     defaultData: {
       coupleNames: 'John & Jane',
       message: 'Terima kasih atas ucapan, doa, dan kesediaannya untuk datang di acara pernikahan putra-putri kami.',
-      designerCredit: 'Invitation by Stundea Studio'
+      designerCredit: 'Invitation by Stundea Studio',
+      design: 'classic',
+      designId: 'closing-classic',
     }
   }
 ];

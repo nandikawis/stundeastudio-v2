@@ -77,6 +77,7 @@ function mapElementTypeToComponentType(type: EditorElement['type']): string {
     'couple-profile': 'CoupleProfile',
     'event-details': 'EventDetails',
     'photo-gallery': 'PhotoGalleryGrid',
+    'kado-digital': 'KadoDigitalSection',
     'closing': 'ClosingSection',
   };
 

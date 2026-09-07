@@ -7,6 +7,7 @@ export type AddableSectionType =
   | "CoupleProfile"
   | "EventDetails"
   | "PhotoGalleryGrid"
+  | "KadoDigitalSection"
   | "ClosingSection"
   | "ImageCarousel"
   | "CountdownTimer"
@@ -52,6 +53,11 @@ export const ADDABLE_SECTIONS: Array<{
     type: "PhotoGalleryGrid",
     label: "Galeri",
     description: "Grid foto",
+  },
+  {
+    type: "KadoDigitalSection",
+    label: "Kado Digital",
+    description: "Rekening & QRIS",
   },
   {
     type: "CountdownTimer",
@@ -148,6 +154,8 @@ export function getSectionDefaults(type: string): Record<string, unknown> {
           "Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir untuk memberikan doa restu di hari yang berbahagia.",
         dateMessageDateAlign: "center",
         dateMessageTextAlign: "center",
+        dateMessageShowLine: true,
+        dateMessageLinePlacement: "before",
         backgroundColor: "#ffffff",
       };
     case "PhotoGalleryGrid":
@@ -155,6 +163,21 @@ export function getSectionDefaults(type: string): Record<string, unknown> {
         columns: 2,
         images: [],
         backgroundColor: "#ffffff",
+      };
+    case "KadoDigitalSection":
+      return {
+        title: "Kado Digital",
+        message:
+          "Doa restu Anda merupakan karunia yang sangat berarti. Dan jika memberi adalah ungkapan tanda kasih, Anda dapat memberikan kado secara digital.",
+        accounts: [
+          { id: "acc-1", bankName: "BCA", accountNumber: "1234567890", accountName: "John Doe" },
+          { id: "acc-2", bankName: "Mandiri", accountNumber: "0987654321", accountName: "Jane Doe" },
+        ],
+        qrisLabel: "QRIS",
+        design: "classic",
+        designId: "kado-classic",
+        cardDesign: "graphite",
+        backgroundColor: "#f7f6f3",
       };
     case "CountdownTimer":
       return {
@@ -172,7 +195,12 @@ export function getSectionDefaults(type: string): Record<string, unknown> {
         message:
           "Terima kasih atas ucapan, doa, dan kesediaannya untuk datang di acara pernikahan putra-putri kami.",
         designerCredit: "Invitation by Stundea Studio",
-        backgroundColor: "#ffffff",
+        design: "classic",
+        designId: "closing-classic",
+        backgroundColor: "#1f1d1a",
+        coupleNamesColor: "#c4a574",
+        messageColor: "rgba(247,246,243,0.82)",
+        designerCreditColor: "rgba(247,246,243,0.5)",
       };
     case "RsvpSection":
       return {

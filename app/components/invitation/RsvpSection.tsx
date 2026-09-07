@@ -2,16 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { renderTopCurve, renderBottomCurve, CurveDividerProps } from "../../lib/curveHelpers";
+import { textStyle, textAlignClass, type TextStyleFields } from "../../lib/textStyle";
+
 import { api } from "../../lib/api";
 
 type RsvpStatus = "pending" | "attending" | "not_attending" | "maybe";
 export type RsvpDesign = "classic" | "card" | "minimal" | "soft";
 
-interface RsvpSectionProps extends CurveDividerProps {
+interface RsvpSectionProps extends CurveDividerProps,
+  TextStyleFields<"title">,
+  TextStyleFields<"subtitle"> {
   title?: string;
   subtitle?: string;
   titleColor?: string;
   subtitleColor?: string;
+  titleAlign?: "left" | "center" | "right" | "justify";
+  subtitleAlign?: "left" | "center" | "right" | "justify";
   backgroundColor?: string;
   backgroundImageUrl?: string;
   design?: RsvpDesign;
@@ -54,6 +60,14 @@ export default function RsvpSection({
   topCurveStyle,
   bottomCurveStyle,
   className = "",
+  titleFont,
+  titleSize,
+  titleEmphasis,
+  subtitleFont,
+  subtitleSize,
+  subtitleEmphasis,
+  titleAlign = "center",
+  subtitleAlign = "center",
 }: RsvpSectionProps) {
   const variant = resolveDesign(design, designId);
   const [status, setStatus] = useState<RsvpStatus | "">("");
@@ -220,15 +234,12 @@ export default function RsvpSection({
         bottomCurveStyle,
       })}
 
-      <div className="relative z-10 mx-auto max-w-md text-center">
+      <div className="relative z-10 mx-auto max-w-md">
         <h2
           className={`font-medium tracking-[-0.02em] ${
             variant === "minimal" ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl"
-          }`}
-          style={{
-            fontFamily: "var(--font-playfair)",
-            color: ink,
-          }}
+          } ${textAlignClass(titleAlign)}`}
+          style={textStyle({ font: titleFont, size: titleSize, emphasis: titleEmphasis, fallbackFont: "var(--font-playfair)", color: ink })}
         >
           {title}
         </h2>
@@ -236,8 +247,8 @@ export default function RsvpSection({
           <p
             className={`mt-3 leading-relaxed ${
               variant === "minimal" ? "text-xs sm:text-sm" : "text-sm sm:text-[15px]"
-            }`}
-            style={{ color: muted }}
+            } ${textAlignClass(subtitleAlign)}`}
+            style={textStyle({ font: subtitleFont, size: subtitleSize, emphasis: subtitleEmphasis, fallbackFont: "var(--font-dm-sans)", color: muted })}
           >
             {subtitle}
           </p>

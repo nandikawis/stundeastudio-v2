@@ -13,6 +13,7 @@ export { default as CoupleProfile } from "./CoupleProfile";
 export { default as EventDetails } from "./EventDetails";
 export { default as PhotoGalleryGrid } from "./PhotoGalleryGrid";
 export { default as ClosingSection } from "./ClosingSection";
+export { default as KadoDigitalSection } from "./KadoDigitalSection";
 export { default as RsvpSection } from "./RsvpSection";
 
 // Legacy components (keeping for backward compatibility)
@@ -33,6 +34,7 @@ import CoupleProfile from "./CoupleProfile";
 import EventDetails from "./EventDetails";
 import PhotoGalleryGrid from "./PhotoGalleryGrid";
 import ClosingSection from "./ClosingSection";
+import KadoDigitalSection from "./KadoDigitalSection";
 import RsvpSection from "./RsvpSection";
 import HeroImage from "./HeroImage";
 import TitleSection from "./TitleSection";
@@ -53,6 +55,7 @@ export const componentRegistry: Record<string, React.ComponentType<any>> = {
   EventDetails,
   PhotoGalleryGrid,
   ClosingSection,
+  KadoDigitalSection,
   RsvpSection,
   // Legacy
   HeroImage,
