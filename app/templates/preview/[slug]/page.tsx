@@ -102,7 +102,7 @@ export default function TemplatePreviewPage() {
   return (
     <main className="landing-root flex min-h-screen flex-col bg-[#f7f6f3] text-primary">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-primary/8 bg-[#f7f6f3]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-primary/8 bg-[#f7f6f3]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-14">
           <div className="flex min-w-0 items-center gap-4">
             <Link
@@ -191,7 +191,7 @@ export default function TemplatePreviewPage() {
 
                 <div className="flex w-full flex-1 items-center justify-center">
                   <div
-                    className="flex w-full max-w-[390px] flex-col overflow-hidden rounded-[2.25rem] border-[10px] border-neutral-800 bg-white shadow-[0_24px_64px_rgba(45,45,45,0.14)]"
+                    className="relative isolate z-0 flex w-full max-w-[390px] flex-col overflow-hidden rounded-[2.25rem] border-[10px] border-neutral-800 bg-white shadow-[0_24px_64px_rgba(45,45,45,0.14)]"
                     style={{
                       width: "min(390px, 100%, calc((100dvh - 9rem) * 9 / 19.5))",
                       aspectRatio: "9 / 19.5",

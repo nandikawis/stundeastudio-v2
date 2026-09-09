@@ -6,7 +6,6 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { componentRegistry } from "./index";
 import { ProjectData } from "@/app/lib/mockData";
-import { bindInviteViewportHeight } from "@/app/lib/inviteViewport";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -295,19 +294,13 @@ export default function TemplateRenderer({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    if (!isStandaloneInvitation) return;
-    if (coverOpen) {
-      const large = Math.max(
-        window.innerHeight,
-        window.visualViewport?.height ?? 0
-      );
-      document.documentElement.style.setProperty(
-        "--invite-vh",
-        `${Math.round(large)}px`
-      );
-      return;
-    }
-    return bindInviteViewportHeight();
+    if (!isStandaloneInvitation || coverOpen) return;
+    const html = document.documentElement;
+    const previousOverflow = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = previousOverflow;
+    };
   }, [isStandaloneInvitation, coverOpen]);
 
   // After cover opens, layout/overflow change — recalc ScrollTrigger positions
@@ -399,17 +392,20 @@ export default function TemplateRenderer({
       return null;
     }
     const seamClass = index > 0 ? "-mt-px" : undefined;
+    const isCover = componentConfig.type === "CoverSection";
     const section = <Component {...buildProps(componentConfig)} />;
     const useFade =
       !isPreview &&
-      componentConfig.type !== "CoverSection" &&
+      !isCover &&
       opts?.revealEnabled !== false;
     return (
       <FadeInWrap
         key={componentConfig.id}
         disabled={!useFade}
         scrollerEl={scrollEl}
-        className={seamClass}
+        className={[seamClass, isCover ? "relative h-full w-full" : null]
+          .filter(Boolean)
+          .join(" ") || undefined}
       >
         {section}
       </FadeInWrap>
@@ -466,13 +462,8 @@ export default function TemplateRenderer({
       <div
         className={
           fullScreen
-            ? "absolute left-0 top-0 z-50 w-full overflow-hidden"
-            : "absolute inset-0 z-50 h-full w-full overflow-hidden"
-        }
-        style={
-          fullScreen
-            ? { height: "var(--invite-vh, 100dvh)" }
-            : undefined
+            ? "invite-cover-layer"
+            : "absolute inset-0 z-10 h-full w-full overflow-hidden"
         }
       >
         {coverComponents.map((cc, i) =>
@@ -506,13 +497,7 @@ export default function TemplateRenderer({
   if (isStandaloneInvitation && coverComponents.length > 0) {
     return (
       <>
-        <div
-          className="relative w-full bg-background"
-          style={{
-            minHeight: "var(--invite-vh, 100dvh)",
-            height: "var(--invite-vh, 100dvh)",
-          }}
-        >
+        <div className="invite-shell bg-background">
           {coverLayer(true)}
           {contentLayer(true)}
         </div>
@@ -524,7 +509,7 @@ export default function TemplateRenderer({
   if (isPreview) {
     if (coverComponents.length > 0) {
       return (
-        <div className="relative h-full w-full bg-background">
+        <div className="relative isolate z-0 h-full w-full bg-background">
           {coverLayer(false)}
           {contentLayer(false)}
         </div>

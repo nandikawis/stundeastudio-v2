@@ -196,8 +196,8 @@ export default function CoverSection({
   const positionClasses = isEditor
     ? `relative ${isDocked ? "h-[100svh] min-h-[100svh]" : "min-h-screen"} w-full max-w-[375px] mx-auto z-0`
     : isStandaloneInvitation
-      ? "relative h-full w-full z-50"
-      : "absolute inset-0 w-full z-50"; // Phone mockup: fill the frame screen
+      ? "absolute inset-0 h-full w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      : "absolute inset-0 h-full w-full"; // Phone mockup: fill the frame screen
 
   return (
     <>
@@ -212,9 +212,8 @@ export default function CoverSection({
           ...(!isEditor
             ? {
                 height: "100%",
-                maxHeight: "100%",
                 minHeight: "100%",
-                willChange: isAnimating ? 'transform, opacity' : 'auto',
+                willChange: isAnimating ? "transform, opacity" : "auto",
               }
             : {}),
         }}

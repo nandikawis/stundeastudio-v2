@@ -88,7 +88,7 @@ export default async function WeddingInvitationPage({
   }
 
   return (
-    <div className="bg-background" style={{ minHeight: "var(--invite-vh, 100dvh)" }}>
+    <div className="invite-shell bg-background">
       <TemplateRenderer project={project} isStandaloneInvitation />
     </div>
   );
